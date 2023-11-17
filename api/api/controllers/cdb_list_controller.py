@@ -118,7 +118,7 @@ async def get_file(request, pretty: bool = False, wait_for_complete: bool = Fals
                           )
     data = raise_if_exc(await dapi.distribute_function())
     if isinstance(data, AffectedItemsWazuhResult):
-        response = return _json_response(data, pretty=pretty)
+        response = _json_response(data, pretty=pretty)
     else:
         response = ConnexionResponse(body=data["message"], mimetype='text/plain', content_type='text/plain')
 

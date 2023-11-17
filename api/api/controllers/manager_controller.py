@@ -129,7 +129,7 @@ async def get_configuration(request, pretty: bool = False, wait_for_complete: bo
     data = raise_if_exc(await dapi.distribute_function())
 
     if isinstance(data, AffectedItemsWazuhResult):
-        response = return _json_response(data, pretty=pretty)
+        response = _json_response(data, pretty=pretty)
     else:
         response = ConnexionResponse(body=data["message"], mimetype='application/xml', content_type='application/xml')
     return response

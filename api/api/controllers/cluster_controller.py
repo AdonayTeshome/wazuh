@@ -346,7 +346,7 @@ async def get_info_node(request, node_id: str, pretty: bool = False, wait_for_co
 
 async def get_configuration_node(request, node_id: str, pretty: bool = False, wait_for_complete: bool = False,
                                  section: str = None, field: str = None,
-                                 raw: bool = False) -> Union[web.Response, ConnexionResponse]:
+                                 raw: bool = False) -> Union[Response, ConnexionResponse]:
     """Get a specified node's configuration (ossec.conf).
 
     Parameters
@@ -390,7 +390,7 @@ async def get_configuration_node(request, node_id: str, pretty: bool = False, wa
     data = raise_if_exc(await dapi.distribute_function())
 
     if isinstance(data, AffectedItemsWazuhResult):
-        response = return _json_response(data, pretty=pretty)
+        response = _json_response(data, pretty=pretty)
     else:
         response = ConnexionResponse(body=data["message"], mimetype='application/xml', content_type='application/xml')
     return response
