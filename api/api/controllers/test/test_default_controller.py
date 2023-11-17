@@ -2,7 +2,7 @@ import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
-from aiohttp import web_response
+from starlette.responses import Response_response
 
 with patch('wazuh.common.wazuh_uid'):
     with patch('wazuh.common.wazuh_gid'):

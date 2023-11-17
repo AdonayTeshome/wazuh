@@ -5,12 +5,12 @@
 import logging
 from typing import Union
 
-from aiohttp import web
+from starlette.responses import Response
 from aiohttp_cache import cache
 from connexion.lifecycle import ConnexionResponse
 
 from api.configuration import api_conf
-from api.encoder import dumps, prettify
+from api.controllers.util import _json_response
 from api.models.base_model_ import Body
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc
 from wazuh import rule as rule_framework
@@ -25,7 +25,7 @@ async def get_rules(request, rule_ids: list = None, pretty: bool = False, wait_f
                     offset: int = 0, select: str = None, limit: int = None, sort: str = None, search: str = None,
                     q: str = None, status: str = None, group: str = None, level: str = None, filename: list = None,
                     relative_dirname: str = None, pci_dss: str = None, gdpr: str = None, gpg13: str = None,
-                    hipaa: str = None, tsc: str = None, mitre: str = None, distinct: bool = False) -> web.Response:
+                    hipaa: str = None, tsc: str = None, mitre: str = None, distinct: bool = False) -> Response:
     """Get information about all Wazuh rules.
 
     Parameters
@@ -110,12 +110,12 @@ async def get_rules(request, rule_ids: list = None, pretty: bool = False, wait_f
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 @cache(expires=api_conf['cache']['time'])
 async def get_rules_groups(request, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
-                           limit: int = None, sort: str = None, search: str = None) -> web.Response:
+                           limit: int = None, sort: str = None, search: str = None) -> Response:
     """Get all rule groups names.
 
     Parameters
@@ -158,13 +158,13 @@ async def get_rules_groups(request, pretty: bool = False, wait_for_complete: boo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 @cache(expires=api_conf['cache']['time'])
 async def get_rules_requirement(request, requirement: str = None, pretty: bool = False, wait_for_complete: bool = False,
                                 offset: int = 0, limit: int = None, sort: str = None,
-                                search: str = None) -> web.Response:
+                                search: str = None) -> Response:
     """Get all specified requirements.
 
     Parameters
@@ -207,14 +207,14 @@ async def get_rules_requirement(request, requirement: str = None, pretty: bool =
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 @cache(expires=api_conf['cache']['time'])
 async def get_rules_files(request, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
                           limit: int = None, sort: str = None, search: str = None, status: str = None,
                           filename: list = None, relative_dirname: str = None, q: str = None,
-                          select: str = None, distinct: bool = False) -> web.Response:
+                          select: str = None, distinct: bool = False) -> Response:
     """Get all the rules files.
 
     Parameters
@@ -274,7 +274,7 @@ async def get_rules_files(request, pretty: bool = False, wait_for_complete: bool
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 @cache(expires=api_conf['cache']['time'])
@@ -317,7 +317,7 @@ async def get_file(request, pretty: bool = False, wait_for_complete: bool = Fals
                           )
     data = raise_if_exc(await dapi.distribute_function())
     if isinstance(data, AffectedItemsWazuhResult):
-        response = web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+        response = return _json_response(data, pretty=pretty)
     else:
         response = ConnexionResponse(body=data["message"], mimetype='application/xml', content_type='application/xml')
 
@@ -326,7 +326,7 @@ async def get_file(request, pretty: bool = False, wait_for_complete: bool = Fals
 
 async def put_file(request, body: bytes, filename: str = None, overwrite: bool = False,
                    pretty: bool = False, relative_dirname: str = None,
-                   wait_for_complete: bool = False) -> web.Response:
+                   wait_for_complete: bool = False) -> Response:
     """Upload a rule file.
     
     Parameters
@@ -370,13 +370,13 @@ async def put_file(request, body: bytes, filename: str = None, overwrite: bool =
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def delete_file(request, filename: str = None, 
                       relative_dirname: str = None, 
                       pretty: bool = False,
-                      wait_for_complete: bool = False) -> web.Response:
+                      wait_for_complete: bool = False) -> Response:
     """Delete a rule file.
 
     Parameters
@@ -408,4 +408,4 @@ async def delete_file(request, filename: str = None,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)

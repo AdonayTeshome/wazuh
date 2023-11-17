@@ -4,10 +4,10 @@
 
 import logging
 
-from aiohttp import web
+from starlette.responses import Response
 
 import wazuh.active_response as active_response
-from api.encoder import dumps, prettify
+from api.controllers.util import _json_response
 from api.models.active_response_model import ActiveResponseModel
 from api.models.base_model_ import Body
 from api.util import remove_nones_to_dict, raise_if_exc
@@ -17,7 +17,7 @@ logger = logging.getLogger('wazuh-api')
 
 
 async def run_command(request, agents_list: str = '*', pretty: bool = False,
-                      wait_for_complete: bool = False) -> web.Response:
+                      wait_for_complete: bool = False) -> Response:
     """Runs an Active Response command on a specified list of agents.
 
     Parameters
@@ -49,4 +49,4 @@ async def run_command(request, agents_list: str = '*', pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)

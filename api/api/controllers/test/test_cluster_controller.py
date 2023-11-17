@@ -2,7 +2,7 @@ import sys
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 import pytest
-from aiohttp import web_response
+from starlette.responses import Response_response
 from connexion.lifecycle import ConnexionResponse
 
 from api.controllers.test.utils import CustomAffectedItems

@@ -4,9 +4,9 @@
 
 import logging
 
-from aiohttp import web
+from starlette.responses import Response
 
-from api.encoder import dumps, prettify
+from api.controllers.util import _json_response
 from api.util import raise_if_exc, remove_nones_to_dict
 from wazuh.agent import get_full_overview
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
@@ -14,7 +14,7 @@ from wazuh.core.cluster.dapi.dapi import DistributedAPI
 logger = logging.getLogger('wazuh-api')
 
 
-async def get_overview_agents(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def get_overview_agents(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get full summary of agents.
 
     Parameters
@@ -42,4 +42,4 @@ async def get_overview_agents(request, pretty: bool = False, wait_for_complete: 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)

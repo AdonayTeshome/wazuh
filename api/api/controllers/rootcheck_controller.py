@@ -4,9 +4,9 @@
 
 import logging
 
-from aiohttp import web
+from starlette.responses import Response
 
-from api.encoder import dumps, prettify
+from api.controllers.util import _json_response
 from api.util import parse_api_param, remove_nones_to_dict, raise_if_exc
 from wazuh import rootcheck
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
@@ -15,7 +15,7 @@ logger = logging.getLogger('wazuh-api')
 
 
 async def put_rootcheck(request, agents_list: str = '*', pretty: bool = False,
-                        wait_for_complete: bool = False) -> web.Response:
+                        wait_for_complete: bool = False) -> Response:
     """Run rootcheck scan over the agent_ids.
 
     Parameters
@@ -46,11 +46,11 @@ async def put_rootcheck(request, agents_list: str = '*', pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def delete_rootcheck(request, pretty: bool = False, wait_for_complete: bool = False,
-                           agent_id: str = '') -> web.Response:
+                           agent_id: str = '') -> Response:
     """Clear the rootcheck database for a list of agents.
 
     Parameters
@@ -80,13 +80,13 @@ async def delete_rootcheck(request, pretty: bool = False, wait_for_complete: boo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_rootcheck_agent(request, pretty: bool = False, wait_for_complete: bool = False, agent_id: str = None,
                               offset: int = 0, limit: int = None, sort: str = None, search: str = None,
                               select: str = None, q: str = '', distinct: bool = False, status: str = 'all',
-                              pci_dss: str = None, cis: str = None) -> web.Response:
+                              pci_dss: str = None, cis: str = None) -> Response:
     """Return a list of events from the rootcheck database.
 
     Parameters
@@ -150,11 +150,11 @@ async def get_rootcheck_agent(request, pretty: bool = False, wait_for_complete: 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_last_scan_agent(request, pretty: bool = False, wait_for_complete: bool = False,
-                              agent_id: str = None) -> web.Response:
+                              agent_id: str = None) -> Response:
     """Get the last rootcheck scan of an agent.
 
     Parameters
@@ -184,4 +184,4 @@ async def get_last_scan_agent(request, pretty: bool = False, wait_for_complete: 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)

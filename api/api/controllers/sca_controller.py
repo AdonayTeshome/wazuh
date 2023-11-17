@@ -5,10 +5,10 @@
 
 import logging
 
-from aiohttp import web
+from starlette.responses import Response
 
 import wazuh.sca as sca
-from api.encoder import dumps, prettify
+from api.controllers.util import _json_response
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
 from wazuh.core.common import DATABASE_LIMIT
@@ -19,7 +19,7 @@ logger = logging.getLogger('wazuh-api')
 async def get_sca_agent(request, agent_id: str = None, pretty: bool = False, wait_for_complete: bool = False,
                         name: str = None, description: str = None, references: str = None, offset: int = 0,
                         limit: int = DATABASE_LIMIT, sort: str = None, search: str = None, select: str = None,
-                        q: str = None, distinct: bool = False) -> web.Response:
+                        q: str = None, distinct: bool = False) -> Response:
     """Get security configuration assessment (SCA) database of an agent.
 
     Parameters
@@ -82,7 +82,7 @@ async def get_sca_agent(request, agent_id: str = None, pretty: bool = False, wai
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_sca_checks(request, agent_id: str = None, pretty: bool = False, wait_for_complete: bool = False,
@@ -91,7 +91,7 @@ async def get_sca_checks(request, agent_id: str = None, pretty: bool = False, wa
                          file: str = None, process: str = None, directory: str = None, registry: str = None,
                          references: str = None, result: str = None, condition: str = None, offset: int = 0,
                          limit: int = DATABASE_LIMIT, sort: str = None, search: str = None, select: str = None,
-                         q: str = None, distinct: bool = False) -> web.Response:
+                         q: str = None, distinct: bool = False) -> Response:
     """Get policy monitoring alerts for a given policy.
 
     Parameters
@@ -188,4 +188,4 @@ async def get_sca_checks(request, agent_id: str = None, pretty: bool = False, wa
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)

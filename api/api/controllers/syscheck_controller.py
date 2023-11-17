@@ -4,10 +4,10 @@
 
 import logging
 
-from aiohttp import web
+from starlette.responses import Response
 
-from api.encoder import dumps, prettify
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc
+from api.controllers.util import _json_response
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
 from wazuh.syscheck import run, clear, files, last_scan
 
@@ -15,7 +15,7 @@ logger = logging.getLogger('wazuh-api')
 
 
 async def put_syscheck(request, agents_list: str = '*', pretty: bool = False,
-                       wait_for_complete: bool = False) -> web.Response:
+                       wait_for_complete: bool = False) -> Response:
     """Run a syscheck scan in the specified agents.
 
     Parameters
@@ -46,13 +46,13 @@ async def put_syscheck(request, agents_list: str = '*', pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_syscheck_agent(request, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                              offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                              search: str = None, distinct: bool = False, summary: bool = False, md5: str = None,
-                             sha1: str = None, sha256: str = None, q: str = None, arch: str = None) -> web.Response:
+                             sha1: str = None, sha256: str = None, q: str = None, arch: str = None) -> Response:
     """Get file integrity monitoring scan result from an agent.
 
     Parameters
@@ -120,11 +120,11 @@ async def get_syscheck_agent(request, agent_id: str, pretty: bool = False, wait_
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def delete_syscheck_agent(request, agent_id: str = '*', pretty: bool = False,
-                                wait_for_complete: bool = False) -> web.Response:
+                                wait_for_complete: bool = False) -> Response:
     """Clear file integrity monitoring scan results for a specified agent.
 
     Parameters
@@ -154,11 +154,11 @@ async def delete_syscheck_agent(request, agent_id: str = '*', pretty: bool = Fal
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_last_scan_agent(request, agent_id: str, pretty: bool = False,
-                              wait_for_complete: bool = False) -> web.Response:
+                              wait_for_complete: bool = False) -> Response:
     """Return when the last syscheck scan of a specified agent started and ended.
 
     Parameters
@@ -188,4 +188,4 @@ async def get_last_scan_agent(request, agent_id: str, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)

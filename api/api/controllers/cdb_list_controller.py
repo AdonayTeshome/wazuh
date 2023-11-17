@@ -5,10 +5,10 @@
 import logging
 from typing import Union
 
-from aiohttp import web
+from starlette.responses import Response
 from connexion.lifecycle import ConnexionResponse
 
-from api.encoder import dumps, prettify
+from api.controllers.util import _json_response
 from api.models.base_model_ import Body
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc
 from wazuh import cdb_list
@@ -20,7 +20,7 @@ logger = logging.getLogger('wazuh-api')
 
 async def get_lists(request, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0, limit: int = None,
                     select: list = None, sort: str = None, search: str = None, filename: str = None,
-                    relative_dirname: str = None, q: str = None, distinct: bool = False) -> web.Response:
+                    relative_dirname: str = None, q: str = None, distinct: bool = False) -> Response:
     """Get all CDB lists.
 
     Parameters
@@ -79,7 +79,7 @@ async def get_lists(request, pretty: bool = False, wait_for_complete: bool = Fal
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_file(request, pretty: bool = False, wait_for_complete: bool = False, filename: str = None,
@@ -118,7 +118,7 @@ async def get_file(request, pretty: bool = False, wait_for_complete: bool = Fals
                           )
     data = raise_if_exc(await dapi.distribute_function())
     if isinstance(data, AffectedItemsWazuhResult):
-        response = web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+        response = return _json_response(data, pretty=pretty)
     else:
         response = ConnexionResponse(body=data["message"], mimetype='text/plain', content_type='text/plain')
 
@@ -126,7 +126,7 @@ async def get_file(request, pretty: bool = False, wait_for_complete: bool = Fals
 
 
 async def put_file(request, body: bytes, overwrite: bool = False, pretty: bool = False, wait_for_complete: bool = False,
-                   filename: str = None) -> web.Response:
+                   filename: str = None) -> Response:
     """Upload content of CDB list file.
 
     Parameters
@@ -166,11 +166,11 @@ async def put_file(request, body: bytes, overwrite: bool = False, pretty: bool =
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def delete_file(request, pretty: bool = False, wait_for_complete: bool = False,
-                      filename: str = None) -> web.Response:
+                      filename: str = None) -> Response:
     """Delete a CDB list file.
 
     Parameters
@@ -200,12 +200,12 @@ async def delete_file(request, pretty: bool = False, wait_for_complete: bool = F
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_lists_files(request, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
                           limit: int = None, sort: str = None, search: str = None, filename: str = None,
-                          relative_dirname: str = None) -> web.Response:
+                          relative_dirname: str = None) -> Response:
     """Get paths from all CDB lists.
 
     Parameters
@@ -256,4 +256,4 @@ async def get_lists_files(request, pretty: bool = False, wait_for_complete: bool
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)

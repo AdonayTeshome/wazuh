@@ -6,12 +6,12 @@ import datetime
 import logging
 from typing import Union
 
-from aiohttp import web
+from starlette.responses import Response
 from connexion.lifecycle import ConnexionResponse
 
 import wazuh.manager as manager
 import wazuh.stats as stats
-from api.encoder import dumps, prettify
+from api.controllers.util import _json_response
 from api.models.base_model_ import Body
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc, deserialize_date, deprecate_endpoint
 from api.validator import check_component_configuration_pair
@@ -22,7 +22,7 @@ from wazuh.core.results import AffectedItemsWazuhResult
 logger = logging.getLogger('wazuh-api')
 
 
-async def get_status(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def get_status(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get manager's or local_node's Wazuh daemons status
 
     Parameters
@@ -50,10 +50,10 @@ async def get_status(request, pretty: bool = False, wait_for_complete: bool = Fa
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def get_info(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def get_info(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get manager's or local_node's basic information
 
     Parameters
@@ -81,7 +81,7 @@ async def get_info(request, pretty: bool = False, wait_for_complete: bool = Fals
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_configuration(request, pretty: bool = False, wait_for_complete: bool = False, section: str = None,
@@ -129,7 +129,7 @@ async def get_configuration(request, pretty: bool = False, wait_for_complete: bo
     data = raise_if_exc(await dapi.distribute_function())
 
     if isinstance(data, AffectedItemsWazuhResult):
-        response = web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+        response = return _json_response(data, pretty=pretty)
     else:
         response = ConnexionResponse(body=data["message"], mimetype='application/xml', content_type='application/xml')
     return response
@@ -159,10 +159,10 @@ async def get_daemon_stats(request, pretty: bool = False, wait_for_complete: boo
                           rbac_permissions=request['token_info']['rbac_policies'])
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def get_stats(request, pretty: bool = False, wait_for_complete: bool = False, date: str = None) -> web.Response:
+async def get_stats(request, pretty: bool = False, wait_for_complete: bool = False, date: str = None) -> Response:
     """Get manager's or local_node's stats.
 
     Returns Wazuh statistical information for the current or specified date.
@@ -199,10 +199,10 @@ async def get_stats(request, pretty: bool = False, wait_for_complete: bool = Fal
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def get_stats_hourly(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def get_stats_hourly(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get manager's or local_node's stats by hour.
 
     Returns Wazuh statistical information per hour. Each number in the averages field represents the average of alerts
@@ -233,10 +233,10 @@ async def get_stats_hourly(request, pretty: bool = False, wait_for_complete: boo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def get_stats_weekly(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def get_stats_weekly(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get manager's or local_node's stats by week.
 
     Returns Wazuh statistical information per week. Each number in the averages field represents the average of alerts
@@ -267,11 +267,11 @@ async def get_stats_weekly(request, pretty: bool = False, wait_for_complete: boo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 @deprecate_endpoint()
-async def get_stats_analysisd(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def get_stats_analysisd(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get manager's or local_node's analysisd statistics.
 
     Notes
@@ -301,11 +301,11 @@ async def get_stats_analysisd(request, pretty: bool = False, wait_for_complete: 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 @deprecate_endpoint()
-async def get_stats_remoted(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def get_stats_remoted(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get manager's or local_node's remoted statistics.
 
     Notes
@@ -335,12 +335,12 @@ async def get_stats_remoted(request, pretty: bool = False, wait_for_complete: bo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_log(request, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0, limit: int = None,
                   sort: str = None, search: str = None, tag: str = None, level: str = None,
-                  q: str = None, select: str = None, distinct: bool = False) -> web.Response:
+                  q: str = None, select: str = None, distinct: bool = False) -> Response:
     """Get manager's or local_node's last 2000 wazuh log entries.
 
     Parameters
@@ -397,10 +397,10 @@ async def get_log(request, pretty: bool = False, wait_for_complete: bool = False
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def get_log_summary(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def get_log_summary(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get manager's or local_node's summary of the last 2000 wazuh log entries.
 
     Parameters
@@ -428,10 +428,10 @@ async def get_log_summary(request, pretty: bool = False, wait_for_complete: bool
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def get_api_config(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def get_api_config(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get active API configuration in manager or local_node.
 
     Parameters
@@ -459,10 +459,10 @@ async def get_api_config(request, pretty: bool = False, wait_for_complete: bool 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def put_restart(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def put_restart(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Restart manager or local_node.
 
     Parameters
@@ -490,10 +490,10 @@ async def put_restart(request, pretty: bool = False, wait_for_complete: bool = F
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def get_conf_validation(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def get_conf_validation(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Check if Wazuh configuration is correct in manager or local_node.
 
     Parameters
@@ -521,11 +521,11 @@ async def get_conf_validation(request, pretty: bool = False, wait_for_complete: 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_manager_config_ondemand(request, component: str, pretty: bool = False, wait_for_complete: bool = False,
-                                      **kwargs: dict) -> web.Response:
+                                      **kwargs: dict) -> Response:
     """Get active configuration in manager or local_node for one component [on demand].
 
     Parameters
@@ -559,11 +559,11 @@ async def get_manager_config_ondemand(request, component: str, pretty: bool = Fa
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def update_configuration(request, body: bytes, pretty: bool = False,
-                               wait_for_complete: bool = False) -> web.Response:
+                               wait_for_complete: bool = False) -> Response:
     """Update manager's or local_node's configuration (ossec.conf).
 
     Parameters
@@ -597,4 +597,4 @@ async def update_configuration(request, body: bytes, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)

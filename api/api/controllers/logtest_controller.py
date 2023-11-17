@@ -4,9 +4,9 @@
 
 import logging
 
-from aiohttp import web
+from starlette.responses import Response
 
-from api.encoder import dumps, prettify
+from api.controllers.util import _json_response
 from api.models.base_model_ import Body
 from api.models.logtest_model import LogtestModel
 from api.util import remove_nones_to_dict, raise_if_exc
@@ -16,7 +16,7 @@ from wazuh.core.cluster.dapi.dapi import DistributedAPI
 logger = logging.getLogger('wazuh-api')
 
 
-async def run_logtest_tool(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def run_logtest_tool(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get the logtest output after sending a JSON to its socket.
 
     Parameters
@@ -45,11 +45,11 @@ async def run_logtest_tool(request, pretty: bool = False, wait_for_complete: boo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def end_logtest_session(request, pretty: bool = False, wait_for_complete: bool = False,
-                              token: str = None) -> web.Response:
+                              token: str = None) -> Response:
     """Delete the saved session corresponding to the specified token.
 
     Parameters
@@ -79,4 +79,4 @@ async def end_logtest_session(request, pretty: bool = False, wait_for_complete: 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)

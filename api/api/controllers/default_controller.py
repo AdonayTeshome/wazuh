@@ -6,9 +6,9 @@ import logging
 import socket
 from datetime import datetime
 
-from aiohttp import web
+from starlette.responses import Response
 
-from api.encoder import dumps, prettify
+from api.controllers.util import _json_response
 from api.models.basic_info_model import BasicInfo
 from wazuh.core.common import DATE_FORMAT
 from wazuh.core.results import WazuhResult
@@ -18,7 +18,7 @@ from wazuh.core.utils import get_utc_now
 logger = logging.getLogger('wazuh-api')
 
 
-async def default_info(pretty: bool = False) -> web.Response:
+async def default_info(pretty: bool = False) -> Response:
     """Return basic information about the Wazuh API.
 
     Parameters

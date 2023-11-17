@@ -4,9 +4,9 @@
 
 import logging
 
-from aiohttp import web
+from starlette.responses import Response
 
-from api.encoder import dumps, prettify
+from api.controllers.util import _json_response
 from api.util import raise_if_exc, parse_api_param, remove_nones_to_dict
 from wazuh import mitre
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
@@ -14,7 +14,7 @@ from wazuh.core.cluster.dapi.dapi import DistributedAPI
 logger = logging.getLogger('wazuh-api')
 
 
-async def get_metadata(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def get_metadata(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Return the metadata of the MITRE's database.
 
     Parameters
@@ -41,12 +41,12 @@ async def get_metadata(request, pretty: bool = False, wait_for_complete: bool = 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_references(request, reference_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                          offset: int = None, limit: int = None, sort: str = None, search: str = None,
-                         select: list = None, q: str = None) -> web.Response:
+                         select: list = None, q: str = None) -> Response:
     """Get information of specified MITRE's references.
 
     Parameters
@@ -101,12 +101,12 @@ async def get_references(request, reference_ids: list = None, pretty: bool = Fal
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_tactics(request, tactic_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                       offset: int = None, limit: int = None, sort: str = None, search: str = None, select: list = None,
-                      q: str = None, distinct: bool = False) -> web.Response:
+                      q: str = None, distinct: bool = False) -> Response:
     """Get information of specified MITRE's tactics.
 
     Parameters
@@ -164,12 +164,12 @@ async def get_tactics(request, tactic_ids: list = None, pretty: bool = False, wa
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_techniques(request, technique_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                          offset: int = None, limit: int = None, sort: str = None, search: str = None,
-                         select: list = None, q: str = None, distinct: bool = False) -> web.Response:
+                         select: list = None, q: str = None, distinct: bool = False) -> Response:
     """Get information of specified MITRE's techniques.
 
     Parameters
@@ -225,12 +225,12 @@ async def get_techniques(request, technique_ids: list = None, pretty: bool = Fal
 
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_mitigations(request, mitigation_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                           offset: int = None, limit: int = None, sort: str = None, search: str = None,
-                          select: list = None, q: str = None, distinct: bool = False) -> web.Response:
+                          select: list = None, q: str = None, distinct: bool = False) -> Response:
     """Get information of specified MITRE's mitigations.
 
     Parameters
@@ -286,12 +286,12 @@ async def get_mitigations(request, mitigation_ids: list = None, pretty: bool = F
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_groups(request, group_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                      offset: int = None, limit: int = None, sort: str = None, search: str = None, select: list = None,
-                     q: str = None, distinct: bool = False) -> web.Response:
+                     q: str = None, distinct: bool = False) -> Response:
     """Get information of specified MITRE's groups.
 
     Parameters
@@ -348,12 +348,12 @@ async def get_groups(request, group_ids: list = None, pretty: bool = False, wait
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_software(request, software_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                        offset: int = None, limit: int = None, sort: str = None, search: str = None, select: list = None,
-                       q: str = None, distinct: bool = False) -> web.Response:
+                       q: str = None, distinct: bool = False) -> Response:
     """Get information of specified MITRE's software.
 
     Parameters
@@ -410,4 +410,4 @@ async def get_software(request, software_ids: list = None, pretty: bool = False,
 
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)

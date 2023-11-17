@@ -5,24 +5,23 @@
 import logging
 import re
 
-from aiohttp import web
+from starlette.responses import Response
 
-from api.authentication import generate_token
 from api.configuration import default_security_configuration
-from api.encoder import dumps, prettify
 from api.models.base_model_ import Body
 from api.models.configuration_model import SecurityConfigurationModel
-from api.models.security_model import (CreateUserModel, PolicyModel, RoleModel,
-                                       RuleModel, UpdateUserModel)
-from api.models.security_token_response_model import TokenResponseModel
-from api.util import (deprecate_endpoint, parse_api_param, raise_if_exc,
-                      remove_nones_to_dict)
+from api.models.security_model import  CreateUserModel, PolicyModel, RoleModel, \
+                                       RuleModel, UpdateUserModel
+from api.util import deprecate_endpoint, parse_api_param, raise_if_exc, \
+                      remove_nones_to_dict
+from api.controllers.util import _json_response, _token_response
+
 from wazuh import security
 from wazuh.core.cluster.control import get_system_nodes
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
 from wazuh.core.common import WAZUH_VERSION
-from wazuh.core.exception import WazuhException, WazuhPermissionError
-from wazuh.core.results import AffectedItemsWazuhResult, WazuhResult
+from wazuh.core.exception import WazuhPermissionError
+from wazuh.core.results import WazuhResult, AffectedItemsWazuhResult
 from wazuh.core.security import revoke_tokens
 from wazuh.rbac import preprocessor
 
@@ -32,7 +31,7 @@ auth_re = re.compile(r'basic (.*)', re.IGNORECASE)
 
 @deprecate_endpoint(link=f'https://documentation.wazuh.com/{WAZUH_VERSION}/user-manual/api/reference.html#'
                          f'operation/api.controllers.security_controller.login_user')
-async def deprecated_login_user(user: str, raw: bool = False) -> web.Response:
+async def deprecated_login_user(user: str, raw: bool = False) -> Response:
     """User/password authentication to get an access token.
     This method should be called to get an API token. This token will expire at some time.
 
@@ -45,7 +44,7 @@ async def deprecated_login_user(user: str, raw: bool = False) -> web.Response:
 
     Returns
     -------
-    web.Response
+    Response
         Raw or JSON response with the generated access token.
     """
     f_kwargs = {'user_id': user}
@@ -58,17 +57,10 @@ async def deprecated_login_user(user: str, raw: bool = False) -> web.Response:
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    token = None
-    try:
-        token = generate_token(user_id=user, data=data.dikt)
-    except WazuhException as e:
-        raise_if_exc(e)
-
-    return web.Response(text=token, content_type='text/plain', status=200) if raw \
-        else web.json_response(data=WazuhResult({'data': TokenResponseModel(token=token)}), status=200, dumps=dumps)
+    return _token_response(user, data.dikt, raw)
 
 
-async def login_user(user: str, raw: bool = False) -> web.Response:
+async def login_user(user: str, raw: bool = False) -> Response:
     """User/password authentication to get an access token.
     This method should be called to get an API token. This token will expire at some time.
 
@@ -81,7 +73,7 @@ async def login_user(user: str, raw: bool = False) -> web.Response:
 
     Returns
     -------
-    web.Response
+    starlette.Response
         Raw or JSON response with the generated access token.
     """
     f_kwargs = {'user_id': user}
@@ -94,20 +86,13 @@ async def login_user(user: str, raw: bool = False) -> web.Response:
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    token = None
-    try:
-        token = generate_token(user_id=user, data=data.dikt)
-    except WazuhException as e:
-        raise_if_exc(e)
-
-    return web.Response(text=token, content_type='text/plain', status=200) if raw \
-        else web.json_response(data=WazuhResult({'data': TokenResponseModel(token=token)}), status=200, dumps=dumps)
+    return _token_response(user, data.dikt, raw)
 
 
-async def run_as_login(request, user: str, raw: bool = False) -> web.Response:
+async def run_as_login(request, user: str, raw: bool = False) -> Response:
     """User/password authentication to get an access token.
-    This method should be called to get an API token using an authorization context body. This token will expire at
-    some time.
+    This method should be called to get an API token using an authorization context body. 
+    This token will expire at some time.
 
     Parameters
     ----------
@@ -119,7 +104,7 @@ async def run_as_login(request, user: str, raw: bool = False) -> web.Response:
 
     Returns
     -------
-    web.Response
+    Response
         Raw or JSON response with the generated access token.
     """
     auth_context = await request.json()
@@ -133,17 +118,10 @@ async def run_as_login(request, user: str, raw: bool = False) -> web.Response:
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    token = None
-    try:
-        token = generate_token(user_id=user, data=data.dikt, auth_context=auth_context)
-    except WazuhException as e:
-        raise_if_exc(e)
-
-    return web.Response(text=token, content_type='text/plain', status=200) if raw \
-        else web.json_response(data=WazuhResult({'data': TokenResponseModel(token=token)}), status=200, dumps=dumps)
+    return _token_response(user, data.dikt, raw)
 
 
-async def get_user_me(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def get_user_me(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Returns information about the current user.
 
     Parameters
@@ -156,7 +134,7 @@ async def get_user_me(request, pretty: bool = False, wait_for_complete: bool = F
 
     Returns
     -------
-    web.Response
+    Response
         API response with the user information.
     """
     f_kwargs = {'token': request['token_info']}
@@ -171,10 +149,10 @@ async def get_user_me(request, pretty: bool = False, wait_for_complete: bool = F
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def get_user_me_policies(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def get_user_me_policies(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Return processed RBAC policies and rbac_mode for the current user.
 
     Parameters
@@ -187,16 +165,16 @@ async def get_user_me_policies(request, pretty: bool = False, wait_for_complete:
 
     Returns
     -------
-    web.Response
+    Response
         API response with the user RBAC policies and mode.
     """
     data = WazuhResult({'data': request['token_info']['rbac_policies'],
                         'message': "Current user processed policies information was returned"})
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def logout_user(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def logout_user(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Invalidate all current user's tokens.
 
     Parameters
@@ -209,7 +187,7 @@ async def logout_user(request, pretty: bool = False, wait_for_complete: bool = F
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
 
@@ -222,12 +200,13 @@ async def logout_user(request, pretty: bool = False, wait_for_complete: bool = F
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def get_users(request, user_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
-                    offset: int = 0, limit: int = None, search: str = None, select: str = None,
-                    sort: str = None, q: str = None, distinct: bool = False) -> web.Response:
+async def get_users(request, user_ids: list = None, pretty: bool = False,
+                    wait_for_complete: bool = False, offset: int = 0, limit: int = None,
+                    search: str = None, select: str = None,
+                    sort: str = None, q: str = None, distinct: bool = False) -> Response:
     """Returns information from all system users.
 
     Parameters
@@ -248,8 +227,8 @@ async def get_users(request, user_ids: list = None, pretty: bool = False, wait_f
     select : str
         Select which fields to return (separated by comma).
     sort : str, optional
-        Sorts the collection by a field or fields (separated by comma). Use +/- at the beginning to list in
-        ascending or descending order.
+        Sorts the collection by a field or fields (separated by comma). 
+        Use +/- at the beginning to list in ascending or descending order.
     q : str
         Query to filter results by.
     distinct : bool
@@ -257,7 +236,7 @@ async def get_users(request, user_ids: list = None, pretty: bool = False, wait_f
 
     Returns
     -------
-    web.Response
+    Response
         API response with the users information.
     """
     f_kwargs = {'user_ids': user_ids, 'offset': offset, 'limit': limit, 'select': select,
@@ -278,11 +257,11 @@ async def get_users(request, user_ids: list = None, pretty: bool = False, wait_f
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def edit_run_as(request, user_id: str, allow_run_as: bool, pretty: bool = False,
-                      wait_for_complete: bool = False) -> web.Response:
+                      wait_for_complete: bool = False) -> Response:
     """Modify the specified user's allow_run_as flag.
 
     Parameters
@@ -299,7 +278,7 @@ async def edit_run_as(request, user_id: str, allow_run_as: bool, pretty: bool = 
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'user_id': user_id, 'allow_run_as': allow_run_as}
@@ -315,10 +294,10 @@ async def edit_run_as(request, user_id: str, allow_run_as: bool, pretty: bool = 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def create_user(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def create_user(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Create a new user.
 
     Parameters
@@ -331,7 +310,7 @@ async def create_user(request, pretty: bool = False, wait_for_complete: bool = F
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     Body.validate_content_type(request, expected_content_type='application/json')
@@ -347,10 +326,10 @@ async def create_user(request, pretty: bool = False, wait_for_complete: bool = F
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def update_user(request, user_id: str, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def update_user(request, user_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Modify an existent user.
 
     Parameters
@@ -365,7 +344,7 @@ async def update_user(request, user_id: str, pretty: bool = False, wait_for_comp
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     Body.validate_content_type(request, expected_content_type='application/json')
@@ -382,11 +361,11 @@ async def update_user(request, user_id: str, pretty: bool = False, wait_for_comp
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def delete_users(request, user_ids: list = None, pretty: bool = False,
-                       wait_for_complete: bool = False) -> web.Response:
+                       wait_for_complete: bool = False) -> Response:
     """Delete an existent list of users.
 
     Parameters
@@ -401,7 +380,7 @@ async def delete_users(request, user_ids: list = None, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     if 'all' in user_ids:
@@ -419,12 +398,12 @@ async def delete_users(request, user_ids: list = None, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_roles(request, role_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                     offset: int = 0, limit: int = None, search: str = None, select: str = None,
-                    sort: str = None, q: str = None, distinct: bool = False) -> web.Response:
+                    sort: str = None, q: str = None, distinct: bool = False) -> Response:
     """Get information about the security roles in the system.
 
     Parameters
@@ -454,7 +433,7 @@ async def get_roles(request, role_ids: list = None, pretty: bool = False, wait_f
 
     Returns
     -------
-    web.Response
+    Response
         API response with the roles information.
     """
     f_kwargs = {'role_ids': role_ids, 'offset': offset, 'limit': limit, 'select': select,
@@ -476,10 +455,10 @@ async def get_roles(request, role_ids: list = None, pretty: bool = False, wait_f
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def add_role(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def add_role(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Add a specified role.
 
     Parameters
@@ -492,7 +471,7 @@ async def add_role(request, pretty: bool = False, wait_for_complete: bool = Fals
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     # Get body parameters
@@ -509,11 +488,11 @@ async def add_role(request, pretty: bool = False, wait_for_complete: bool = Fals
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def remove_roles(request, role_ids: list = None, pretty: bool = False,
-                       wait_for_complete: bool = False) -> web.Response:
+                       wait_for_complete: bool = False) -> Response:
     """Removes a list of roles in the system.
 
     Parameters
@@ -528,7 +507,7 @@ async def remove_roles(request, role_ids: list = None, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    Response
         API response composed of two lists: one contains the deleted roles and the other the non-deleted roles.
     """
     if 'all' in role_ids:
@@ -545,10 +524,10 @@ async def remove_roles(request, role_ids: list = None, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def update_role(request, role_id: int, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def update_role(request, role_id: int, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Update the information of a specified role.
 
     Parameters
@@ -563,7 +542,7 @@ async def update_role(request, role_id: int, pretty: bool = False, wait_for_comp
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     # Get body parameters
@@ -580,12 +559,12 @@ async def update_role(request, role_id: int, pretty: bool = False, wait_for_comp
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_rules(request, rule_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                     offset: int = 0, limit: int = None, search: str = None, select: str = None,
-                    sort: str = None, q: str = '', distinct: bool = False) -> web.Response:
+                    sort: str = None, q: str = '', distinct: bool = False) -> Response:
     """Get information about the security rules in the system.
 
     Parameters
@@ -615,7 +594,7 @@ async def get_rules(request, rule_ids: list = None, pretty: bool = False, wait_f
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'rule_ids': rule_ids, 'offset': offset, 'limit': limit, 'select': select,
@@ -637,10 +616,10 @@ async def get_rules(request, rule_ids: list = None, pretty: bool = False, wait_f
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def add_rule(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def add_rule(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Add a specified rule.
 
     Parameters
@@ -653,7 +632,7 @@ async def add_rule(request, pretty: bool = False, wait_for_complete: bool = Fals
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     # Get body parameters
@@ -670,10 +649,10 @@ async def add_rule(request, pretty: bool = False, wait_for_complete: bool = Fals
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def update_rule(request, rule_id: int, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def update_rule(request, rule_id: int, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Update the information of a specified rule.
 
     Parameters
@@ -688,7 +667,7 @@ async def update_rule(request, rule_id: int, pretty: bool = False, wait_for_comp
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     # Get body parameters
@@ -705,11 +684,11 @@ async def update_rule(request, rule_id: int, pretty: bool = False, wait_for_comp
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def remove_rules(request, rule_ids: list = None, pretty: bool = False,
-                       wait_for_complete: bool = False) -> web.Response:
+                       wait_for_complete: bool = False) -> Response:
     """Remove a list of rules from the system.
 
     Parameters
@@ -724,7 +703,7 @@ async def remove_rules(request, rule_ids: list = None, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    Response
         API response composed of two lists: one contains the deleted rules and the other the non-deleted rules.
     """
     if 'all' in rule_ids:
@@ -741,12 +720,12 @@ async def remove_rules(request, rule_ids: list = None, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_policies(request, policy_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                        offset: int = 0, limit: int = None, search: str = None, select: str = None,
-                       sort: str = None, q: str = None, distinct: bool = False) -> web.Response:
+                       sort: str = None, q: str = None, distinct: bool = False) -> Response:
     """Returns information from all system policies.
 
     Parameters
@@ -776,7 +755,7 @@ async def get_policies(request, policy_ids: list = None, pretty: bool = False, w
 
     Returns
     -------
-    web.Response
+    Response
         API response with the policies information.
     """
     f_kwargs = {'policy_ids': policy_ids, 'offset': offset, 'limit': limit, 'select': select,
@@ -798,10 +777,10 @@ async def get_policies(request, policy_ids: list = None, pretty: bool = False, w
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def add_policy(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def add_policy(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Add a specified policy.
 
     Parameters
@@ -814,7 +793,7 @@ async def add_policy(request, pretty: bool = False, wait_for_complete: bool = Fa
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     # Get body parameters
@@ -831,11 +810,11 @@ async def add_policy(request, pretty: bool = False, wait_for_complete: bool = Fa
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def remove_policies(request, policy_ids: list = None, pretty: bool = False,
-                          wait_for_complete: bool = False) -> web.Response:
+                          wait_for_complete: bool = False) -> Response:
     """Removes a list of roles in the system.
 
     Parameters
@@ -850,7 +829,7 @@ async def remove_policies(request, policy_ids: list = None, pretty: bool = False
 
     Returns
     -------
-    web.Response
+    Response
         API response composed of two lists: one contains the deleted policies and the other the non-deleted policies.
     """
     if 'all' in policy_ids:
@@ -867,10 +846,10 @@ async def remove_policies(request, policy_ids: list = None, pretty: bool = False
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def update_policy(request, policy_id: int, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def update_policy(request, policy_id: int, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Update the information of a specified policy.
 
     Parameters
@@ -885,7 +864,7 @@ async def update_policy(request, policy_id: int, pretty: bool = False, wait_for_
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     # Get body parameters
@@ -902,11 +881,11 @@ async def update_policy(request, policy_id: int, pretty: bool = False, wait_for_
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def set_user_role(request, user_id: str, role_ids: list, position: int = None,
-                        pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+                        pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Add a list of roles to a specified user.
 
     Parameters
@@ -925,7 +904,7 @@ async def set_user_role(request, user_id: str, role_ids: list, position: int = N
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'user_id': user_id, 'role_ids': role_ids, 'position': position}
@@ -939,11 +918,11 @@ async def set_user_role(request, user_id: str, role_ids: list, position: int = N
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def remove_user_role(request, user_id: str, role_ids: list, pretty: bool = False,
-                           wait_for_complete: bool = False) -> web.Response:
+                           wait_for_complete: bool = False) -> Response:
     """Delete a list of roles of a specified user.
 
     Parameters
@@ -960,7 +939,7 @@ async def remove_user_role(request, user_id: str, role_ids: list, pretty: bool =
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     if 'all' in role_ids:
@@ -977,11 +956,11 @@ async def remove_user_role(request, user_id: str, role_ids: list, pretty: bool =
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def set_role_policy(request, role_id: int, policy_ids: list, position: int = None, pretty: bool = False,
-                          wait_for_complete: bool = False) -> web.Response:
+                          wait_for_complete: bool = False) -> Response:
     """Add a list of policies to a specified role.
 
     Parameters
@@ -1000,7 +979,7 @@ async def set_role_policy(request, role_id: int, policy_ids: list, position: int
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'role_id': role_id, 'policy_ids': policy_ids, 'position': position}
@@ -1015,11 +994,11 @@ async def set_role_policy(request, role_id: int, policy_ids: list, position: int
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def remove_role_policy(request, role_id: int, policy_ids: list, pretty: bool = False,
-                             wait_for_complete: bool = False) -> web.Response:
+                             wait_for_complete: bool = False) -> Response:
     """Delete a list of policies of a specified role.
 
     Parameters
@@ -1036,7 +1015,7 @@ async def remove_role_policy(request, role_id: int, policy_ids: list, pretty: bo
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     if 'all' in policy_ids:
@@ -1053,11 +1032,11 @@ async def remove_role_policy(request, role_id: int, policy_ids: list, pretty: bo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def set_role_rule(request, role_id: int, rule_ids: list, pretty: bool = False,
-                        wait_for_complete: bool = False) -> web.Response:
+                        wait_for_complete: bool = False) -> Response:
     """Add a list of rules to a specified role.
 
     Parameters
@@ -1074,7 +1053,7 @@ async def set_role_rule(request, role_id: int, rule_ids: list, pretty: bool = Fa
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'role_id': role_id, 'rule_ids': rule_ids,
@@ -1090,11 +1069,11 @@ async def set_role_rule(request, role_id: int, rule_ids: list, pretty: bool = Fa
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def remove_role_rule(request, role_id: int, rule_ids: list, pretty: bool = False,
-                           wait_for_complete: bool = False) -> web.Response:
+                           wait_for_complete: bool = False) -> Response:
     """Delete a list of rules of a specified role.
 
     Parameters
@@ -1111,7 +1090,7 @@ async def remove_role_rule(request, role_id: int, rule_ids: list, pretty: bool =
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     if 'all' in rule_ids:
@@ -1128,10 +1107,10 @@ async def remove_role_rule(request, role_id: int, rule_ids: list, pretty: bool =
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def get_rbac_resources(resource: str = None, pretty: bool = False) -> web.Response:
+async def get_rbac_resources(resource: str = None, pretty: bool = False) -> Response:
     """Gets all the current defined resources for RBAC.
 
     Parameters
@@ -1143,7 +1122,7 @@ async def get_rbac_resources(resource: str = None, pretty: bool = False) -> web.
 
     Returns
     -------
-    web.Response
+    Response
         API response with the RBAC resources.
     """
     f_kwargs = {'resource': resource}
@@ -1157,10 +1136,10 @@ async def get_rbac_resources(resource: str = None, pretty: bool = False) -> web.
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def get_rbac_actions(pretty: bool = False, endpoint: str = None) -> web.Response:
+async def get_rbac_actions(pretty: bool = False, endpoint: str = None) -> Response:
     """Gets all the current defined actions for RBAC.
 
     Parameters
@@ -1172,7 +1151,7 @@ async def get_rbac_actions(pretty: bool = False, endpoint: str = None) -> web.Re
 
     Returns
     -------
-    web.Response
+    Response
         API response with the RBAC actions.
     """
     f_kwargs = {'endpoint': endpoint}
@@ -1186,10 +1165,10 @@ async def get_rbac_actions(pretty: bool = False, endpoint: str = None) -> web.Re
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def revoke_all_tokens(request, pretty: bool = False) -> web.Response:
+async def revoke_all_tokens(request, pretty: bool = False) -> Response:
     """Revoke all tokens.
 
     Parameters
@@ -1200,7 +1179,7 @@ async def revoke_all_tokens(request, pretty: bool = False) -> web.Response:
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {}
@@ -1223,10 +1202,10 @@ async def revoke_all_tokens(request, pretty: bool = False) -> web.Response:
     if type(data) == AffectedItemsWazuhResult and len(data.affected_items) == 0:
         raise_if_exc(WazuhPermissionError(4000, data.message))
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def get_security_config(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def get_security_config(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get active security configuration.
 
     Parameters
@@ -1239,7 +1218,7 @@ async def get_security_config(request, pretty: bool = False, wait_for_complete: 
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {}
@@ -1254,7 +1233,7 @@ async def get_security_config(request, pretty: bool = False, wait_for_complete: 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def security_revoke_tokens():
@@ -1274,7 +1253,7 @@ async def security_revoke_tokens():
     raise_if_exc(await dapi.distribute_function())
 
 
-async def put_security_config(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def put_security_config(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Update current security configuration with the given one
 
     Parameters
@@ -1287,7 +1266,7 @@ async def put_security_config(request, pretty: bool = False, wait_for_complete: 
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     Body.validate_content_type(request, expected_content_type='application/json')
@@ -1304,10 +1283,10 @@ async def put_security_config(request, pretty: bool = False, wait_for_complete: 
     data = raise_if_exc(await dapi.distribute_function())
     await security_revoke_tokens()
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def delete_security_config(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def delete_security_config(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Restore default security configuration.
 
     Parameters
@@ -1320,7 +1299,7 @@ async def delete_security_config(request, pretty: bool = False, wait_for_complet
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {"updated_config": await SecurityConfigurationModel.get_kwargs(default_security_configuration)}
@@ -1336,4 +1315,4 @@ async def delete_security_config(request, pretty: bool = False, wait_for_complet
     data = raise_if_exc(await dapi.distribute_function())
     await security_revoke_tokens()
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)

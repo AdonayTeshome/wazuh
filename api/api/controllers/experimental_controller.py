@@ -5,14 +5,14 @@
 import logging
 from functools import wraps
 
-from aiohttp import web
+from starlette.responses import Response
 
 import wazuh.ciscat as ciscat
 import wazuh.rootcheck as rootcheck
 import wazuh.syscheck as syscheck
 import wazuh.syscollector as syscollector
 from api import configuration
-from api.encoder import dumps, prettify
+from api.controllers.util import _json_response
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
 from wazuh.core.exception import WazuhResourceNotFound
@@ -35,7 +35,7 @@ def check_experimental_feature_value(func):
 
 @check_experimental_feature_value
 async def clear_rootcheck_database(request, pretty: bool = False, wait_for_complete: bool = False,
-                                   agents_list: list = None) -> web.Response:
+                                   agents_list: list = None) -> Response:
     """Clear the rootcheck database for all the agents or a list of them.
 
     Parameters
@@ -70,12 +70,12 @@ async def clear_rootcheck_database(request, pretty: bool = False, wait_for_compl
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
 async def clear_syscheck_database(request, pretty: bool = False, wait_for_complete: bool = False,
-                                  agents_list: list = None) -> web.Response:
+                                  agents_list: list = None) -> Response:
     """Clear the syscheck database for all agents or a list of them.
 
     Parameters
@@ -110,7 +110,7 @@ async def clear_syscheck_database(request, pretty: bool = False, wait_for_comple
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
@@ -118,7 +118,7 @@ async def get_cis_cat_results(request, pretty: bool = False, wait_for_complete: 
                               offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                               search: str = None, benchmark: str = None, profile: str = None, fail: int = None,
                               error: int = None, notchecked: int = None, unknown: int = None,
-                              score: int = None) -> web.Response:
+                              score: int = None) -> Response:
     """Get ciscat results info from all agents or a list of them.
 
     Parameters
@@ -190,13 +190,13 @@ async def get_cis_cat_results(request, pretty: bool = False, wait_for_complete: 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
 async def get_hardware_info(request, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
                             offset: int = 0, limit: int = None, select: str = None, sort: str = None,
-                            search: str = None, board_serial: str = None) -> web.Response:
+                            search: str = None, board_serial: str = None) -> Response:
     """Get hardware info from all agents or a list of them.
 
     Parameters
@@ -255,14 +255,14 @@ async def get_hardware_info(request, pretty: bool = False, wait_for_complete: bo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
 async def get_network_address_info(request, pretty: bool = False, wait_for_complete: bool = False,
                                    agents_list: str = '*', offset: int = 0, limit: str = None, select: str = None,
                                    sort: str = None, search: str = None, iface_name: str = None, proto: str = None,
-                                   address: str = None, broadcast: str = None, netmask: str = None) -> web.Response:
+                                   address: str = None, broadcast: str = None, netmask: str = None) -> Response:
     """Get the IPv4 and IPv6 addresses associated to all network interfaces.
 
     Parameters
@@ -328,14 +328,14 @@ async def get_network_address_info(request, pretty: bool = False, wait_for_compl
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
 async def get_network_interface_info(request, pretty: bool = False, wait_for_complete: bool = False,
                                      agents_list: str = '*', offset: int = 0, limit: int = None, select: str = None,
                                      sort: str = None, search: str = None, adapter: str = None, state: str = None,
-                                     mtu: str = None) -> web.Response:
+                                     mtu: str = None) -> Response:
     """Get all network interfaces from all agents or a list of them.
 
     Parameters
@@ -402,14 +402,14 @@ async def get_network_interface_info(request, pretty: bool = False, wait_for_com
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
 async def get_network_protocol_info(request, pretty: bool = False, wait_for_complete: bool = False,
                                     agents_list: str = '*', offset: int = 0, limit: int = None, select: str = None,
                                     sort: str = None, search: str = None, iface: str = None, gateway: str = None,
-                                    dhcp: str = None) -> web.Response:
+                                    dhcp: str = None) -> Response:
     """Get network protocol info from all agents or a list of them.
 
     Parameters
@@ -470,14 +470,14 @@ async def get_network_protocol_info(request, pretty: bool = False, wait_for_comp
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
 async def get_os_info(request, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
                       offset: int = 0, limit: int = None, select: str = None, sort: str = None, search: str = None,
                       os_name: str = None, architecture: str = None, os_version: str = None, version: str = None,
-                      release: str = None) -> web.Response:
+                      release: str = None) -> Response:
     """Get OS info from all agents or a list of them.
 
     Parameters
@@ -543,14 +543,14 @@ async def get_os_info(request, pretty: bool = False, wait_for_complete: bool = F
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
 async def get_packages_info(request, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
                             offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                             search: str = None, vendor: str = None, name: str = None, architecture: str = None,
-                            version: str = None) -> web.Response:
+                            version: str = None) -> Response:
     """Get packages info from all agents or a list of them.
 
     Parameters
@@ -614,14 +614,14 @@ async def get_packages_info(request, pretty: bool = False, wait_for_complete: bo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
 async def get_ports_info(request, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
                          offset: int = 0, limit: int = None, select: str = None, sort: str = None, search: str = None,
                          pid: str = None, protocol: str = None, tx_queue: str = None, state: str = None,
-                         process: str = None) -> web.Response:
+                         process: str = None) -> Response:
     """Get ports info from all agents or a list of them.
 
     Parameters
@@ -693,7 +693,7 @@ async def get_ports_info(request, pretty: bool = False, wait_for_complete: bool 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
@@ -702,7 +702,7 @@ async def get_processes_info(request, pretty: bool = False, wait_for_complete: b
                              search: str = None, pid: str = None, state: str = None, ppid: str = None,
                              egroup: str = None, euser: str = None, fgroup: str = None, name: str = None,
                              nlwp: str = None, pgrp: str = None, priority: str = None, rgroup: str = None,
-                             ruser: str = None, sgroup: str = None, suser: str = None) -> web.Response:
+                             ruser: str = None, sgroup: str = None, suser: str = None) -> Response:
     """Get processes info from all agents or a list of them.
 
     Parameters
@@ -795,13 +795,13 @@ async def get_processes_info(request, pretty: bool = False, wait_for_complete: b
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
 async def get_hotfixes_info(request, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
                             offset: int = 0, limit: int = None, sort: str = None, search: str = None,
-                            select: str = None, hotfix: str = None) -> web.Response:
+                            select: str = None, hotfix: str = None) -> Response:
     """Get hotfixes info from all agents or a list of them.
 
     Parameters
@@ -856,4 +856,4 @@ async def get_hotfixes_info(request, pretty: bool = False, wait_for_complete: bo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)

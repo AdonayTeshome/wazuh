@@ -4,11 +4,11 @@
 
 import logging
 
-from aiohttp import web
+from starlette.responses import Response
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
 from wazuh.event import send_event_to_analysisd
 
-from api.encoder import dumps, prettify
+from api.controllers.util import _json_response
 from api.models.base_model_ import Body
 from api.models.event_ingest_model import EventIngestModel
 from api.util import raise_if_exc, remove_nones_to_dict
@@ -16,7 +16,7 @@ from api.util import raise_if_exc, remove_nones_to_dict
 logger = logging.getLogger('wazuh-api')
 
 
-async def forward_event(request: web.Request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def forward_event(request: web.Request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Forward events to analysisd.
 
     Parameters
@@ -47,4 +47,4 @@ async def forward_event(request: web.Request, pretty: bool = False, wait_for_com
 
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)

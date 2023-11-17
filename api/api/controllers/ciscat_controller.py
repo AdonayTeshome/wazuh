@@ -5,10 +5,10 @@
 import logging
 from typing import List
 
-from aiohttp import web
+from starlette.responses import Response
 
 import wazuh.ciscat as ciscat
-from api.encoder import dumps, prettify
+from api.controllers.util import _json_response
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
 
@@ -19,7 +19,7 @@ async def get_agents_ciscat_results(request, agent_id: str, pretty: bool = False
                                     offset: int = 0, limit: int = None, select: List[str] = None, sort: str = None,
                                     search: str = None, benchmark: str = None, profile: str = None, fail: int = None,
                                     error: int = None, notchecked: int = None, unknown: int = None, score: int = None,
-                                    q: str = None) -> web.Response:
+                                    q: str = None) -> Response:
     """Get CIS-CAT results from an agent
 
     Returns the agent's ciscat results info.

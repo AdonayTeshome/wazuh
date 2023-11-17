@@ -5,10 +5,10 @@
 import logging
 from typing import Union
 
-from aiohttp import web
+from starlette.responses import Response
 from connexion.lifecycle import ConnexionResponse
 
-from api.encoder import dumps, prettify
+from api.controllers.util import _json_response
 from api.models.agent_added_model import AgentAddedModel
 from api.models.agent_inserted_model import AgentInsertedModel
 from api.models.base_model_ import Body
@@ -27,7 +27,7 @@ logger = logging.getLogger('wazuh-api')
 async def delete_agents(request, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = None,
                         purge: bool = False, status: str = None, q: str = None, older_than: str = None,
                         manager: str = None, version: str = None, group: str = None, node_name: str = None,
-                        name: str = None, ip: str = None) -> web.Response:
+                        name: str = None, ip: str = None) -> Response:
     """Delete all agents or a list of them based on optional criteria.
 
     Parameters
@@ -99,14 +99,14 @@ async def delete_agents(request, pretty: bool = False, wait_for_complete: bool =
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_agents(request, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = None,
                      offset: int = 0, limit: int = DATABASE_LIMIT, select: str = None, sort: str = None,
                      search: str = None, status: str = None, q: str = None, older_than: str = None, manager: str = None,
                      version: str = None, group: str = None, node_name: str = None, name: str = None, ip: str = None,
-                     group_config_status: str = None, distinct: bool = False) -> web.Response:
+                     group_config_status: str = None, distinct: bool = False) -> Response:
     """Get information about all agents or a list of them.
 
     Parameters
@@ -194,10 +194,10 @@ async def get_agents(request, pretty: bool = False, wait_for_complete: bool = Fa
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def add_agent(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def add_agent(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Add a new Wazuh agent.
 
     Parameters
@@ -228,11 +228,11 @@ async def add_agent(request, pretty: bool = False, wait_for_complete: bool = Fal
 
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def reconnect_agents(request, pretty: bool = False, wait_for_complete: bool = False,
-                           agents_list: Union[list, str] = '*') -> web.Response:
+                           agents_list: Union[list, str] = '*') -> Response:
     """Force reconnect all agents or a list of them.
 
     Parameters
@@ -263,11 +263,11 @@ async def reconnect_agents(request, pretty: bool = False, wait_for_complete: boo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def restart_agents(request, pretty: bool = False, wait_for_complete: bool = False,
-                         agents_list: str = '*') -> web.Response:
+                         agents_list: str = '*') -> Response:
     """Restart all agents or a list of them.
 
     Parameters
@@ -298,11 +298,11 @@ async def restart_agents(request, pretty: bool = False, wait_for_complete: bool 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def restart_agents_by_node(request, node_id: str, pretty: bool = False,
-                                 wait_for_complete: bool = False) -> web.Response:
+                                 wait_for_complete: bool = False) -> Response:
     """Restart all agents belonging to a node.
 
     Parameters
@@ -334,11 +334,11 @@ async def restart_agents_by_node(request, node_id: str, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_agent_config(request, pretty: bool = False, wait_for_complete: bool = False, agent_id: str = None,
-                           component: str = None, **kwargs: dict) -> web.Response:
+                           component: str = None, **kwargs: dict) -> Response:
     """Get agent active configuration.
 
     Returns the active configuration the agent is currently using. This can be different from the configuration present
@@ -378,11 +378,11 @@ async def get_agent_config(request, pretty: bool = False, wait_for_complete: boo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def delete_single_agent_multiple_groups(request, agent_id: str, groups_list: str = None, pretty: bool = False,
-                                              wait_for_complete: bool = False) -> web.Response:
+                                              wait_for_complete: bool = False) -> Response:
     """Remove the agent from all groups or a list of them.
 
     The agent will automatically revert to the "default" group if it is removed from all its assigned groups.
@@ -418,11 +418,11 @@ async def delete_single_agent_multiple_groups(request, agent_id: str, groups_lis
 
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 @deprecate_endpoint()
-async def get_sync_agent(request, agent_id: str, pretty: bool = False, wait_for_complete=False) -> web.Response:
+async def get_sync_agent(request, agent_id: str, pretty: bool = False, wait_for_complete=False) -> Response:
     """Get agent configuration sync status.
 
     Return whether the agent group configuration has been synchronized with the agent or not.
@@ -454,11 +454,11 @@ async def get_sync_agent(request, agent_id: str, pretty: bool = False, wait_for_
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def delete_single_agent_single_group(request, agent_id: str, group_id: str, pretty: bool = False,
-                                           wait_for_complete: bool = False) -> web.Response:
+                                           wait_for_complete: bool = False) -> Response:
     """Remove agent from a single group.
 
     Removes an agent from a group. If the agent has multigroups, it will preserve all previous groups except the last
@@ -494,11 +494,11 @@ async def delete_single_agent_single_group(request, agent_id: str, group_id: str
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def put_agent_single_group(request, agent_id: str, group_id: str, force_single_group: bool = False,
-                                 pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+                                 pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Assign an agent to the specified group.
 
     Parameters
@@ -534,10 +534,10 @@ async def put_agent_single_group(request, agent_id: str, group_id: str, force_si
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def get_agent_key(request, agent_id: str, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def get_agent_key(request, agent_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get agent key.
 
     Parameters
@@ -567,10 +567,10 @@ async def get_agent_key(request, agent_id: str, pretty: bool = False, wait_for_c
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def restart_agent(request, agent_id: str, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def restart_agent(request, agent_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Restart an agent.
 
     Parameters
@@ -600,14 +600,14 @@ async def restart_agent(request, agent_id: str, pretty: bool = False, wait_for_c
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def put_upgrade_agents(request, agents_list: str = None, pretty: bool = False, wait_for_complete: bool = False,
                              wpk_repo: str = None, upgrade_version: str = None, use_http: bool = False,
                              force: bool = False, q: str = None, manager: str = None, version: str = None,
                              group: str = None, node_name: str = None, name: str = None,
-                             ip: str = None) -> web.Response:
+                             ip: str = None) -> Response:
     """Upgrade agents using a WPK file from an online repository.
 
     Parameters
@@ -684,13 +684,13 @@ async def put_upgrade_agents(request, agents_list: str = None, pretty: bool = Fa
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def put_upgrade_custom_agents(request, agents_list: str = None, pretty: bool = False,
                                     wait_for_complete: bool = False, file_path: str = None, installer: str = None,
                                     q: str = None, manager: str = None, version: str = None, group: str = None,
-                                    node_name: str = None, name: str = None, ip: str = None) -> web.Response:
+                                    node_name: str = None, name: str = None, ip: str = None) -> Response:
     """Upgrade agents using a local WPK file.
 
     Parameters
@@ -761,12 +761,12 @@ async def put_upgrade_custom_agents(request, agents_list: str = None, pretty: bo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_agent_upgrade(request, agents_list: str = None, pretty: bool = False, wait_for_complete: bool = False,
                             q: str = None, manager: str = None, version: str = None, group: str = None,
-                            node_name: str = None, name: str = None, ip: str = None) -> web.Response:
+                            node_name: str = None, name: str = None, ip: str = None) -> Response:
     """Get upgrade results from agents.
 
     Parameters
@@ -826,11 +826,11 @@ async def get_agent_upgrade(request, agents_list: str = None, pretty: bool = Fal
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_daemon_stats(request, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
-                           daemons_list: list = None) -> web.Response:
+                           daemons_list: list = None) -> Response:
     """Get Wazuh statistical information from the specified daemons of a specified agent.
 
     Parameters
@@ -863,11 +863,11 @@ async def get_daemon_stats(request, agent_id: str, pretty: bool = False, wait_fo
                           rbac_permissions=request['token_info']['rbac_policies'])
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_component_stats(request, pretty: bool = False, wait_for_complete: bool = False, agent_id: str = None,
-                              component: str = None) -> web.Response:
+                              component: str = None) -> Response:
     """Get a specified agent's component stats.
 
     Parameters
@@ -900,11 +900,11 @@ async def get_component_stats(request, pretty: bool = False, wait_for_complete: 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def post_new_agent(request, agent_name: str, pretty: bool = False,
-                         wait_for_complete: bool = False) -> web.Response:
+                         wait_for_complete: bool = False) -> Response:
     """Add agent (quick method).
 
     Parameters
@@ -934,11 +934,11 @@ async def post_new_agent(request, agent_name: str, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def delete_multiple_agent_single_group(request, group_id: str, agents_list: str = None, pretty: bool = False,
-                                             wait_for_complete: bool = False) -> web.Response:
+                                             wait_for_complete: bool = False) -> Response:
     """Remove agents assignment from a specified group.
 
     Parameters
@@ -973,12 +973,12 @@ async def delete_multiple_agent_single_group(request, group_id: str, agents_list
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def put_multiple_agent_single_group(request, group_id: str, agents_list: str = None, pretty: bool = False,
                                           wait_for_complete: bool = False,
-                                          force_single_group: bool = False) -> web.Response:
+                                          force_single_group: bool = False) -> Response:
     """Add multiple agents to a group.
 
     Parameters
@@ -1014,11 +1014,11 @@ async def put_multiple_agent_single_group(request, group_id: str, agents_list: s
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def delete_groups(request, groups_list: str = None, pretty: bool = False,
-                        wait_for_complete: bool = False) -> web.Response:
+                        wait_for_complete: bool = False) -> Response:
     """Delete all groups or a list of them.
 
     Parameters
@@ -1050,13 +1050,13 @@ async def delete_groups(request, groups_list: str = None, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_list_group(request, pretty: bool = False, wait_for_complete: bool = False,
                         groups_list: str = None, offset: int = 0, limit: int = None,
                         sort: str = None, search: str = None, q: str = None, select: str = None,
-                        distinct: bool = False) -> web.Response:
+                        distinct: bool = False) -> Response:
     """Get groups.
 
     Returns a list containing basic information about each agent group such as number of agents belonging to the group
@@ -1115,13 +1115,13 @@ async def get_list_group(request, pretty: bool = False, wait_for_complete: bool 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_agents_in_group(request, group_id: str, pretty: bool = False, wait_for_complete: bool = False,
                               offset: int = 0, limit: int = DATABASE_LIMIT, select: str = None, sort: str = None,
                               search: str = None, status: str = None, q: str = None,
-                              distinct: bool = False) -> web.Response:
+                              distinct: bool = False) -> Response:
     """Get the list of agents that belongs to the specified group.
 
     Parameters
@@ -1179,10 +1179,10 @@ async def get_agents_in_group(request, group_id: str, pretty: bool = False, wait
 
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def post_group(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def post_group(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Create a new group.
 
     Parameters
@@ -1211,11 +1211,11 @@ async def post_group(request, pretty: bool = False, wait_for_complete: bool = Fa
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_group_config(request, group_id: str, pretty: bool = False, wait_for_complete: bool = False,
-                           offset: int = 0, limit: int = DATABASE_LIMIT) -> web.Response:
+                           offset: int = 0, limit: int = DATABASE_LIMIT) -> Response:
     """Get group configuration defined in the `agent.conf` file.
 
     Parameters
@@ -1251,11 +1251,11 @@ async def get_group_config(request, group_id: str, pretty: bool = False, wait_fo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def put_group_config(request, body: bytes, group_id: str, pretty: bool = False,
-                           wait_for_complete: bool = False) -> web.Response:
+                           wait_for_complete: bool = False) -> Response:
     """Update group configuration.
 
     Update a specified group's configuration. This API call expects a full valid XML file with the shared configuration
@@ -1296,12 +1296,12 @@ async def put_group_config(request, body: bytes, group_id: str, pretty: bool = F
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_group_files(request, group_id: str, pretty: bool = False, wait_for_complete: bool = False,
                           offset: int = 0, limit: int = None, sort: str = None, search: str = None, 
-                          q: str = None, select: str = None, distinct: bool = False) -> web.Response:
+                          q: str = None, select: str = None, distinct: bool = False) -> Response:
     """Get the files placed under the group directory.
 
     Parameters
@@ -1357,11 +1357,11 @@ async def get_group_files(request, group_id: str, pretty: bool = False, wait_for
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_group_file_json(request, group_id: str, file_name: str, pretty: bool = False,
-                              wait_for_complete: bool = False) -> web.Response:
+                              wait_for_complete: bool = False) -> Response:
     """Get the files placed under the group directory in JSON format.
 
     Parameters
@@ -1396,7 +1396,7 @@ async def get_group_file_json(request, group_id: str, file_name: str, pretty: bo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_group_file_xml(request, group_id: str, file_name: str, pretty: bool = False,
@@ -1440,7 +1440,7 @@ async def get_group_file_xml(request, group_id: str, file_name: str, pretty: boo
 
 
 async def restart_agents_by_group(request, group_id: str, pretty: bool = False,
-                                  wait_for_complete: bool = False) -> web.Response:
+                                  wait_for_complete: bool = False) -> Response:
     """Restart all agents from a group.
 
     Parameters
@@ -1472,7 +1472,7 @@ async def restart_agents_by_group(request, group_id: str, pretty: bool = False,
     agent_list = [a['id'] for a in agents.affected_items]
     if not agent_list:
         data = AffectedItemsWazuhResult(none_msg='Restart command was not sent to any agent')
-        return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+        return _json_response(data, pretty=pretty)
 
     f_kwargs = {'agent_list': agent_list}
     dapi = DistributedAPI(f=agent.restart_agents_by_group,
@@ -1486,10 +1486,10 @@ async def restart_agents_by_group(request, group_id: str, pretty: bool = False,
 
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def insert_agent(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def insert_agent(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Insert a new agent.
 
     Parameters
@@ -1518,11 +1518,11 @@ async def insert_agent(request, pretty: bool = False, wait_for_complete: bool = 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_agent_no_group(request, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
-                             limit: int = DATABASE_LIMIT, select=None, sort=None, search=None, q=None) -> web.Response:
+                             limit: int = DATABASE_LIMIT, select=None, sort=None, search=None, q=None) -> Response:
     """Get agents without group.
 
     Parameters
@@ -1568,12 +1568,12 @@ async def get_agent_no_group(request, pretty: bool = False, wait_for_complete: b
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_agent_outdated(request, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
                              limit: int = DATABASE_LIMIT, sort: str = None, search: str = None,
-                             q: str = None) -> web.Response:
+                             q: str = None) -> Response:
     """Get outdated agents.
 
     Parameters
@@ -1616,12 +1616,12 @@ async def get_agent_outdated(request, pretty: bool = False, wait_for_complete: b
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
 async def get_agent_fields(request, pretty: bool = False, wait_for_complete: bool = False, fields: str = None,
                            offset: int = 0, limit: int = DATABASE_LIMIT, sort: str = None, search: str = None,
-                           q: str = None) -> web.Response:
+                           q: str = None) -> Response:
     """Get distinct fields in agents.
 
     Returns all the different combinations that agents have for the selected fields. It also indicates the total number
@@ -1670,10 +1670,10 @@ async def get_agent_fields(request, pretty: bool = False, wait_for_complete: boo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def get_agent_summary_status(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def get_agent_summary_status(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get agents status summary.
 
     Parameters
@@ -1701,10 +1701,10 @@ async def get_agent_summary_status(request, pretty: bool = False, wait_for_compl
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
 
 
-async def get_agent_summary_os(request, pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
+async def get_agent_summary_os(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get agents OS summary.
 
     Parameters
@@ -1732,4 +1732,4 @@ async def get_agent_summary_os(request, pretty: bool = False, wait_for_complete:
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
+    return _json_response(data, pretty=pretty)
