@@ -8,16 +8,37 @@ import argparse
 import os
 import signal
 import sys
+import asyncio
+import logging
+import ssl
+
+import connexion
+from connexion.options import SwaggerUIOptions
+import uvicorn
+
+from starlette.middleware.cors import CORSMiddleware
+from content_size_limit_asgi import ContentSizeLimitMiddleware
 
 from api.constants import API_LOG_PATH
+from api.api_exception import APIError
+from api import alogging, configuration
+from api.configuration import api_conf, read_yaml_config
+from api import __path__ as api_path
+from api.constants import CONFIG_FILE_PATH
+from api.middlewares import security_middleware, response_postprocessing, \
+    request_logging, set_secure_headers
+# from api.signals import modify_response_headers
+from api.util import APILoggerSize, to_relative_path
+
+from wazuh.rbac.orm import check_database_integrity
 from wazuh.core.wlogging import TimeBasedFileRotatingHandler, SizeBasedFileRotatingHandler
-from wazuh.core import pyDaemonModule
+from wazuh.core import pyDaemonModule, common, utils
+from wazuh.core.cluster import __version__, __author__, __wazuh_name__, __licence__
 
 API_MAIN_PROCESS = 'wazuh-apid'
 API_LOCAL_REQUEST_PROCESS = 'wazuh-apid_exec'
 API_AUTHENTICATION_PROCESS = 'wazuh-apid_auth'
 API_SECURITY_EVENTS_PROCESS = 'wazuh-apid_events'
-
 
 def spawn_process_pool():
     """Spawn general process pool child."""
@@ -46,7 +67,7 @@ def spawn_authentication_pool():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
-def start():
+def start(params):
     """Run the Wazuh API.
 
     If another Wazuh API is running, this function fails.
@@ -55,71 +76,69 @@ def start():
     try:
         check_database_integrity()
     except Exception as db_integrity_exc:
-        raise APIError(2012, details=str(db_integrity_exc))
+        raise APIError(2012, details=str(db_integrity_exc)) from db_integrity_exc
 
     # Spawn child processes with their own needed imports
     if 'thread_pool' not in common.mp_pools.get():
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            asyncio.wait([loop.run_in_executor(pool, getattr(sys.modules[__name__], f'spawn_{name}'))
+            asyncio.wait([loop.run_in_executor(pool,
+                                               getattr(sys.modules[__name__], f'spawn_{name}'))
                           for name, pool in common.mp_pools.get().items()]))
 
     # Set up API
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-    app = connexion.AioHttpApp(__name__, host=api_conf['host'],
-                               port=api_conf['port'],
-                               specification_dir=os.path.join(api_path[0], 'spec'),
-                               options={"swagger_ui": False, 'uri_parser_class': APIUriParser},
-                               only_one_api=True
-                               )
+    # asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+    app = connexion.AsyncApp(
+        __name__,
+        specification_dir=os.path.join(api_path[0], 'spec'),
+        swagger_ui_options=SwaggerUIOptions(swagger_ui=False)
+    )
     app.add_api('spec.yaml',
-                arguments={'title': 'Wazuh API',
-                           'protocol': 'https' if api_conf['https']['enabled'] else 'http',
-                           'host': api_conf['host'],
-                           'port': api_conf['port']
-                           },
+                arguments={
+                    'title': 'Wazuh API',
+                    'protocol': 'https' if api_conf['https']['enabled'] else 'http',
+                    'host': params['host'],
+                    'port': params['port']},
                 strict_validation=True,
-                validate_responses=False,
-                pass_context_arg_name='request',
-                options={"middlewares": [response_postprocessing, security_middleware, request_logging,
-                                         set_secure_headers]})
+                validate_responses=False
+    )
 
     # Maximum body size that the API can accept (bytes)
-    app.app._client_max_size = configuration.api_conf['max_upload_size']
+    app.add_middleware(ContentSizeLimitMiddleware,
+                       max_content_size=api_conf['max_upload_size'])
+    # app.add_middleware(response_postprocessing)
+    # app.add_middleware(security_middleware)
+    # app.add_middleware(request_logging)
+    # app.add_middleware(set_secure_headers)
 
     # Enable CORS
     if api_conf['cors']['enabled']:
-        import aiohttp_cors
-        cors = aiohttp_cors.setup(app.app, defaults={
-            api_conf['cors']['source_route']: aiohttp_cors.ResourceOptions(
-                expose_headers=api_conf['cors']['expose_headers'],
-                allow_headers=api_conf['cors']['allow_headers'],
-                allow_credentials=api_conf['cors']['allow_credentials']
-            )
-        })
-        # Configure CORS on all endpoints.
-        for route in list(app.app.router.routes()):
-            cors.add(route)
+        app.add_middleware(
+            CORSMiddleware(app=app,
+                           allow_origins=api_conf['cors']['source_route'],
+                           expose_headers=api_conf['cors']['expose_headers'],
+                           allow_headers=api_conf['cors']['allow_headers'],
+                           allow_credentials=api_conf['cors']['allow_credentials'])
+        )
 
     # Enable cache plugin
-    if api_conf['cache']['enabled']:
-        setup_cache(app.app)
+    # if api_conf['cache']['enabled']:
+    #     setup_cache(app.app)
 
+    # HAY QUE HACER: AGREGAR MIDDLEWARE PARA MODIFICAR LOS RESPONSE HEADERS
     # Add application signals
-    app.app.on_response_prepare.append(modify_response_headers)
+    # app.on_response_prepare.append(modify_response_headers)
+    
 
     # API configuration logging
     logger.debug(f'Loaded API configuration: {api_conf}')
     logger.debug(f'Loaded security API configuration: {security_conf}')
 
-    # Start API
+    # Start uvicorn server
+
     try:
-        app.run(port=api_conf['port'],
-                host=api_conf['host'],
-                ssl_context=ssl_context,
-                access_log_class=alogging.AccessLogger,
-                use_default_access_log=True
-                )
+        uvicorn.run(app,**params)
+
     except OSError as exc:
         if exc.errno == 98:
             error = APIError(2010)
@@ -131,7 +150,6 @@ def start():
 
 
 def print_version():
-    from wazuh.core.cluster import __version__, __author__, __wazuh_name__, __licence__
     print("\n{} {} - {}\n\n{}".format(__wazuh_name__, __version__, __author__, __licence__))
 
 
@@ -144,7 +162,6 @@ def test_config(config_file: str):
         Path of the file
     """
     try:
-        from api.configuration import read_yaml_config
         read_yaml_config(config_file=config_file)
     except Exception as exc:
         print(f"Configuration not valid. ERROR: {exc}")
@@ -186,15 +203,6 @@ if __name__ == '__main__':
         test_config(args.config_file)
         sys.exit(0)
 
-    import logging
-    from api.api_exception import APIError
-    from wazuh.core import common
-    from api import alogging, configuration
-    from api.api_exception import APIError
-    from api.util import APILoggerSize, to_relative_path
-
-    from wazuh.core import common, utils
-
 
     def set_logging(log_path=f'{API_LOG_PATH}.log', foreground_mode=False, debug_mode='info'):
         """Set up logging for the API.
@@ -212,12 +220,15 @@ if __name__ == '__main__':
             custom_handler = TimeBasedFileRotatingHandler(filename=log_path, when='midnight')
         else:
             max_size = APILoggerSize(api_conf['logs']['max_size']['size']).size
-            custom_handler = SizeBasedFileRotatingHandler(filename=log_path, maxBytes=max_size, backupCount=1)
+            custom_handler = SizeBasedFileRotatingHandler(filename=log_path,
+                                                          maxBytes=max_size,
+                                                          backupCount=1)
 
         for logger_name in ('connexion.aiohttp_app', 'connexion.apis.aiohttp_api', 'wazuh-api'):
             api_logger = alogging.APILogger(
                 log_path=log_path, foreground_mode=foreground_mode, logger_name=logger_name,
-                debug_level='info' if logger_name != 'wazuh-api' and debug_mode != 'debug2' else debug_mode
+                debug_level='info' \
+                    if logger_name != 'wazuh-api' and debug_mode != 'debug2' else debug_mode
             )
             api_logger.setup_logger(custom_handler)
         if os.path.exists(log_path):
@@ -225,17 +236,14 @@ if __name__ == '__main__':
             os.chmod(log_path, 0o660)
 
     try:
-        from wazuh.core import utils
-        from api import alogging, configuration
-
         if args.config_file is not None:
-            configuration.api_conf.update(configuration.read_yaml_config(config_file=args.config_file))
-        api_conf = configuration.api_conf
+            api_conf.update(configuration.read_yaml_config(config_file=args.config_file))
         security_conf = configuration.security_conf
     except APIError as e:
         print(f"Error when trying to start the Wazuh API. {e}")
         sys.exit(1)
 
+    params = dict()
     # Set up logger
     try:
         plain_log = 'plain' in api_conf['logs']['format']
@@ -253,37 +261,26 @@ if __name__ == '__main__':
 
     logger = logging.getLogger('wazuh-api')
 
-    import asyncio
-    import ssl
-
-    import connexion
-    import uvloop
-    from aiohttp_cache import setup_cache
-    from api import __path__ as api_path
-    # noinspection PyUnresolvedReferences
-    from api.constants import CONFIG_FILE_PATH
-    from api.middlewares import security_middleware, response_postprocessing, request_logging, set_secure_headers
-    from api.signals import modify_response_headers
-    from api.uri_parser import APIUriParser
-    from api.util import to_relative_path
-    from wazuh.rbac.orm import check_database_integrity
+    # from aiohttp_cache import setup_cache
 
     # Check deprecated options. To delete after expected versions
     if 'use_only_authd' in api_conf:
         del api_conf['use_only_authd']
-        logger.warning("'use_only_authd' option was deprecated on v4.3.0. Wazuh Authd will always be used")
+        logger.warning(
+            "'use_only_authd' option was deprecated on v4.3.0. Wazuh Authd will always be used")
 
     if 'path' in api_conf['logs']:
         del api_conf['logs']['path']
-        logger.warning("Log 'path' option was deprecated on v4.3.0. Default path will always be used: "
+        logger.warning(
+            "Log 'path' option was deprecated on v4.3.0. Default path will always be used: "
                        f"{API_LOG_PATH}.<log_format>")
 
     # Configure https
-    ssl_context = None
     if api_conf['https']['enabled']:
         try:
             # Generate SSL if it does not exist and HTTPS is enabled
-            if not os.path.exists(api_conf['https']['key']) or not os.path.exists(api_conf['https']['cert']):
+            if not os.path.exists(api_conf['https']['key']) \
+                or not os.path.exists(api_conf['https']['cert']):
                 logger.info('HTTPS is enabled but cannot find the private key and/or certificate. '
                             'Attempting to generate them')
                 private_key = configuration.generate_private_key(api_conf['https']['key'])
@@ -300,45 +297,44 @@ if __name__ == '__main__':
                 'tlsv1.1': ssl.PROTOCOL_TLSv1_1,
                 'tlsv1.2': ssl.PROTOCOL_TLSv1_2
             }
-
             ssl_protocol = allowed_ssl_protocols[api_conf['https']['ssl_protocol'].lower()]
             ssl_context = ssl.SSLContext(protocol=ssl_protocol)
+            ssl_context.load_cert_chain(certfile=api_conf['https']['cert'], keyfile=api_conf['https']['key'])
+
+            params['ssl_version'] = allowed_ssl_protocols[api_conf['https']['ssl_protocol'].lower()]
 
             if api_conf['https']['use_ca']:
-                ssl_context.verify_mode = ssl.CERT_REQUIRED
-                ssl_context.load_verify_locations(api_conf['https']['ca'])
+                params['ssl_cert_reqs'] = ssl.CERT_REQUIRED
+                params['ssl_ca_certs'] = api_conf['https']['ca']
 
-            ssl_context.load_cert_chain(certfile=api_conf['https']['cert'], keyfile=api_conf['https']['key'])
+            params['ssl_certfile'] = api_conf['https']['cert']
+            params['ssl_keyfile'] = api_conf['https']['key']
 
             # Load SSL ciphers if any has been specified
             if api_conf['https']['ssl_ciphers']:
-                ssl_ciphers = api_conf['https']['ssl_ciphers'].upper()
-                try:
-                    ssl_context.set_ciphers(ssl_ciphers)
-                except ssl.SSLError:
-                    error = APIError(2003, details='SSL ciphers cannot be selected')
-                    logger.error(error)
-                    raise error
+                params['ssl_ciphers'] = api_conf['https']['ssl_ciphers'].upper()
 
-        except ssl.SSLError:
+        except ssl.SSLError as exc:
             error = APIError(2003, details='Private key does not match with the certificate')
             logger.error(error)
-            raise error
+            raise error from exc
         except IOError as exc:
             if exc.errno == 22:
                 error = APIError(2003, details='PEM phrase is not correct')
                 logger.error(error)
-                raise error
+                raise error from exc
             elif exc.errno == 13:
-                error = APIError(2003, details='Ensure the certificates have the correct permissions')
+                error = APIError(2003, 
+                                 details='Ensure the certificates have the correct permissions')
                 logger.error(error)
-                raise error
+                raise error from exc
             else:
-                msg = f'Wazuh API SSL ERROR. Please, ensure if path to certificates is correct in the configuration ' \
+                msg = f'Wazuh API SSL ERROR. Please, ensure ' \
+                      f'if path to certificates is correct in the configuration ' \
                       f'file WAZUH_PATH/{to_relative_path(CONFIG_FILE_PATH)}'
                 print(msg)
                 logger.error(msg)
-                raise exc
+                raise exc from exc
 
     # Check for unused PID files
     utils.clean_pid_files(API_MAIN_PROCESS)
@@ -361,9 +357,11 @@ if __name__ == '__main__':
     pyDaemonModule.create_pid(API_MAIN_PROCESS, pid)
 
     signal.signal(signal.SIGTERM, exit_handler)
-
+    params['host']=api_conf['host']
+    params['port']=api_conf['port']
+    params['loop']='uvloop'
     try:
-        start()
+        start(params)
     except APIError as e:
         print(f"Error when trying to start the Wazuh API. {e}")
         sys.exit(1)
