@@ -5,6 +5,7 @@
 import logging
 
 from starlette.responses import Response
+from starlette.requests import Request
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
 from wazuh.event import send_event_to_analysisd
 
@@ -16,7 +17,7 @@ from api.util import raise_if_exc, remove_nones_to_dict
 logger = logging.getLogger('wazuh-api')
 
 
-async def forward_event(request: web.Request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def forward_event(request: Request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Forward events to analysisd.
 
     Parameters
