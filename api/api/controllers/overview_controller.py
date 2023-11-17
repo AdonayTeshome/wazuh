@@ -27,7 +27,7 @@ async def get_overview_agents(request, pretty: bool = False, wait_for_complete: 
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {}

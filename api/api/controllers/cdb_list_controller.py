@@ -52,7 +52,7 @@ async def get_lists(request, pretty: bool = False, wait_for_complete: bool = Fal
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'offset': offset,
@@ -83,7 +83,7 @@ async def get_lists(request, pretty: bool = False, wait_for_complete: bool = Fal
 
 
 async def get_file(request, pretty: bool = False, wait_for_complete: bool = False, filename: str = None,
-                   raw: bool = False) -> Union[web.Response, ConnexionResponse]:
+                   raw: bool = False) -> Union[Response, ConnexionResponse]:
     """Get content of one CDB list file, in raw or dict format.
 
     Parameters
@@ -100,11 +100,11 @@ async def get_file(request, pretty: bool = False, wait_for_complete: bool = Fals
 
     Returns
     -------
-    web.Response or ConnexionResponse
-        Depending on the `raw` parameter, it will return a web.Response object or a ConnexionResponse object:
+    Response or ConnexionResponse
+        Depending on the `raw` parameter, it will return a Response object or a ConnexionResponse object:
             raw=True            -> ConnexionResponse (text/plain)
-            raw=False (default) -> web.Response      (application/json)
-        If any exception was raised, it will return a web.Response with details.
+            raw=False (default) -> Response      (application/json)
+        If any exception was raised, it will return a Response with details.
     """
     f_kwargs = {'filename': filename, 'raw': raw}
 
@@ -145,7 +145,7 @@ async def put_file(request, body: bytes, overwrite: bool = False, pretty: bool =
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     # Parse body to utf-8
@@ -185,7 +185,7 @@ async def delete_file(request, pretty: bool = False, wait_for_complete: bool = F
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'filename': filename}
@@ -231,7 +231,7 @@ async def get_lists_files(request, pretty: bool = False, wait_for_complete: bool
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'offset': offset,

@@ -32,7 +32,7 @@ async def get_hardware_info(request, agent_id: str, pretty: bool = False, wait_f
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'agent_list': [agent_id],
@@ -85,7 +85,7 @@ async def get_hotfix_info(request, agent_id: str, pretty: bool = False, wait_for
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
 
@@ -159,7 +159,7 @@ async def get_network_address_info(request, agent_id: str, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     filters = {'iface': iface,
@@ -233,7 +233,7 @@ async def get_network_interface_info(request, agent_id: str, pretty: bool = Fals
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     filters = {'adapter': adapter,
@@ -309,7 +309,7 @@ async def get_network_protocol_info(request, agent_id: str, pretty: bool = False
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     filters = {'iface': iface,
@@ -359,7 +359,7 @@ async def get_os_info(request, agent_id: str, pretty: bool = False, wait_for_com
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'agent_list': [agent_id],
@@ -420,7 +420,7 @@ async def get_packages_info(request, agent_id: str, pretty: bool = False, wait_f
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     filters = {'vendor': vendor,
@@ -496,7 +496,7 @@ async def get_ports_info(request, agent_id: str, pretty: bool = False, wait_for_
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     filters = {'pid': pid,
@@ -597,7 +597,7 @@ async def get_processes_info(request, agent_id: str, pretty: bool = False, wait_
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     filters = {'state': state,

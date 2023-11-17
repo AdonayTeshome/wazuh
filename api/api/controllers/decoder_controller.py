@@ -60,7 +60,7 @@ async def get_decoders(request, decoder_names: list = None, pretty: bool = False
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'names': decoder_names,
@@ -132,7 +132,7 @@ async def get_decoders_files(request, pretty: bool = False, wait_for_complete: b
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'offset': offset,
@@ -189,7 +189,7 @@ async def get_decoders_parents(request, pretty: bool = False, wait_for_complete:
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'offset': offset,
@@ -216,7 +216,7 @@ async def get_decoders_parents(request, pretty: bool = False, wait_for_complete:
 
 async def get_file(request, pretty: bool = False, wait_for_complete: bool = False, 
                    filename: str = None, relative_dirname: str = None, 
-                   raw: bool = False) -> Union[web.Response, ConnexionResponse]:
+                   raw: bool = False) -> Union[Response, ConnexionResponse]:
     """Get decoder file content.
 
     Parameters
@@ -236,10 +236,10 @@ async def get_file(request, pretty: bool = False, wait_for_complete: bool = Fals
     Returns
     -------
     web.json_response or ConnexionResponse
-        Depending on the `raw` parameter, it will return a web.Response object or a ConnexionResponse object:
+        Depending on the `raw` parameter, it will return a Response object or a ConnexionResponse object:
             raw=True            -> ConnexionResponse (application/xml)
-            raw=False (default) -> web.Response (application/json)
-        If any exception was raised, it will return a web.Response with details.
+            raw=False (default) -> Response (application/json)
+        If any exception was raised, it will return a Response with details.
     """
     f_kwargs = {'filename': filename, 'raw': raw, 'relative_dirname': relative_dirname}
 
@@ -285,7 +285,7 @@ async def put_file(request, body: bytes, filename: str = None, relative_dirname:
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     # Parse body to utf-8
@@ -330,7 +330,7 @@ async def delete_file(request, filename: str = None,
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'filename': filename, 'relative_dirname': relative_dirname}

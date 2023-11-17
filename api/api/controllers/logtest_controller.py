@@ -29,7 +29,7 @@ async def run_logtest_tool(request, pretty: bool = False, wait_for_complete: boo
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     Body.validate_content_type(request, expected_content_type='application/json')
@@ -64,7 +64,7 @@ async def end_logtest_session(request, pretty: bool = False, wait_for_complete: 
         
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'token': token}

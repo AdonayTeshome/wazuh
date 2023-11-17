@@ -63,7 +63,7 @@ async def delete_agents(request, pretty: bool = False, wait_for_complete: bool =
 
     Returns
     -------
-    web.Response
+    Response
         Agents which have been deleted.
     """
     if 'all' in agents_list:
@@ -155,7 +155,7 @@ async def get_agents(request, pretty: bool = False, wait_for_complete: bool = Fa
 
     Returns
     -------
-    web.Response
+    Response
         Response with all selected agents' information.
     """
     f_kwargs = {'agent_list': agents_list,
@@ -210,7 +210,7 @@ async def add_agent(request, pretty: bool = False, wait_for_complete: bool = Fal
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     # Get body parameters
@@ -247,7 +247,7 @@ async def reconnect_agents(request, pretty: bool = False, wait_for_complete: boo
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'agent_list': agents_list}
@@ -282,7 +282,7 @@ async def restart_agents(request, pretty: bool = False, wait_for_complete: bool 
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'agent_list': agents_list}
@@ -316,7 +316,7 @@ async def restart_agents_by_node(request, node_id: str, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     nodes = raise_if_exc(await get_system_nodes())
@@ -358,7 +358,7 @@ async def get_agent_config(request, pretty: bool = False, wait_for_complete: boo
 
     Returns
     -------
-    web.Response
+    Response
         API response with the agent configuration.
     """
     f_kwargs = {'agent_list': [agent_id],
@@ -401,7 +401,7 @@ async def delete_single_agent_multiple_groups(request, agent_id: str, groups_lis
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'agent_list': [agent_id],
@@ -478,7 +478,7 @@ async def delete_single_agent_single_group(request, agent_id: str, group_id: str
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'agent_list': [agent_id],
@@ -517,7 +517,7 @@ async def put_agent_single_group(request, agent_id: str, group_id: str, force_si
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'agent_list': [agent_id],
@@ -552,7 +552,7 @@ async def get_agent_key(request, agent_id: str, pretty: bool = False, wait_for_c
 
     Returns
     -------
-    web.Response
+    Response
         API response with the specified agent's key.
     """
     f_kwargs = {'agent_list': [agent_id]}
@@ -585,7 +585,7 @@ async def restart_agent(request, agent_id: str, pretty: bool = False, wait_for_c
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'agent_list': [agent_id]}
@@ -644,7 +644,7 @@ async def put_upgrade_agents(request, agents_list: str = None, pretty: bool = Fa
 
     Returns
     -------
-    web.Response
+    Response
         Upgrade message after trying to upgrade the agents.
     """
     # If we use the 'all' keyword and the request is distributed_master, agents_list must be '*'
@@ -723,7 +723,7 @@ async def put_upgrade_custom_agents(request, agents_list: str = None, pretty: bo
 
     Returns
     -------
-    web.Response
+    Response
         Upgrade message after trying to upgrade the agents.
     """
     # If we use the 'all' keyword and the request is distributed_master, agents_list must be '*'
@@ -795,7 +795,7 @@ async def get_agent_upgrade(request, agents_list: str = None, pretty: bool = Fal
 
     Returns
     -------
-    web.Response
+    Response
         Upgrade message after having upgraded the agents.
     """
     f_kwargs = {'agent_list': agents_list,
@@ -847,7 +847,7 @@ async def get_daemon_stats(request, agent_id: str, pretty: bool = False, wait_fo
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     daemons_list = daemons_list or []
@@ -884,7 +884,7 @@ async def get_component_stats(request, pretty: bool = False, wait_for_complete: 
 
     Returns
     -------
-    web.Response
+    Response
         API response with the module stats.
     """
     f_kwargs = {'agent_list': [agent_id],
@@ -919,7 +919,7 @@ async def post_new_agent(request, agent_name: str, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = await AgentAddedModel.get_kwargs({'name': agent_name})
@@ -955,7 +955,7 @@ async def delete_multiple_agent_single_group(request, group_id: str, agents_list
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     if 'all' in agents_list:
@@ -997,7 +997,7 @@ async def put_multiple_agent_single_group(request, group_id: str, agents_list: s
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'agent_list': agents_list,
@@ -1033,7 +1033,7 @@ async def delete_groups(request, groups_list: str = None, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     if 'all' in groups_list:
@@ -1089,7 +1089,7 @@ async def get_list_group(request, pretty: bool = False, wait_for_complete: bool 
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     hash_ = request.query.get('hash', 'md5')  # Select algorithm to generate the returned checksums.
@@ -1153,7 +1153,7 @@ async def get_agents_in_group(request, group_id: str, pretty: bool = False, wait
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'group_list': [group_id],
@@ -1194,7 +1194,7 @@ async def post_group(request, pretty: bool = False, wait_for_complete: bool = Fa
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     # Get body parameters
@@ -1234,7 +1234,7 @@ async def get_group_config(request, group_id: str, pretty: bool = False, wait_fo
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'group_list': [group_id],
@@ -1276,7 +1276,7 @@ async def put_group_config(request, body: bytes, group_id: str, pretty: bool = F
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     # Parse body to utf-8
@@ -1331,7 +1331,7 @@ async def get_group_files(request, group_id: str, pretty: bool = False, wait_for
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     hash_ = request.query.get('hash', 'md5')  # Select algorithm to generate the returned checksums.
@@ -1378,7 +1378,7 @@ async def get_group_file_json(request, group_id: str, file_name: str, pretty: bo
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'group_list': [group_id],
@@ -1455,7 +1455,7 @@ async def restart_agents_by_group(request, group_id: str, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'group_list': [group_id], 'select': ['id'], 'limit': None}
@@ -1501,7 +1501,7 @@ async def insert_agent(request, pretty: bool = False, wait_for_complete: bool = 
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     # Get body parameters
@@ -1548,7 +1548,7 @@ async def get_agent_no_group(request, pretty: bool = False, wait_for_complete: b
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'offset': offset,
@@ -1597,7 +1597,7 @@ async def get_agent_outdated(request, pretty: bool = False, wait_for_complete: b
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'offset': offset,
@@ -1650,7 +1650,7 @@ async def get_agent_fields(request, pretty: bool = False, wait_for_complete: boo
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'offset': offset,
@@ -1686,7 +1686,7 @@ async def get_agent_summary_status(request, pretty: bool = False, wait_for_compl
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {}
@@ -1717,7 +1717,7 @@ async def get_agent_summary_os(request, pretty: bool = False, wait_for_complete:
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {}

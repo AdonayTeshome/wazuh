@@ -56,7 +56,7 @@ async def get_sca_agent(request, agent_id: str = None, pretty: bool = False, wai
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     filters = {'name': name,
@@ -150,7 +150,7 @@ async def get_sca_checks(request, agent_id: str = None, pretty: bool = False, wa
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     filters = {'title': title,

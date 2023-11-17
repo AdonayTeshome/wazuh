@@ -28,7 +28,7 @@ async def default_info(pretty: bool = False) -> Response:
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     info_data = load_spec()

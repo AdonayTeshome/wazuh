@@ -63,7 +63,7 @@ async def get_agents_ciscat_results(request, agent_id: str, pretty: bool = False
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {

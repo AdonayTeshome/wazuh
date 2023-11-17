@@ -30,7 +30,7 @@ async def put_rootcheck(request, agents_list: str = '*', pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'agent_list': agents_list}
@@ -65,7 +65,7 @@ async def delete_rootcheck(request, pretty: bool = False, wait_for_complete: boo
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'agent_list': [agent_id]}
@@ -122,7 +122,7 @@ async def get_rootcheck_agent(request, pretty: bool = False, wait_for_complete: 
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'agent_list': [agent_id],
@@ -169,7 +169,7 @@ async def get_last_scan_agent(request, pretty: bool = False, wait_for_complete: 
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'agent_list': [agent_id]}

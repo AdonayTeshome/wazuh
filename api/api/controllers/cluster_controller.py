@@ -37,7 +37,7 @@ async def get_cluster_node(request, pretty: bool = False, wait_for_complete: boo
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {}
@@ -89,7 +89,7 @@ async def get_cluster_nodes(request, pretty: bool = False, wait_for_complete: bo
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     # Get type parameter from query
@@ -140,7 +140,7 @@ async def get_healthcheck(request, pretty: bool = False, wait_for_complete: bool
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'filter_node': nodes_list}
@@ -179,7 +179,7 @@ async def get_nodes_ruleset_sync_status(request, pretty: bool = False, wait_for_
 
     Returns
     -------
-    web.Response
+    Response
         Nodes ruleset synchronization statuses.
     """
     nodes = raise_if_exc(await get_system_nodes())
@@ -222,7 +222,7 @@ async def get_status(request, pretty: bool = False, wait_for_complete: bool = Fa
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {}
@@ -252,7 +252,7 @@ async def get_config(request, pretty: bool = False, wait_for_complete: bool = Fa
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {}
@@ -287,7 +287,7 @@ async def get_status_node(request, node_id: str, pretty: bool = False, wait_for_
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'node_id': node_id}
@@ -324,7 +324,7 @@ async def get_info_node(request, node_id: str, pretty: bool = False, wait_for_co
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'node_id': node_id}
@@ -366,11 +366,11 @@ async def get_configuration_node(request, node_id: str, pretty: bool = False, wa
 
     Returns
     -------
-    web.Response or ConnexionResponse
-        Depending on the `raw` parameter, it will return a web.Response object or a ConnexionResponse object:
+    Response or ConnexionResponse
+        Depending on the `raw` parameter, it will return a Response object or a ConnexionResponse object:
             raw=True            -> ConnexionResponse (application/xml)
-            raw=False (default) -> web.Response (application/json)
-        If any exception was raised, it will return a web.Response with details.
+            raw=False (default) -> Response (application/json)
+        If any exception was raised, it will return a Response with details.
     """
     f_kwargs = {'node_id': node_id,
                 'section': section,
@@ -449,7 +449,7 @@ async def get_stats_node(request, node_id: str, pretty: bool = False, wait_for_c
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     if not date:
@@ -493,7 +493,7 @@ async def get_stats_hourly_node(request, node_id: str, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'node_id': node_id}
@@ -532,7 +532,7 @@ async def get_stats_weekly_node(request, node_id: str, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'node_id': node_id}
@@ -572,7 +572,7 @@ async def get_stats_analysisd_node(request, node_id: str, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    Response
     """
     f_kwargs = {'node_id': node_id,
                 'filename': common.ANALYSISD_STATS}
@@ -612,7 +612,7 @@ async def get_stats_remoted_node(request, node_id: str, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    Response
     """
     f_kwargs = {'node_id': node_id,
                 'filename': common.REMOTED_STATS}
@@ -670,7 +670,7 @@ async def get_log_node(request, node_id: str, pretty: bool = False, wait_for_com
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'node_id': node_id,
@@ -717,7 +717,7 @@ async def get_log_summary_node(request, node_id: str, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'node_id': node_id}
@@ -753,7 +753,7 @@ async def get_api_config(request, pretty: bool = False, wait_for_complete: bool 
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'node_list': nodes_list}
@@ -790,7 +790,7 @@ async def put_restart(request, pretty: bool = False, wait_for_complete: bool = F
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'node_list': nodes_list}
@@ -828,7 +828,7 @@ async def get_conf_validation(request, pretty: bool = False, wait_for_complete: 
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'node_list': nodes_list}
@@ -868,7 +868,7 @@ async def get_node_config(request, node_id: str, component: str, wait_for_comple
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     f_kwargs = {'node_id': node_id,
@@ -911,7 +911,7 @@ async def update_configuration(request, node_id: str, body: bytes, pretty: bool 
 
     Returns
     -------
-    web.Response
+    Response
         API response.
     """
     # Parse body to utf-8
