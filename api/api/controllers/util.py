@@ -39,7 +39,7 @@ def _token_response(user: str, data: dict, raw: bool = True) -> Response:
 
     token = None
     try:
-        token = generate_token(user_id=user, data=data.dikt)
+        token = generate_token(user_id=user, data=data)
     except WazuhException as exc:
         raise_if_exc(exc)
 
