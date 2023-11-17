@@ -14,7 +14,7 @@ from wazuh.core.cluster.dapi.dapi import DistributedAPI
 logger = logging.getLogger('wazuh-api')
 
 
-async def get_hardware_info(request, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_hardware_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                             select: str = None) -> Response:
     """Get hardware info of an agent.
 
@@ -44,14 +44,14 @@ async def get_hardware_info(request, agent_id: str, pretty: bool = False, wait_f
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_hotfix_info(request, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_hotfix_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                           offset: int = 0, limit: int = None, sort: str = None, search: str = None, select: str = None,
                           hotfix: str = None, q: str = None, distinct: bool = False) -> Response:
     """Get info about an agent's hotfixes.
@@ -108,14 +108,14 @@ async def get_hotfix_info(request, agent_id: str, pretty: bool = False, wait_for
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_network_address_info(request, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_network_address_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                                    offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                                    search: str = None, iface: str = None, proto: str = None, address: str = None,
                                    broadcast: str = None, netmask: str = None, q: str = None,
@@ -185,14 +185,14 @@ async def get_network_address_info(request, agent_id: str, pretty: bool = False,
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_network_interface_info(request, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_network_interface_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                                      offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                                      search: str = None, name: str = None, adapter: str = None, state: str = None,
                                      mtu: str = None, q: str = None, distinct: bool = False) -> Response:
@@ -263,14 +263,14 @@ async def get_network_interface_info(request, agent_id: str, pretty: bool = Fals
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_network_protocol_info(request, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_network_protocol_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                                     offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                                     search: str = None, iface: str = None, gateway: str = None, dhcp: str = None,
                                     q: str = None, distinct: bool = False) -> Response:
@@ -334,14 +334,14 @@ async def get_network_protocol_info(request, agent_id: str, pretty: bool = False
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_os_info(request, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_os_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                       select: str = None) -> Response:
     """Get OS info of an agent.
 
@@ -372,14 +372,14 @@ async def get_os_info(request, agent_id: str, pretty: bool = False, wait_for_com
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_packages_info(request, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_packages_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                             offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                             search: str = None, vendor: str = None, name: str = None, architecture: str = None,
                             version: str = None, q: str = None, distinct: bool = False) -> Response:
@@ -446,14 +446,14 @@ async def get_packages_info(request, agent_id: str, pretty: bool = False, wait_f
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_ports_info(request, agent_id: str, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
+async def get_ports_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
                          limit: int = None, select: str = None, sort: str = None, search: str = None, pid: str = None,
                          protocol: str = None, tx_queue: str = None, state: str = None, process: str = None,
                          q: str = None, distinct: bool = False) -> Response:
@@ -526,14 +526,14 @@ async def get_ports_info(request, agent_id: str, pretty: bool = False, wait_for_
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_processes_info(request, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_processes_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                              offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                              search: str = None, pid: str = None, state: str = None, ppid: str = None,
                              egroup: str = None, euser: str = None, fgroup: str = None, name: str = None,
@@ -632,7 +632,7 @@ async def get_processes_info(request, agent_id: str, pretty: bool = False, wait_
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 

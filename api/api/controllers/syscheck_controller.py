@@ -14,7 +14,7 @@ from wazuh.syscheck import run, clear, files, last_scan
 logger = logging.getLogger('wazuh-api')
 
 
-async def put_syscheck(request, agents_list: str = '*', pretty: bool = False,
+async def put_syscheck(token_info, agents_list: str = '*', pretty: bool = False,
                        wait_for_complete: bool = False) -> Response:
     """Run a syscheck scan in the specified agents.
 
@@ -42,14 +42,14 @@ async def put_syscheck(request, agents_list: str = '*', pretty: bool = False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=agents_list == '*',
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_syscheck_agent(request, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_syscheck_agent(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                              offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                              search: str = None, distinct: bool = False, summary: bool = False, md5: str = None,
                              sha1: str = None, sha256: str = None, q: str = None, arch: str = None) -> Response:
@@ -116,14 +116,14 @@ async def get_syscheck_agent(request, agent_id: str, pretty: bool = False, wait_
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def delete_syscheck_agent(request, agent_id: str = '*', pretty: bool = False,
+async def delete_syscheck_agent(token_info, agent_id: str = '*', pretty: bool = False,
                                 wait_for_complete: bool = False) -> Response:
     """Clear file integrity monitoring scan results for a specified agent.
 
@@ -150,14 +150,14 @@ async def delete_syscheck_agent(request, agent_id: str = '*', pretty: bool = Fal
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_last_scan_agent(request, agent_id: str, pretty: bool = False,
+async def get_last_scan_agent(token_info, agent_id: str, pretty: bool = False,
                               wait_for_complete: bool = False) -> Response:
     """Return when the last syscheck scan of a specified agent started and ended.
 
@@ -184,7 +184,7 @@ async def get_last_scan_agent(request, agent_id: str, pretty: bool = False,
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 

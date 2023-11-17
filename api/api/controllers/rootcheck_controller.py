@@ -14,13 +14,14 @@ from wazuh.core.cluster.dapi.dapi import DistributedAPI
 logger = logging.getLogger('wazuh-api')
 
 
-async def put_rootcheck(request, agents_list: str = '*', pretty: bool = False,
+async def put_rootcheck(token_info, agents_list: str = '*', pretty: bool = False,
                         wait_for_complete: bool = False) -> Response:
     """Run rootcheck scan over the agent_ids.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     agents_list : str
         List of agent's IDs.
     pretty: bool
@@ -42,20 +43,21 @@ async def put_rootcheck(request, agents_list: str = '*', pretty: bool = False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=agents_list == '*',
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def delete_rootcheck(request, pretty: bool = False, wait_for_complete: bool = False,
+async def delete_rootcheck(token_info, pretty: bool = False, wait_for_complete: bool = False,
                            agent_id: str = '') -> Response:
     """Clear the rootcheck database for a list of agents.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty: bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -76,14 +78,14 @@ async def delete_rootcheck(request, pretty: bool = False, wait_for_complete: boo
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_rootcheck_agent(request, pretty: bool = False, wait_for_complete: bool = False, agent_id: str = None,
+async def get_rootcheck_agent(token_info, pretty: bool = False, wait_for_complete: bool = False, agent_id: str = None,
                               offset: int = 0, limit: int = None, sort: str = None, search: str = None,
                               select: str = None, q: str = '', distinct: bool = False, status: str = 'all',
                               pci_dss: str = None, cis: str = None) -> Response:
@@ -91,7 +93,8 @@ async def get_rootcheck_agent(request, pretty: bool = False, wait_for_complete: 
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -146,20 +149,21 @@ async def get_rootcheck_agent(request, pretty: bool = False, wait_for_complete: 
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_last_scan_agent(request, pretty: bool = False, wait_for_complete: bool = False,
+async def get_last_scan_agent(token_info, pretty: bool = False, wait_for_complete: bool = False,
                               agent_id: str = None) -> Response:
     """Get the last rootcheck scan of an agent.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -180,7 +184,7 @@ async def get_last_scan_agent(request, pretty: bool = False, wait_for_complete: 
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 

@@ -24,12 +24,13 @@ from wazuh.core.results import AffectedItemsWazuhResult
 logger = logging.getLogger('wazuh-api')
 
 
-async def get_cluster_node(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def get_cluster_node(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get basic information about the local node.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -49,7 +50,7 @@ async def get_cluster_node(request, pretty: bool = False, wait_for_complete: boo
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -57,14 +58,15 @@ async def get_cluster_node(request, pretty: bool = False, wait_for_complete: boo
     return _json_response(data, pretty=pretty)
 
 
-async def get_cluster_nodes(request, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
+async def get_cluster_nodes(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
                             limit: int = None, sort: str = None, search: str = None, select: str = None,
                             nodes_list: str = None, q: str = None, distinct: bool = False) -> Response:
     """Get information about all nodes in the cluster or a list of them.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -113,7 +115,7 @@ async def get_cluster_nodes(request, pretty: bool = False, wait_for_complete: bo
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           local_client_arg='lc',
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -121,7 +123,7 @@ async def get_cluster_nodes(request, pretty: bool = False, wait_for_complete: bo
     return _json_response(data, pretty=pretty)
 
 
-async def get_healthcheck(request, pretty: bool = False, wait_for_complete: bool = False,
+async def get_healthcheck(token_info, pretty: bool = False, wait_for_complete: bool = False,
                           nodes_list: str = None) -> Response:
     """Get cluster healthcheck.
 
@@ -130,7 +132,8 @@ async def get_healthcheck(request, pretty: bool = False, wait_for_complete: bool
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -153,7 +156,7 @@ async def get_healthcheck(request, pretty: bool = False, wait_for_complete: bool
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           local_client_arg='lc',
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -161,7 +164,7 @@ async def get_healthcheck(request, pretty: bool = False, wait_for_complete: bool
     return _json_response(data, pretty=pretty)
 
 
-async def get_nodes_ruleset_sync_status(request, pretty: bool = False, wait_for_complete: bool = False,
+async def get_nodes_ruleset_sync_status(token_info, pretty: bool = False, wait_for_complete: bool = False,
                                         nodes_list: str = "*") -> Response:
     """Get cluster ruleset synchronization status.
 
@@ -169,7 +172,8 @@ async def get_nodes_ruleset_sync_status(request, pretty: bool = False, wait_for_
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -201,7 +205,7 @@ async def get_nodes_ruleset_sync_status(request, pretty: bool = False, wait_for_
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=nodes_list == "*",
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -209,12 +213,13 @@ async def get_nodes_ruleset_sync_status(request, pretty: bool = False, wait_for_
     return _json_response(data, pretty=pretty)
 
 
-async def get_status(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def get_status(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get cluster status.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -232,19 +237,20 @@ async def get_status(request, pretty: bool = False, wait_for_complete: bool = Fa
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_config(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def get_config(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get the current node cluster configuration.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -264,7 +270,7 @@ async def get_config(request, pretty: bool = False, wait_for_complete: bool = Fa
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -272,12 +278,13 @@ async def get_config(request, pretty: bool = False, wait_for_complete: bool = Fa
     return _json_response(data, pretty=pretty)
 
 
-async def get_status_node(request, node_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def get_status_node(token_info, node_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get a specified node's Wazuh daemons status.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     node_id : str
         Cluster node name.
     pretty : bool
@@ -299,7 +306,7 @@ async def get_status_node(request, node_id: str, pretty: bool = False, wait_for_
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -307,14 +314,15 @@ async def get_status_node(request, node_id: str, pretty: bool = False, wait_for_
     return _json_response(data, pretty=pretty)
 
 
-async def get_info_node(request, node_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def get_info_node(token_info, node_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get a specified node's information.
 
     Returns basic information about a specified node such as version, compilation date, installation path.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     node_id : str
         Cluster node name.
     pretty : bool
@@ -336,7 +344,7 @@ async def get_info_node(request, node_id: str, pretty: bool = False, wait_for_co
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -344,7 +352,7 @@ async def get_info_node(request, node_id: str, pretty: bool = False, wait_for_co
     return _json_response(data, pretty=pretty)
 
 
-async def get_configuration_node(request, node_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_configuration_node(token_info, node_id: str, pretty: bool = False, wait_for_complete: bool = False,
                                  section: str = None, field: str = None,
                                  raw: bool = False) -> Union[Response, ConnexionResponse]:
     """Get a specified node's configuration (ossec.conf).
@@ -384,7 +392,7 @@ async def get_configuration_node(request, node_id: str, pretty: bool = False, wa
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -396,7 +404,7 @@ async def get_configuration_node(request, node_id: str, pretty: bool = False, wa
     return response
 
 
-async def get_daemon_stats_node(request, node_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_daemon_stats_node(token_info, node_id: str, pretty: bool = False, wait_for_complete: bool = False,
                                 daemons_list: list = None):
     """Get Wazuh statistical information from the specified daemons of a specified cluster node.
 
@@ -422,14 +430,14 @@ async def get_daemon_stats_node(request, node_id: str, pretty: bool = False, wai
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes)
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_stats_node(request, node_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_stats_node(token_info, node_id: str, pretty: bool = False, wait_for_complete: bool = False,
                          date: str = None) -> Response:
     """Get a specified node's stats.
 
@@ -437,7 +445,8 @@ async def get_stats_node(request, node_id: str, pretty: bool = False, wait_for_c
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     node_id : str
         Cluster node name.
     pretty : bool
@@ -467,14 +476,14 @@ async def get_stats_node(request, node_id: str, pretty: bool = False, wait_for_c
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
     return _json_response(data, pretty=pretty)
 
 
-async def get_stats_hourly_node(request, node_id: str, pretty: bool = False,
+async def get_stats_hourly_node(token_info, node_id: str, pretty: bool = False,
                                 wait_for_complete: bool = False) -> Response:
     """Get a specified node's stats by hour.
 
@@ -483,7 +492,8 @@ async def get_stats_hourly_node(request, node_id: str, pretty: bool = False,
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     node_id : str
         Cluster node name.
     pretty : bool
@@ -505,7 +515,7 @@ async def get_stats_hourly_node(request, node_id: str, pretty: bool = False,
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -513,7 +523,7 @@ async def get_stats_hourly_node(request, node_id: str, pretty: bool = False,
     return _json_response(data, pretty=pretty)
 
 
-async def get_stats_weekly_node(request, node_id: str, pretty: bool = False,
+async def get_stats_weekly_node(token_info, node_id: str, pretty: bool = False,
                                 wait_for_complete: bool = False) -> Response:
     """Get a specified node's stats by week.
 
@@ -522,7 +532,8 @@ async def get_stats_weekly_node(request, node_id: str, pretty: bool = False,
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     node_id : str
         Cluster node name.
     pretty : bool
@@ -544,7 +555,7 @@ async def get_stats_weekly_node(request, node_id: str, pretty: bool = False,
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -553,7 +564,7 @@ async def get_stats_weekly_node(request, node_id: str, pretty: bool = False,
 
 
 @deprecate_endpoint()
-async def get_stats_analysisd_node(request, node_id: str, pretty: bool = False,
+async def get_stats_analysisd_node(token_info, node_id: str, pretty: bool = False,
                                    wait_for_complete: bool = False) -> Response:
     """Get a specified node's analysisd statistics.
 
@@ -584,7 +595,7 @@ async def get_stats_analysisd_node(request, node_id: str, pretty: bool = False,
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -593,7 +604,7 @@ async def get_stats_analysisd_node(request, node_id: str, pretty: bool = False,
 
 
 @deprecate_endpoint()
-async def get_stats_remoted_node(request, node_id: str, pretty: bool = False,
+async def get_stats_remoted_node(token_info, node_id: str, pretty: bool = False,
                                  wait_for_complete: bool = False) -> Response:
     """Get a specified node's remoted statistics.
 
@@ -624,7 +635,7 @@ async def get_stats_remoted_node(request, node_id: str, pretty: bool = False,
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -632,7 +643,7 @@ async def get_stats_remoted_node(request, node_id: str, pretty: bool = False,
     return _json_response(data, pretty=pretty)
 
 
-async def get_log_node(request, node_id: str, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
+async def get_log_node(token_info, node_id: str, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
                        limit: int = None, sort: str = None, search: str = None, tag: str = None, level: str = None,
                        q: str = None, select: str = None, distinct: bool = False) -> Response:
     """Get a specified node's wazuh logs.
@@ -641,7 +652,8 @@ async def get_log_node(request, node_id: str, pretty: bool = False, wait_for_com
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     node_id : str
         Cluster node name.
     pretty : bool
@@ -693,7 +705,7 @@ async def get_log_node(request, node_id: str, pretty: bool = False, wait_for_com
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -701,13 +713,14 @@ async def get_log_node(request, node_id: str, pretty: bool = False, wait_for_com
     return _json_response(data, pretty=pretty)
 
 
-async def get_log_summary_node(request, node_id: str, pretty: bool = False,
+async def get_log_summary_node(token_info, node_id: str, pretty: bool = False,
                                wait_for_complete: bool = False) -> Response:
     """Get a summary of a specified node's wazuh logs.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     node_id : str
         Cluster node name.
     pretty : bool
@@ -729,7 +742,7 @@ async def get_log_summary_node(request, node_id: str, pretty: bool = False,
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -737,13 +750,14 @@ async def get_log_summary_node(request, node_id: str, pretty: bool = False,
     return _json_response(data, pretty=pretty)
 
 
-async def get_api_config(request, pretty: bool = False, wait_for_complete: bool = False,
+async def get_api_config(token_info, pretty: bool = False, wait_for_complete: bool = False,
                          nodes_list: str = '*') -> Response:
     """Get active API configuration in manager or local_node.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -766,7 +780,7 @@ async def get_api_config(request, pretty: bool = False, wait_for_complete: bool 
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=nodes_list == '*',
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -774,13 +788,14 @@ async def get_api_config(request, pretty: bool = False, wait_for_complete: bool 
     return _json_response(data, pretty=pretty)
 
 
-async def put_restart(request, pretty: bool = False, wait_for_complete: bool = False,
+async def put_restart(token_info, pretty: bool = False, wait_for_complete: bool = False,
                       nodes_list: str = '*') -> Response:
     """Restarts all nodes in the cluster or a list of them.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -803,7 +818,7 @@ async def put_restart(request, pretty: bool = False, wait_for_complete: bool = F
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=nodes_list == '*',
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -811,14 +826,15 @@ async def put_restart(request, pretty: bool = False, wait_for_complete: bool = F
     return _json_response(data, pretty=pretty)
 
 
-async def get_conf_validation(request, pretty: bool = False, wait_for_complete: bool = False,
+async def get_conf_validation(token_info, pretty: bool = False, wait_for_complete: bool = False,
                               nodes_list: str = '*') -> Response:
     """Check whether the Wazuh configuration in a list of cluster nodes is correct or not.
 
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -841,7 +857,7 @@ async def get_conf_validation(request, pretty: bool = False, wait_for_complete: 
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=nodes_list == '*',
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -849,13 +865,14 @@ async def get_conf_validation(request, pretty: bool = False, wait_for_complete: 
     return _json_response(data, pretty=pretty)
 
 
-async def get_node_config(request, node_id: str, component: str, wait_for_complete: bool = False, pretty: bool = False,
+async def get_node_config(token_info, node_id: str, component: str, wait_for_complete: bool = False, pretty: bool = False,
                           **kwargs: dict) -> Response:
     """Get active configuration in node node_id [on demand]
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     node_id : str
         Node ID.
     component : str
@@ -885,7 +902,7 @@ async def get_node_config(request, node_id: str, component: str, wait_for_comple
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -893,13 +910,14 @@ async def get_node_config(request, node_id: str, component: str, wait_for_comple
     return _json_response(data, pretty=pretty)
 
 
-async def update_configuration(request, node_id: str, body: bytes, pretty: bool = False,
+async def update_configuration(token_info, node_id: str, body: bytes, pretty: bool = False,
                                wait_for_complete: bool = False) -> Response:
     """Update Wazuh configuration (ossec.conf) in node node_id.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     node_id : str
         Node ID.
     body : bytes
@@ -915,7 +933,7 @@ async def update_configuration(request, node_id: str, body: bytes, pretty: bool 
         API response.
     """
     # Parse body to utf-8
-    Body.validate_content_type(request, expected_content_type='application/octet-stream')
+    Body.validate_content_type(token_info, expected_content_type='application/octet-stream')
     parsed_body = Body.decode_body(body, unicode_error=1911, attribute_error=1912)
 
     f_kwargs = {'node_id': node_id,
@@ -928,7 +946,7 @@ async def update_configuration(request, node_id: str, body: bytes, pretty: bool 
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())

@@ -18,14 +18,15 @@ from wazuh.core.results import AffectedItemsWazuhResult
 logger = logging.getLogger('wazuh-api')
 
 
-async def get_lists(request, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0, limit: int = None,
+async def get_lists(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0, limit: int = None,
                     select: list = None, sort: str = None, search: str = None, filename: str = None,
                     relative_dirname: str = None, q: str = None, distinct: bool = False) -> Response:
     """Get all CDB lists.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -75,20 +76,21 @@ async def get_lists(request, pretty: bool = False, wait_for_complete: bool = Fal
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_file(request, pretty: bool = False, wait_for_complete: bool = False, filename: str = None,
+async def get_file(token_info, pretty: bool = False, wait_for_complete: bool = False, filename: str = None,
                    raw: bool = False) -> Union[Response, ConnexionResponse]:
     """Get content of one CDB list file, in raw or dict format.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -114,7 +116,7 @@ async def get_file(request, pretty: bool = False, wait_for_complete: bool = Fals
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
     if isinstance(data, AffectedItemsWazuhResult):
@@ -125,13 +127,14 @@ async def get_file(request, pretty: bool = False, wait_for_complete: bool = Fals
     return response
 
 
-async def put_file(request, body: bytes, overwrite: bool = False, pretty: bool = False, wait_for_complete: bool = False,
+async def put_file(token_info, body: bytes, overwrite: bool = False, pretty: bool = False, wait_for_complete: bool = False,
                    filename: str = None) -> Response:
     """Upload content of CDB list file.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     body : bytes
         Bytes object with the content of the file to be uploaded.
     pretty : bool
@@ -149,7 +152,7 @@ async def put_file(request, body: bytes, overwrite: bool = False, pretty: bool =
         API response.
     """
     # Parse body to utf-8
-    Body.validate_content_type(request, expected_content_type='application/octet-stream')
+    Body.validate_content_type(token_info, expected_content_type='application/octet-stream')
     parsed_body = Body.decode_body(body, unicode_error=1911, attribute_error=1912)
 
     f_kwargs = {'filename': filename,
@@ -162,20 +165,21 @@ async def put_file(request, body: bytes, overwrite: bool = False, pretty: bool =
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def delete_file(request, pretty: bool = False, wait_for_complete: bool = False,
+async def delete_file(token_info, pretty: bool = False, wait_for_complete: bool = False,
                       filename: str = None) -> Response:
     """Delete a CDB list file.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -196,21 +200,22 @@ async def delete_file(request, pretty: bool = False, wait_for_complete: bool = F
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_lists_files(request, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
+async def get_lists_files(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
                           limit: int = None, sort: str = None, search: str = None, filename: str = None,
                           relative_dirname: str = None) -> Response:
     """Get paths from all CDB lists.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -252,7 +257,7 @@ async def get_lists_files(request, pretty: bool = False, wait_for_complete: bool
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 

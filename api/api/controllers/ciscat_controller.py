@@ -15,7 +15,7 @@ from wazuh.core.cluster.dapi.dapi import DistributedAPI
 logger = logging.getLogger('wazuh-api')
 
 
-async def get_agents_ciscat_results(request, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_agents_ciscat_results(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                                     offset: int = 0, limit: int = None, select: List[str] = None, sort: str = None,
                                     search: str = None, benchmark: str = None, profile: str = None, fail: int = None,
                                     error: int = None, notchecked: int = None, unknown: int = None, score: int = None,
@@ -26,7 +26,8 @@ async def get_agents_ciscat_results(request, agent_id: str, pretty: bool = False
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     agent_id : str
         Agent ID. All posible values since 000 onwards.
     pretty : bool
@@ -92,7 +93,7 @@ async def get_agents_ciscat_results(request, agent_id: str, pretty: bool = False
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     response = raise_if_exc(await dapi.distribute_function())
 

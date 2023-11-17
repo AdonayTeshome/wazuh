@@ -16,13 +16,14 @@ from wazuh.core.cluster.dapi.dapi import DistributedAPI
 logger = logging.getLogger('wazuh-api')
 
 
-async def run_command(request, agents_list: str = '*', pretty: bool = False,
+async def run_command(token_info, agents_list: str = '*', pretty: bool = False,
                       wait_for_complete: bool = False) -> Response:
     """Runs an Active Response command on a specified list of agents.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     agents_list : str
         List of agents IDs. All possible values from 000 onwards. Default: '*'
     pretty : bool
@@ -35,8 +36,8 @@ async def run_command(request, agents_list: str = '*', pretty: bool = False,
     Response
     """
     # Get body parameters
-    Body.validate_content_type(request, expected_content_type='application/json')
-    f_kwargs = await ActiveResponseModel.get_kwargs(request, additional_kwargs={'agent_list': agents_list})
+    Body.validate_content_type(token_info, expected_content_type='application/json')
+    f_kwargs = await ActiveResponseModel.get_kwargs(token_info, additional_kwargs={'agent_list': agents_list})
 
     dapi = DistributedAPI(f=active_response.run_command,
                           f_kwargs=remove_nones_to_dict(f_kwargs),
@@ -45,7 +46,7 @@ async def run_command(request, agents_list: str = '*', pretty: bool = False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=agents_list == '*',
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 

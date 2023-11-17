@@ -21,7 +21,7 @@ logger = logging.getLogger('wazuh-api')
 
 
 @cache(expires=api_conf['cache']['time'])
-async def get_rules(request, rule_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_rules(token_info, rule_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                     offset: int = 0, select: str = None, limit: int = None, sort: str = None, search: str = None,
                     q: str = None, status: str = None, group: str = None, level: str = None, filename: list = None,
                     relative_dirname: str = None, pci_dss: str = None, gdpr: str = None, gpg13: str = None,
@@ -30,7 +30,8 @@ async def get_rules(request, rule_ids: list = None, pretty: bool = False, wait_f
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     rule_ids : list
         Filters by rule ID.
     pretty : bool
@@ -106,7 +107,7 @@ async def get_rules(request, rule_ids: list = None, pretty: bool = False, wait_f
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
@@ -114,13 +115,14 @@ async def get_rules(request, rule_ids: list = None, pretty: bool = False, wait_f
 
 
 @cache(expires=api_conf['cache']['time'])
-async def get_rules_groups(request, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
+async def get_rules_groups(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
                            limit: int = None, sort: str = None, search: str = None) -> Response:
     """Get all rule groups names.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -154,7 +156,7 @@ async def get_rules_groups(request, pretty: bool = False, wait_for_complete: boo
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
@@ -162,14 +164,15 @@ async def get_rules_groups(request, pretty: bool = False, wait_for_complete: boo
 
 
 @cache(expires=api_conf['cache']['time'])
-async def get_rules_requirement(request, requirement: str = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_rules_requirement(token_info, requirement: str = None, pretty: bool = False, wait_for_complete: bool = False,
                                 offset: int = 0, limit: int = None, sort: str = None,
                                 search: str = None) -> Response:
     """Get all specified requirements.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     requirement : str
         Get the specified requirement in all rules in the system.
     pretty : bool
@@ -203,7 +206,7 @@ async def get_rules_requirement(request, requirement: str = None, pretty: bool =
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
@@ -211,7 +214,7 @@ async def get_rules_requirement(request, requirement: str = None, pretty: bool =
 
 
 @cache(expires=api_conf['cache']['time'])
-async def get_rules_files(request, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
+async def get_rules_files(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
                           limit: int = None, sort: str = None, search: str = None, status: str = None,
                           filename: list = None, relative_dirname: str = None, q: str = None,
                           select: str = None, distinct: bool = False) -> Response:
@@ -219,7 +222,8 @@ async def get_rules_files(request, pretty: bool = False, wait_for_complete: bool
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -270,7 +274,7 @@ async def get_rules_files(request, pretty: bool = False, wait_for_complete: bool
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
@@ -278,14 +282,15 @@ async def get_rules_files(request, pretty: bool = False, wait_for_complete: bool
 
 
 @cache(expires=api_conf['cache']['time'])
-async def get_file(request, pretty: bool = False, wait_for_complete: bool = False, 
+async def get_file(token_info, pretty: bool = False, wait_for_complete: bool = False, 
                    filename: str = None, relative_dirname: str = None, 
                    raw: bool = False) -> Union[Response, ConnexionResponse]:
     """Get rule file content.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool, optional
         Show results in human-readable format. It only works when `raw` is False (JSON format). Default `True`.
     wait_for_complete : bool, optional
@@ -313,7 +318,7 @@ async def get_file(request, pretty: bool = False, wait_for_complete: bool = Fals
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
     if isinstance(data, AffectedItemsWazuhResult):
@@ -324,14 +329,15 @@ async def get_file(request, pretty: bool = False, wait_for_complete: bool = Fals
     return response
 
 
-async def put_file(request, body: bytes, filename: str = None, overwrite: bool = False,
+async def put_file(token_info, body: bytes, filename: str = None, overwrite: bool = False,
                    pretty: bool = False, relative_dirname: str = None,
                    wait_for_complete: bool = False) -> Response:
     """Upload a rule file.
     
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     body : bytes
         Body request with the file content to be uploaded.
     filename : str, optional
@@ -352,7 +358,7 @@ async def put_file(request, body: bytes, filename: str = None, overwrite: bool =
         API response.
     """
     # Parse body to utf-8
-    Body.validate_content_type(request, expected_content_type='application/octet-stream')
+    Body.validate_content_type(token_info, expected_content_type='application/octet-stream')
     parsed_body = Body.decode_body(body, unicode_error=1911, attribute_error=1912)
 
     f_kwargs = {'filename': filename,
@@ -366,14 +372,14 @@ async def put_file(request, body: bytes, filename: str = None, overwrite: bool =
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def delete_file(request, filename: str = None, 
+async def delete_file(token_info, filename: str = None, 
                       relative_dirname: str = None, 
                       pretty: bool = False,
                       wait_for_complete: bool = False) -> Response:
@@ -381,7 +387,8 @@ async def delete_file(request, filename: str = None,
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     filename : str, optional
         Name of the file.
     relative_dirname : str
@@ -404,7 +411,7 @@ async def delete_file(request, filename: str = None,
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 

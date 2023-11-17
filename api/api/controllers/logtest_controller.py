@@ -16,12 +16,13 @@ from wazuh.core.cluster.dapi.dapi import DistributedAPI
 logger = logging.getLogger('wazuh-api')
 
 
-async def run_logtest_tool(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def run_logtest_tool(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get the logtest output after sending a JSON to its socket.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -32,7 +33,7 @@ async def run_logtest_tool(request, pretty: bool = False, wait_for_complete: boo
     Response
         API response.
     """
-    Body.validate_content_type(request, expected_content_type='application/json')
+    Body.validate_content_type(token_info, expected_content_type='application/json')
     f_kwargs = await LogtestModel.get_kwargs(request)
 
     dapi = DistributedAPI(f=logtest.run_logtest,
@@ -41,20 +42,21 @@ async def run_logtest_tool(request, pretty: bool = False, wait_for_complete: boo
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def end_logtest_session(request, pretty: bool = False, wait_for_complete: bool = False,
+async def end_logtest_session(token_info, pretty: bool = False, wait_for_complete: bool = False,
                               token: str = None) -> Response:
     """Delete the saved session corresponding to the specified token.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -75,7 +77,7 @@ async def end_logtest_session(request, pretty: bool = False, wait_for_complete: 
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 

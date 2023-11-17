@@ -16,7 +16,7 @@ from wazuh.core.common import DATABASE_LIMIT
 logger = logging.getLogger('wazuh-api')
 
 
-async def get_sca_agent(request, agent_id: str = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_sca_agent(token_info, agent_id: str = None, pretty: bool = False, wait_for_complete: bool = False,
                         name: str = None, description: str = None, references: str = None, offset: int = 0,
                         limit: int = DATABASE_LIMIT, sort: str = None, search: str = None, select: str = None,
                         q: str = None, distinct: bool = False) -> Response:
@@ -24,7 +24,8 @@ async def get_sca_agent(request, agent_id: str = None, pretty: bool = False, wai
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     agent_id : str
         Agent ID. All possible values since 000 onwards.
     pretty : bool
@@ -78,14 +79,14 @@ async def get_sca_agent(request, agent_id: str = None, pretty: bool = False, wai
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_sca_checks(request, agent_id: str = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_sca_checks(token_info, agent_id: str = None, pretty: bool = False, wait_for_complete: bool = False,
                          policy_id: str = None, title: str = None, description: str = None, rationale: str = None,
                          remediation: str = None, command: str = None, reason: str = None,
                          file: str = None, process: str = None, directory: str = None, registry: str = None,
@@ -96,7 +97,8 @@ async def get_sca_checks(request, agent_id: str = None, pretty: bool = False, wa
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     agent_id : str
         Agent ID. All possible values since 000 onwards.
     pretty : bool
@@ -184,7 +186,7 @@ async def get_sca_checks(request, agent_id: str = None, pretty: bool = False, wa
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 

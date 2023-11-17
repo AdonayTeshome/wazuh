@@ -34,7 +34,7 @@ async def forward_event(request: Request, pretty: bool = False, wait_for_complet
     Response
         API Response.
     """
-    Body.validate_content_type(request, expected_content_type='application/json')
+    Body.validate_content_type(token_info, expected_content_type='application/json')
     f_kwargs = await EventIngestModel.get_kwargs(request)
 
     dapi = DistributedAPI(f=send_event_to_analysisd,
@@ -43,7 +43,7 @@ async def forward_event(request: Request, pretty: bool = False, wait_for_complet
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
 
     data = raise_if_exc(await dapi.distribute_function())

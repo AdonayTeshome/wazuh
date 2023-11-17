@@ -24,7 +24,7 @@ from wazuh.core.results import AffectedItemsWazuhResult
 logger = logging.getLogger('wazuh-api')
 
 
-async def delete_agents(request, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = None,
+async def delete_agents(token_info, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = None,
                         purge: bool = False, status: str = None, q: str = None, older_than: str = None,
                         manager: str = None, version: str = None, group: str = None, node_name: str = None,
                         name: str = None, ip: str = None) -> Response:
@@ -32,7 +32,8 @@ async def delete_agents(request, pretty: bool = False, wait_for_complete: bool =
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -95,14 +96,14 @@ async def delete_agents(request, pretty: bool = False, wait_for_complete: bool =
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_agents(request, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = None,
+async def get_agents(token_info, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = None,
                      offset: int = 0, limit: int = DATABASE_LIMIT, select: str = None, sort: str = None,
                      search: str = None, status: str = None, q: str = None, older_than: str = None, manager: str = None,
                      version: str = None, group: str = None, node_name: str = None, name: str = None, ip: str = None,
@@ -111,7 +112,8 @@ async def get_agents(request, pretty: bool = False, wait_for_complete: bool = Fa
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -190,19 +192,20 @@ async def get_agents(request, pretty: bool = False, wait_for_complete: bool = Fa
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def add_agent(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def add_agent(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Add a new Wazuh agent.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -214,7 +217,7 @@ async def add_agent(request, pretty: bool = False, wait_for_complete: bool = Fal
         API response.
     """
     # Get body parameters
-    Body.validate_content_type(request, expected_content_type='application/json')
+    Body.validate_content_type(token_info, expected_content_type='application/json')
     f_kwargs = await AgentAddedModel.get_kwargs(request)
 
     dapi = DistributedAPI(f=agent.add_agent,
@@ -223,7 +226,7 @@ async def add_agent(request, pretty: bool = False, wait_for_complete: bool = Fal
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
 
     data = raise_if_exc(await dapi.distribute_function())
@@ -231,13 +234,14 @@ async def add_agent(request, pretty: bool = False, wait_for_complete: bool = Fal
     return _json_response(data, pretty=pretty)
 
 
-async def reconnect_agents(request, pretty: bool = False, wait_for_complete: bool = False,
+async def reconnect_agents(token_info, pretty: bool = False, wait_for_complete: bool = False,
                            agents_list: Union[list, str] = '*') -> Response:
     """Force reconnect all agents or a list of them.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format. Default `False`
     wait_for_complete : bool
@@ -257,7 +261,7 @@ async def reconnect_agents(request, pretty: bool = False, wait_for_complete: boo
                           request_type='distributed_master',
                           is_async=False,
                           wait_for_complete=wait_for_complete,
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           broadcasting=agents_list == '*',
                           logger=logger
                           )
@@ -266,13 +270,14 @@ async def reconnect_agents(request, pretty: bool = False, wait_for_complete: boo
     return _json_response(data, pretty=pretty)
 
 
-async def restart_agents(request, pretty: bool = False, wait_for_complete: bool = False,
+async def restart_agents(token_info, pretty: bool = False, wait_for_complete: bool = False,
                          agents_list: str = '*') -> Response:
     """Restart all agents or a list of them.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -292,7 +297,7 @@ async def restart_agents(request, pretty: bool = False, wait_for_complete: bool 
                           request_type='distributed_master',
                           is_async=False,
                           wait_for_complete=wait_for_complete,
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           broadcasting=agents_list == '*',
                           logger=logger
                           )
@@ -301,7 +306,7 @@ async def restart_agents(request, pretty: bool = False, wait_for_complete: bool 
     return _json_response(data, pretty=pretty)
 
 
-async def restart_agents_by_node(request, node_id: str, pretty: bool = False,
+async def restart_agents_by_node(token_info, node_id: str, pretty: bool = False,
                                  wait_for_complete: bool = False) -> Response:
     """Restart all agents belonging to a node.
 
@@ -329,7 +334,7 @@ async def restart_agents_by_node(request, node_id: str, pretty: bool = False,
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -337,7 +342,7 @@ async def restart_agents_by_node(request, node_id: str, pretty: bool = False,
     return _json_response(data, pretty=pretty)
 
 
-async def get_agent_config(request, pretty: bool = False, wait_for_complete: bool = False, agent_id: str = None,
+async def get_agent_config(token_info, pretty: bool = False, wait_for_complete: bool = False, agent_id: str = None,
                            component: str = None, **kwargs: dict) -> Response:
     """Get agent active configuration.
 
@@ -346,7 +351,8 @@ async def get_agent_config(request, pretty: bool = False, wait_for_complete: boo
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -374,14 +380,14 @@ async def get_agent_config(request, pretty: bool = False, wait_for_complete: boo
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def delete_single_agent_multiple_groups(request, agent_id: str, groups_list: str = None, pretty: bool = False,
+async def delete_single_agent_multiple_groups(token_info, agent_id: str, groups_list: str = None, pretty: bool = False,
                                               wait_for_complete: bool = False) -> Response:
     """Remove the agent from all groups or a list of them.
 
@@ -389,7 +395,8 @@ async def delete_single_agent_multiple_groups(request, agent_id: str, groups_lis
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -413,7 +420,7 @@ async def delete_single_agent_multiple_groups(request, agent_id: str, groups_lis
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
 
     data = raise_if_exc(await dapi.distribute_function())
@@ -422,14 +429,15 @@ async def delete_single_agent_multiple_groups(request, agent_id: str, groups_lis
 
 
 @deprecate_endpoint()
-async def get_sync_agent(request, agent_id: str, pretty: bool = False, wait_for_complete=False) -> Response:
+async def get_sync_agent(token_info, agent_id: str, pretty: bool = False, wait_for_complete=False) -> Response:
     """Get agent configuration sync status.
 
     Return whether the agent group configuration has been synchronized with the agent or not.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     agent_id : str
         Agent ID.
     pretty : bool
@@ -450,14 +458,14 @@ async def get_sync_agent(request, agent_id: str, pretty: bool = False, wait_for_
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def delete_single_agent_single_group(request, agent_id: str, group_id: str, pretty: bool = False,
+async def delete_single_agent_single_group(token_info, agent_id: str, group_id: str, pretty: bool = False,
                                            wait_for_complete: bool = False) -> Response:
     """Remove agent from a single group.
 
@@ -466,7 +474,8 @@ async def delete_single_agent_single_group(request, agent_id: str, group_id: str
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -490,20 +499,21 @@ async def delete_single_agent_single_group(request, agent_id: str, group_id: str
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def put_agent_single_group(request, agent_id: str, group_id: str, force_single_group: bool = False,
+async def put_agent_single_group(token_info, agent_id: str, group_id: str, force_single_group: bool = False,
                                  pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Assign an agent to the specified group.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -530,19 +540,20 @@ async def put_agent_single_group(request, agent_id: str, group_id: str, force_si
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_agent_key(request, agent_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def get_agent_key(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get agent key.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -563,19 +574,20 @@ async def get_agent_key(request, agent_id: str, pretty: bool = False, wait_for_c
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def restart_agent(request, agent_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def restart_agent(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Restart an agent.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -596,14 +608,14 @@ async def restart_agent(request, agent_id: str, pretty: bool = False, wait_for_c
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def put_upgrade_agents(request, agents_list: str = None, pretty: bool = False, wait_for_complete: bool = False,
+async def put_upgrade_agents(token_info, agents_list: str = None, pretty: bool = False, wait_for_complete: bool = False,
                              wpk_repo: str = None, upgrade_version: str = None, use_http: bool = False,
                              force: bool = False, q: str = None, manager: str = None, version: str = None,
                              group: str = None, node_name: str = None, name: str = None,
@@ -612,7 +624,8 @@ async def put_upgrade_agents(request, agents_list: str = None, pretty: bool = Fa
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -679,7 +692,7 @@ async def put_upgrade_agents(request, agents_list: str = None, pretty: bool = Fa
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           broadcasting=agents_list == '*'
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -687,7 +700,7 @@ async def put_upgrade_agents(request, agents_list: str = None, pretty: bool = Fa
     return _json_response(data, pretty=pretty)
 
 
-async def put_upgrade_custom_agents(request, agents_list: str = None, pretty: bool = False,
+async def put_upgrade_custom_agents(token_info, agents_list: str = None, pretty: bool = False,
                                     wait_for_complete: bool = False, file_path: str = None, installer: str = None,
                                     q: str = None, manager: str = None, version: str = None, group: str = None,
                                     node_name: str = None, name: str = None, ip: str = None) -> Response:
@@ -695,7 +708,8 @@ async def put_upgrade_custom_agents(request, agents_list: str = None, pretty: bo
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -756,7 +770,7 @@ async def put_upgrade_custom_agents(request, agents_list: str = None, pretty: bo
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies'],
+                          rbac_permissions=token_info['rbac_policies'],
                           broadcasting=agents_list == '*'
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -764,14 +778,15 @@ async def put_upgrade_custom_agents(request, agents_list: str = None, pretty: bo
     return _json_response(data, pretty=pretty)
 
 
-async def get_agent_upgrade(request, agents_list: str = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_agent_upgrade(token_info, agents_list: str = None, pretty: bool = False, wait_for_complete: bool = False,
                             q: str = None, manager: str = None, version: str = None, group: str = None,
                             node_name: str = None, name: str = None, ip: str = None) -> Response:
     """Get upgrade results from agents.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -822,20 +837,21 @@ async def get_agent_upgrade(request, agents_list: str = None, pretty: bool = Fal
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_daemon_stats(request, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_daemon_stats(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                            daemons_list: list = None) -> Response:
     """Get Wazuh statistical information from the specified daemons of a specified agent.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     agent_id : str
         ID of the agent from which the statistics are obtained.
     pretty : bool
@@ -860,19 +876,20 @@ async def get_daemon_stats(request, agent_id: str, pretty: bool = False, wait_fo
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies'])
+                          rbac_permissions=token_info['rbac_policies'])
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_component_stats(request, pretty: bool = False, wait_for_complete: bool = False, agent_id: str = None,
+async def get_component_stats(token_info, pretty: bool = False, wait_for_complete: bool = False, agent_id: str = None,
                               component: str = None) -> Response:
     """Get a specified agent's component stats.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -896,20 +913,21 @@ async def get_component_stats(request, pretty: bool = False, wait_for_complete: 
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def post_new_agent(request, agent_name: str, pretty: bool = False,
+async def post_new_agent(token_info, agent_name: str, pretty: bool = False,
                          wait_for_complete: bool = False) -> Response:
     """Add agent (quick method).
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     agent_name : str
         Name used to register the agent.
     pretty : bool
@@ -930,20 +948,21 @@ async def post_new_agent(request, agent_name: str, pretty: bool = False,
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def delete_multiple_agent_single_group(request, group_id: str, agents_list: str = None, pretty: bool = False,
+async def delete_multiple_agent_single_group(token_info, group_id: str, agents_list: str = None, pretty: bool = False,
                                              wait_for_complete: bool = False) -> Response:
     """Remove agents assignment from a specified group.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     group_id : str
         Group ID.
     agents_list : str
@@ -969,21 +988,22 @@ async def delete_multiple_agent_single_group(request, group_id: str, agents_list
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def put_multiple_agent_single_group(request, group_id: str, agents_list: str = None, pretty: bool = False,
+async def put_multiple_agent_single_group(token_info, group_id: str, agents_list: str = None, pretty: bool = False,
                                           wait_for_complete: bool = False,
                                           force_single_group: bool = False) -> Response:
     """Add multiple agents to a group.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     group_id : str
         Group ID.
     agents_list : str
@@ -1010,20 +1030,21 @@ async def put_multiple_agent_single_group(request, group_id: str, agents_list: s
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def delete_groups(request, groups_list: str = None, pretty: bool = False,
+async def delete_groups(token_info, groups_list: str = None, pretty: bool = False,
                         wait_for_complete: bool = False) -> Response:
     """Delete all groups or a list of them.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     groups_list : str
         Array of group's IDs.
     pretty: bool
@@ -1046,14 +1067,14 @@ async def delete_groups(request, groups_list: str = None, pretty: bool = False,
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_list_group(request, pretty: bool = False, wait_for_complete: bool = False,
+async def get_list_group(token_info, pretty: bool = False, wait_for_complete: bool = False,
                         groups_list: str = None, offset: int = 0, limit: int = None,
                         sort: str = None, search: str = None, q: str = None, select: str = None,
                         distinct: bool = False) -> Response:
@@ -1064,7 +1085,8 @@ async def get_list_group(request, pretty: bool = False, wait_for_complete: bool 
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     groups_list : str
         Array of group's IDs.
     pretty: bool
@@ -1111,14 +1133,14 @@ async def get_list_group(request, pretty: bool = False, wait_for_complete: bool 
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_agents_in_group(request, group_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_agents_in_group(token_info, group_id: str, pretty: bool = False, wait_for_complete: bool = False,
                               offset: int = 0, limit: int = DATABASE_LIMIT, select: str = None, sort: str = None,
                               search: str = None, status: str = None, q: str = None,
                               distinct: bool = False) -> Response:
@@ -1126,7 +1148,8 @@ async def get_agents_in_group(request, group_id: str, pretty: bool = False, wait
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     group_id : str
         Group ID.
     pretty: bool
@@ -1174,7 +1197,7 @@ async def get_agents_in_group(request, group_id: str, pretty: bool = False, wait
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
 
     data = raise_if_exc(await dapi.distribute_function())
@@ -1182,7 +1205,7 @@ async def get_agents_in_group(request, group_id: str, pretty: bool = False, wait
     return _json_response(data, pretty=pretty)
 
 
-async def post_group(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def post_group(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Create a new group.
 
     Parameters
@@ -1198,7 +1221,7 @@ async def post_group(request, pretty: bool = False, wait_for_complete: bool = Fa
         API response.
     """
     # Get body parameters
-    Body.validate_content_type(request, expected_content_type='application/json')
+    Body.validate_content_type(token_info, expected_content_type='application/json')
     f_kwargs = await GroupAddedModel.get_kwargs(request)
 
     dapi = DistributedAPI(f=agent.create_group,
@@ -1207,20 +1230,21 @@ async def post_group(request, pretty: bool = False, wait_for_complete: bool = Fa
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_group_config(request, group_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_group_config(token_info, group_id: str, pretty: bool = False, wait_for_complete: bool = False,
                            offset: int = 0, limit: int = DATABASE_LIMIT) -> Response:
     """Get group configuration defined in the `agent.conf` file.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     group_id : str
         Group ID.
     pretty: bool
@@ -1247,14 +1271,14 @@ async def get_group_config(request, group_id: str, pretty: bool = False, wait_fo
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def put_group_config(request, body: bytes, group_id: str, pretty: bool = False,
+async def put_group_config(token_info, body: bytes, group_id: str, pretty: bool = False,
                            wait_for_complete: bool = False) -> Response:
     """Update group configuration.
 
@@ -1263,7 +1287,8 @@ async def put_group_config(request, body: bytes, group_id: str, pretty: bool = F
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     body : bytes
         Bytes object with the new group configuration.
         The body is obtained from the XML file and decoded in this function.
@@ -1280,7 +1305,7 @@ async def put_group_config(request, body: bytes, group_id: str, pretty: bool = F
         API response.
     """
     # Parse body to utf-8
-    Body.validate_content_type(request, expected_content_type='application/xml')
+    Body.validate_content_type(token_info, expected_content_type='application/xml')
     parsed_body = Body.decode_body(body, unicode_error=1911, attribute_error=1912)
 
     f_kwargs = {'group_list': [group_id],
@@ -1292,21 +1317,22 @@ async def put_group_config(request, body: bytes, group_id: str, pretty: bool = F
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_group_files(request, group_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_group_files(token_info, group_id: str, pretty: bool = False, wait_for_complete: bool = False,
                           offset: int = 0, limit: int = None, sort: str = None, search: str = None, 
                           q: str = None, select: str = None, distinct: bool = False) -> Response:
     """Get the files placed under the group directory.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     group_id : str
         Group ID.
     pretty: bool
@@ -1353,20 +1379,21 @@ async def get_group_files(request, group_id: str, pretty: bool = False, wait_for
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_group_file_json(request, group_id: str, file_name: str, pretty: bool = False,
+async def get_group_file_json(token_info, group_id: str, file_name: str, pretty: bool = False,
                               wait_for_complete: bool = False) -> Response:
     """Get the files placed under the group directory in JSON format.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     group_id : str
         Group ID.
     file_name : str
@@ -1392,20 +1419,21 @@ async def get_group_file_json(request, group_id: str, file_name: str, pretty: bo
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_group_file_xml(request, group_id: str, file_name: str, pretty: bool = False,
+async def get_group_file_xml(token_info, group_id: str, file_name: str, pretty: bool = False,
                              wait_for_complete: bool = False) -> ConnexionResponse:
     """Get the files placed under the group directory in XML format.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     group_id : str
         Group ID.
     file_name : str
@@ -1431,7 +1459,7 @@ async def get_group_file_xml(request, group_id: str, file_name: str, pretty: boo
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
     response = ConnexionResponse(body=data["data"], mimetype='application/xml')
@@ -1439,13 +1467,14 @@ async def get_group_file_xml(request, group_id: str, file_name: str, pretty: boo
     return response
 
 
-async def restart_agents_by_group(request, group_id: str, pretty: bool = False,
+async def restart_agents_by_group(token_info, group_id: str, pretty: bool = False,
                                   wait_for_complete: bool = False) -> Response:
     """Restart all agents from a group.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     group_id : str
         Group name.
     pretty : bool, optional
@@ -1465,7 +1494,7 @@ async def restart_agents_by_group(request, group_id: str, pretty: bool = False,
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     agents = raise_if_exc(await dapi.distribute_function())
 
@@ -1481,7 +1510,7 @@ async def restart_agents_by_group(request, group_id: str, pretty: bool = False,
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
 
     data = raise_if_exc(await dapi.distribute_function())
@@ -1489,7 +1518,7 @@ async def restart_agents_by_group(request, group_id: str, pretty: bool = False,
     return _json_response(data, pretty=pretty)
 
 
-async def insert_agent(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def insert_agent(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Insert a new agent.
 
     Parameters
@@ -1505,7 +1534,7 @@ async def insert_agent(request, pretty: bool = False, wait_for_complete: bool = 
         API response.
     """
     # Get body parameters
-    Body.validate_content_type(request, expected_content_type='application/json')
+    Body.validate_content_type(token_info, expected_content_type='application/json')
     f_kwargs = await AgentInsertedModel.get_kwargs(request)
 
     dapi = DistributedAPI(f=agent.add_agent,
@@ -1514,20 +1543,21 @@ async def insert_agent(request, pretty: bool = False, wait_for_complete: bool = 
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_agent_no_group(request, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
+async def get_agent_no_group(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
                              limit: int = DATABASE_LIMIT, select=None, sort=None, search=None, q=None) -> Response:
     """Get agents without group.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty: bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -1564,21 +1594,22 @@ async def get_agent_no_group(request, pretty: bool = False, wait_for_complete: b
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_agent_outdated(request, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
+async def get_agent_outdated(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
                              limit: int = DATABASE_LIMIT, sort: str = None, search: str = None,
                              q: str = None) -> Response:
     """Get outdated agents.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty: bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -1612,14 +1643,14 @@ async def get_agent_outdated(request, pretty: bool = False, wait_for_complete: b
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_agent_fields(request, pretty: bool = False, wait_for_complete: bool = False, fields: str = None,
+async def get_agent_fields(token_info, pretty: bool = False, wait_for_complete: bool = False, fields: str = None,
                            offset: int = 0, limit: int = DATABASE_LIMIT, sort: str = None, search: str = None,
                            q: str = None) -> Response:
     """Get distinct fields in agents.
@@ -1629,7 +1660,8 @@ async def get_agent_fields(request, pretty: bool = False, wait_for_complete: boo
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -1666,19 +1698,20 @@ async def get_agent_fields(request, pretty: bool = False, wait_for_complete: boo
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_agent_summary_status(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def get_agent_summary_status(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get agents status summary.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format
     wait_for_complete : bool
@@ -1697,19 +1730,20 @@ async def get_agent_summary_status(request, pretty: bool = False, wait_for_compl
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return _json_response(data, pretty=pretty)
 
 
-async def get_agent_summary_os(request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def get_agent_summary_os(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get agents OS summary.
 
     Parameters
     ----------
-    request : connexion.request
+    token_info: dict
+        Security information.
     pretty : bool
         Show results in human-readable format
     wait_for_complete : bool
@@ -1728,7 +1762,7 @@ async def get_agent_summary_os(request, pretty: bool = False, wait_for_complete:
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=request['token_info']['rbac_policies']
+                          rbac_permissions=token_info['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
