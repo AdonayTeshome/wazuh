@@ -12,7 +12,7 @@ import wazuh.rootcheck as rootcheck
 import wazuh.syscheck as syscheck
 import wazuh.syscollector as syscollector
 from api import configuration
-from api.controllers.util import _json_response
+from api.controllers.util import json_response
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
 from wazuh.core.exception import WazuhResourceNotFound
@@ -71,7 +71,7 @@ async def clear_rootcheck_database(token_info, pretty: bool = False, wait_for_co
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
@@ -112,7 +112,7 @@ async def clear_syscheck_database(token_info, pretty: bool = False, wait_for_com
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
@@ -193,7 +193,7 @@ async def get_cis_cat_results(token_info, pretty: bool = False, wait_for_complet
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
@@ -259,7 +259,7 @@ async def get_hardware_info(token_info, pretty: bool = False, wait_for_complete:
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
@@ -333,7 +333,7 @@ async def get_network_address_info(token_info, pretty: bool = False, wait_for_co
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
@@ -408,7 +408,7 @@ async def get_network_interface_info(token_info, pretty: bool = False, wait_for_
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
@@ -477,7 +477,7 @@ async def get_network_protocol_info(token_info, pretty: bool = False, wait_for_c
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
@@ -551,7 +551,7 @@ async def get_os_info(token_info, pretty: bool = False, wait_for_complete: bool 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
@@ -623,7 +623,7 @@ async def get_packages_info(token_info, pretty: bool = False, wait_for_complete:
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
@@ -703,7 +703,7 @@ async def get_ports_info(token_info, pretty: bool = False, wait_for_complete: bo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
@@ -806,7 +806,7 @@ async def get_processes_info(token_info, pretty: bool = False, wait_for_complete
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 @check_experimental_feature_value
@@ -868,4 +868,4 @@ async def get_hotfixes_info(token_info, pretty: bool = False, wait_for_complete:
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)

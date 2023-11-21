@@ -7,7 +7,7 @@ import logging
 from starlette.responses import Response
 
 import wazuh.active_response as active_response
-from api.controllers.util import _json_response
+from api.controllers.util import json_response
 from api.models.active_response_model import ActiveResponseModel
 from api.models.base_model_ import Body
 from api.util import remove_nones_to_dict, raise_if_exc
@@ -50,4 +50,4 @@ async def run_command(token_info, agents_list: str = '*', pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)

@@ -8,7 +8,7 @@ from typing import Union
 from starlette.responses import Response
 from connexion.lifecycle import ConnexionResponse
 
-from api.controllers.util import _json_response
+from api.controllers.util import json_response
 from api.models.base_model_ import Body
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc
 from wazuh import decoder as decoder_framework
@@ -88,7 +88,7 @@ async def get_decoders(token_info, decoder_names: list = None, pretty: bool = Fa
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_decoders_files(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
@@ -160,7 +160,7 @@ async def get_decoders_files(token_info, pretty: bool = False, wait_for_complete
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_decoders_parents(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
@@ -214,7 +214,7 @@ async def get_decoders_parents(token_info, pretty: bool = False, wait_for_comple
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_file(token_info, pretty: bool = False, wait_for_complete: bool = False, 
@@ -257,7 +257,7 @@ async def get_file(token_info, pretty: bool = False, wait_for_complete: bool = F
                           )
     data = raise_if_exc(await dapi.distribute_function())
     if isinstance(data, AffectedItemsWazuhResult):
-        response = _json_response(data, pretty=pretty)
+        response = json_response(data, pretty=pretty)
     else:
         response = ConnexionResponse(body=data["message"], 
                                      mimetype='application/xml', content_type='application/xml')
@@ -312,7 +312,7 @@ async def put_file(token_info, body: bytes, filename: str = None, relative_dirna
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def delete_file(token_info, filename: str = None, 
@@ -351,4 +351,4 @@ async def delete_file(token_info, filename: str = None,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)

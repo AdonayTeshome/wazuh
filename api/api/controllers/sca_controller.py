@@ -8,7 +8,7 @@ import logging
 from starlette.responses import Response
 
 import wazuh.sca as sca
-from api.controllers.util import _json_response
+from api.controllers.util import json_response
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
 from wazuh.core.common import DATABASE_LIMIT
@@ -83,7 +83,7 @@ async def get_sca_agent(token_info, agent_id: str = None, pretty: bool = False, 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_sca_checks(token_info, agent_id: str = None, pretty: bool = False, wait_for_complete: bool = False,
@@ -190,4 +190,4 @@ async def get_sca_checks(token_info, agent_id: str = None, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)

@@ -6,7 +6,7 @@ import logging
 
 from starlette.responses import Response
 
-from api.controllers.util import _json_response
+from api.controllers.util import json_response
 from api.util import raise_if_exc, parse_api_param, remove_nones_to_dict
 from wazuh import mitre
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
@@ -42,7 +42,7 @@ async def get_metadata(token_info, pretty: bool = False, wait_for_complete: bool
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_references(token_info, reference_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
@@ -103,7 +103,7 @@ async def get_references(token_info, reference_ids: list = None, pretty: bool = 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_tactics(token_info, tactic_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
@@ -167,7 +167,7 @@ async def get_tactics(token_info, tactic_ids: list = None, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_techniques(token_info, technique_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
@@ -229,7 +229,7 @@ async def get_techniques(token_info, technique_ids: list = None, pretty: bool = 
 
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_mitigations(token_info, mitigation_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
@@ -291,7 +291,7 @@ async def get_mitigations(token_info, mitigation_ids: list = None, pretty: bool 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_groups(token_info, group_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
@@ -354,7 +354,7 @@ async def get_groups(token_info, group_ids: list = None, pretty: bool = False, w
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_software(token_info, software_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
@@ -417,4 +417,4 @@ async def get_software(token_info, software_ids: list = None, pretty: bool = Fal
 
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)

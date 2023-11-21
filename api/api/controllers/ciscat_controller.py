@@ -8,7 +8,7 @@ from typing import List
 from starlette.responses import Response
 
 import wazuh.ciscat as ciscat
-from api.controllers.util import _json_response
+from api.controllers.util import json_response
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
 

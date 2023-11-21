@@ -8,7 +8,7 @@ from typing import Union
 from starlette.responses import Response
 from connexion.lifecycle import ConnexionResponse
 
-from api.controllers.util import _json_response
+from api.controllers.util import json_response
 from api.models.base_model_ import Body
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc
 from wazuh import cdb_list
@@ -80,7 +80,7 @@ async def get_lists(token_info, pretty: bool = False, wait_for_complete: bool = 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_file(token_info, pretty: bool = False, wait_for_complete: bool = False, filename: str = None,
@@ -120,7 +120,7 @@ async def get_file(token_info, pretty: bool = False, wait_for_complete: bool = F
                           )
     data = raise_if_exc(await dapi.distribute_function())
     if isinstance(data, AffectedItemsWazuhResult):
-        response = _json_response(data, pretty=pretty)
+        response = json_response(data, pretty=pretty)
     else:
         response = ConnexionResponse(body=data["message"], mimetype='text/plain', content_type='text/plain')
 
@@ -169,7 +169,7 @@ async def put_file(token_info, body: bytes, overwrite: bool = False, pretty: boo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def delete_file(token_info, pretty: bool = False, wait_for_complete: bool = False,
@@ -204,7 +204,7 @@ async def delete_file(token_info, pretty: bool = False, wait_for_complete: bool 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_lists_files(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
@@ -261,4 +261,4 @@ async def get_lists_files(token_info, pretty: bool = False, wait_for_complete: b
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)

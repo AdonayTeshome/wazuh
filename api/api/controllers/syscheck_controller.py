@@ -7,7 +7,7 @@ import logging
 from starlette.responses import Response
 
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc
-from api.controllers.util import _json_response
+from api.controllers.util import json_response
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
 from wazuh.syscheck import run, clear, files, last_scan
 
@@ -46,7 +46,7 @@ async def put_syscheck(token_info, agents_list: str = '*', pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_syscheck_agent(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
@@ -120,7 +120,7 @@ async def get_syscheck_agent(token_info, agent_id: str, pretty: bool = False, wa
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def delete_syscheck_agent(token_info, agent_id: str = '*', pretty: bool = False,
@@ -154,7 +154,7 @@ async def delete_syscheck_agent(token_info, agent_id: str = '*', pretty: bool = 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_last_scan_agent(token_info, agent_id: str, pretty: bool = False,
@@ -188,4 +188,4 @@ async def get_last_scan_agent(token_info, agent_id: str, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)

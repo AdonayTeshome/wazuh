@@ -128,7 +128,7 @@ def start(params):
     # HAY QUE HACER: AGREGAR MIDDLEWARE PARA MODIFICAR LOS RESPONSE HEADERS
     # Add application signals
     # app.on_response_prepare.append(modify_response_headers)
-    
+
 
     # API configuration logging
     logger.debug(f'Loaded API configuration: {api_conf}')

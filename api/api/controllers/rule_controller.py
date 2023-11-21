@@ -10,7 +10,7 @@ from aiohttp_cache import cache
 from connexion.lifecycle import ConnexionResponse
 
 from api.configuration import api_conf
-from api.controllers.util import _json_response
+from api.controllers.util import json_response
 from api.models.base_model_ import Body
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc
 from wazuh import rule as rule_framework
@@ -111,7 +111,7 @@ async def get_rules(token_info, rule_ids: list = None, pretty: bool = False, wai
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 @cache(expires=api_conf['cache']['time'])
@@ -160,7 +160,7 @@ async def get_rules_groups(token_info, pretty: bool = False, wait_for_complete: 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 @cache(expires=api_conf['cache']['time'])
@@ -210,7 +210,7 @@ async def get_rules_requirement(token_info, requirement: str = None, pretty: boo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 @cache(expires=api_conf['cache']['time'])
@@ -278,7 +278,7 @@ async def get_rules_files(token_info, pretty: bool = False, wait_for_complete: b
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 @cache(expires=api_conf['cache']['time'])
@@ -322,7 +322,7 @@ async def get_file(token_info, pretty: bool = False, wait_for_complete: bool = F
                           )
     data = raise_if_exc(await dapi.distribute_function())
     if isinstance(data, AffectedItemsWazuhResult):
-        response = _json_response(data, pretty=pretty)
+        response = json_response(data, pretty=pretty)
     else:
         response = ConnexionResponse(body=data["message"], mimetype='application/xml', content_type='application/xml')
 
@@ -376,7 +376,7 @@ async def put_file(token_info, body: bytes, filename: str = None, overwrite: boo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def delete_file(token_info, filename: str = None, 
@@ -415,4 +415,4 @@ async def delete_file(token_info, filename: str = None,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)

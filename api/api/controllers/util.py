@@ -13,7 +13,7 @@ from wazuh.core.exception import WazuhException
 from wazuh.core.results import WazuhResult
 
 
-def _token_response(user: str, data: dict, raw: bool = True) -> Response:
+def token_response(user: str, data: dict, raw: bool = True) -> Response:
     """Generate a token and returns a Response object.
 
     Parameters
@@ -52,7 +52,7 @@ def _token_response(user: str, data: dict, raw: bool = True) -> Response:
     return res
 
 
-def _json_response(data: dict, pretty: bool = False) -> Response:
+def json_response(data: dict, pretty: bool = False) -> Response:
     """Generate a json Response from a dictionary.
 
     Parameters

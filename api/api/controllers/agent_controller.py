@@ -8,7 +8,7 @@ from typing import Union
 from starlette.responses import Response
 from connexion.lifecycle import ConnexionResponse
 
-from api.controllers.util import _json_response
+from api.controllers.util import json_response
 from api.models.agent_added_model import AgentAddedModel
 from api.models.agent_inserted_model import AgentInsertedModel
 from api.models.base_model_ import Body
@@ -100,7 +100,7 @@ async def delete_agents(token_info, pretty: bool = False, wait_for_complete: boo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_agents(token_info, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = None,
@@ -196,7 +196,7 @@ async def get_agents(token_info, pretty: bool = False, wait_for_complete: bool =
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def add_agent(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -231,7 +231,7 @@ async def add_agent(token_info, pretty: bool = False, wait_for_complete: bool = 
 
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def reconnect_agents(token_info, pretty: bool = False, wait_for_complete: bool = False,
@@ -267,7 +267,7 @@ async def reconnect_agents(token_info, pretty: bool = False, wait_for_complete: 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def restart_agents(token_info, pretty: bool = False, wait_for_complete: bool = False,
@@ -303,7 +303,7 @@ async def restart_agents(token_info, pretty: bool = False, wait_for_complete: bo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def restart_agents_by_node(token_info, node_id: str, pretty: bool = False,
@@ -339,7 +339,7 @@ async def restart_agents_by_node(token_info, node_id: str, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_agent_config(token_info, pretty: bool = False, wait_for_complete: bool = False, agent_id: str = None,
@@ -384,7 +384,7 @@ async def get_agent_config(token_info, pretty: bool = False, wait_for_complete: 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def delete_single_agent_multiple_groups(token_info, agent_id: str, groups_list: str = None, pretty: bool = False,
@@ -425,7 +425,7 @@ async def delete_single_agent_multiple_groups(token_info, agent_id: str, groups_
 
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 @deprecate_endpoint()
@@ -462,7 +462,7 @@ async def get_sync_agent(token_info, agent_id: str, pretty: bool = False, wait_f
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def delete_single_agent_single_group(token_info, agent_id: str, group_id: str, pretty: bool = False,
@@ -503,7 +503,7 @@ async def delete_single_agent_single_group(token_info, agent_id: str, group_id: 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def put_agent_single_group(token_info, agent_id: str, group_id: str, force_single_group: bool = False,
@@ -544,7 +544,7 @@ async def put_agent_single_group(token_info, agent_id: str, group_id: str, force
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_agent_key(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -578,7 +578,7 @@ async def get_agent_key(token_info, agent_id: str, pretty: bool = False, wait_fo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def restart_agent(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -612,7 +612,7 @@ async def restart_agent(token_info, agent_id: str, pretty: bool = False, wait_fo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def put_upgrade_agents(token_info, agents_list: str = None, pretty: bool = False, wait_for_complete: bool = False,
@@ -697,7 +697,7 @@ async def put_upgrade_agents(token_info, agents_list: str = None, pretty: bool =
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def put_upgrade_custom_agents(token_info, agents_list: str = None, pretty: bool = False,
@@ -775,7 +775,7 @@ async def put_upgrade_custom_agents(token_info, agents_list: str = None, pretty:
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_agent_upgrade(token_info, agents_list: str = None, pretty: bool = False, wait_for_complete: bool = False,
@@ -841,7 +841,7 @@ async def get_agent_upgrade(token_info, agents_list: str = None, pretty: bool = 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_daemon_stats(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
@@ -879,7 +879,7 @@ async def get_daemon_stats(token_info, agent_id: str, pretty: bool = False, wait
                           rbac_permissions=token_info['rbac_policies'])
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_component_stats(token_info, pretty: bool = False, wait_for_complete: bool = False, agent_id: str = None,
@@ -917,7 +917,7 @@ async def get_component_stats(token_info, pretty: bool = False, wait_for_complet
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def post_new_agent(token_info, agent_name: str, pretty: bool = False,
@@ -952,7 +952,7 @@ async def post_new_agent(token_info, agent_name: str, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def delete_multiple_agent_single_group(token_info, group_id: str, agents_list: str = None, pretty: bool = False,
@@ -992,7 +992,7 @@ async def delete_multiple_agent_single_group(token_info, group_id: str, agents_l
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def put_multiple_agent_single_group(token_info, group_id: str, agents_list: str = None, pretty: bool = False,
@@ -1034,7 +1034,7 @@ async def put_multiple_agent_single_group(token_info, group_id: str, agents_list
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def delete_groups(token_info, groups_list: str = None, pretty: bool = False,
@@ -1071,7 +1071,7 @@ async def delete_groups(token_info, groups_list: str = None, pretty: bool = Fals
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_list_group(token_info, pretty: bool = False, wait_for_complete: bool = False,
@@ -1137,7 +1137,7 @@ async def get_list_group(token_info, pretty: bool = False, wait_for_complete: bo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_agents_in_group(token_info, group_id: str, pretty: bool = False, wait_for_complete: bool = False,
@@ -1202,7 +1202,7 @@ async def get_agents_in_group(token_info, group_id: str, pretty: bool = False, w
 
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def post_group(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -1234,7 +1234,7 @@ async def post_group(token_info, pretty: bool = False, wait_for_complete: bool =
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_group_config(token_info, group_id: str, pretty: bool = False, wait_for_complete: bool = False,
@@ -1275,7 +1275,7 @@ async def get_group_config(token_info, group_id: str, pretty: bool = False, wait
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def put_group_config(token_info, body: bytes, group_id: str, pretty: bool = False,
@@ -1321,7 +1321,7 @@ async def put_group_config(token_info, body: bytes, group_id: str, pretty: bool 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_group_files(token_info, group_id: str, pretty: bool = False, wait_for_complete: bool = False,
@@ -1383,7 +1383,7 @@ async def get_group_files(token_info, group_id: str, pretty: bool = False, wait_
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_group_file_json(token_info, group_id: str, file_name: str, pretty: bool = False,
@@ -1423,7 +1423,7 @@ async def get_group_file_json(token_info, group_id: str, file_name: str, pretty:
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_group_file_xml(token_info, group_id: str, file_name: str, pretty: bool = False,
@@ -1501,7 +1501,7 @@ async def restart_agents_by_group(token_info, group_id: str, pretty: bool = Fals
     agent_list = [a['id'] for a in agents.affected_items]
     if not agent_list:
         data = AffectedItemsWazuhResult(none_msg='Restart command was not sent to any agent')
-        return _json_response(data, pretty=pretty)
+        return json_response(data, pretty=pretty)
 
     f_kwargs = {'agent_list': agent_list}
     dapi = DistributedAPI(f=agent.restart_agents_by_group,
@@ -1515,7 +1515,7 @@ async def restart_agents_by_group(token_info, group_id: str, pretty: bool = Fals
 
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def insert_agent(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -1547,7 +1547,7 @@ async def insert_agent(token_info, pretty: bool = False, wait_for_complete: bool
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_agent_no_group(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
@@ -1598,7 +1598,7 @@ async def get_agent_no_group(token_info, pretty: bool = False, wait_for_complete
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_agent_outdated(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
@@ -1647,7 +1647,7 @@ async def get_agent_outdated(token_info, pretty: bool = False, wait_for_complete
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_agent_fields(token_info, pretty: bool = False, wait_for_complete: bool = False, fields: str = None,
@@ -1702,7 +1702,7 @@ async def get_agent_fields(token_info, pretty: bool = False, wait_for_complete: 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_agent_summary_status(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -1734,7 +1734,7 @@ async def get_agent_summary_status(token_info, pretty: bool = False, wait_for_co
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_agent_summary_os(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -1766,4 +1766,4 @@ async def get_agent_summary_os(token_info, pretty: bool = False, wait_for_comple
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)

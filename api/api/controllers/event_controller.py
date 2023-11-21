@@ -9,7 +9,7 @@ from starlette.requests import Request
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
 from wazuh.event import send_event_to_analysisd
 
-from api.controllers.util import _json_response
+from api.controllers.util import json_response
 from api.models.base_model_ import Body
 from api.models.event_ingest_model import EventIngestModel
 from api.util import raise_if_exc, remove_nones_to_dict
@@ -48,4 +48,4 @@ async def forward_event(request: Request, pretty: bool = False, wait_for_complet
 
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)

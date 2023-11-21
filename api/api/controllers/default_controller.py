@@ -8,7 +8,7 @@ from datetime import datetime
 
 from starlette.responses import Response
 
-from api.controllers.util import _json_response
+from api.controllers.util import json_response
 from api.models.basic_info_model import BasicInfo
 from wazuh.core.common import DATE_FORMAT
 from wazuh.core.results import WazuhResult

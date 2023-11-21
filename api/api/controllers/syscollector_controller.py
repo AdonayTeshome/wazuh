@@ -7,7 +7,7 @@ import logging
 from starlette.responses import Response
 
 import wazuh.syscollector as syscollector
-from api.controllers.util import _json_response
+from api.controllers.util import json_response
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
 
@@ -48,7 +48,7 @@ async def get_hardware_info(token_info, agent_id: str, pretty: bool = False, wai
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_hotfix_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
@@ -112,7 +112,7 @@ async def get_hotfix_info(token_info, agent_id: str, pretty: bool = False, wait_
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_network_address_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
@@ -189,7 +189,7 @@ async def get_network_address_info(token_info, agent_id: str, pretty: bool = Fal
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_network_interface_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
@@ -267,7 +267,7 @@ async def get_network_interface_info(token_info, agent_id: str, pretty: bool = F
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_network_protocol_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
@@ -338,7 +338,7 @@ async def get_network_protocol_info(token_info, agent_id: str, pretty: bool = Fa
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_os_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
@@ -376,7 +376,7 @@ async def get_os_info(token_info, agent_id: str, pretty: bool = False, wait_for_
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_packages_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
@@ -450,7 +450,7 @@ async def get_packages_info(token_info, agent_id: str, pretty: bool = False, wai
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_ports_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
@@ -530,7 +530,7 @@ async def get_ports_info(token_info, agent_id: str, pretty: bool = False, wait_f
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_processes_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
@@ -636,4 +636,4 @@ async def get_processes_info(token_info, agent_id: str, pretty: bool = False, wa
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)

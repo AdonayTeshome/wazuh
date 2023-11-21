@@ -14,7 +14,7 @@ from api.models.security_model import  CreateUserModel, PolicyModel, RoleModel, 
                                        RuleModel, UpdateUserModel
 from api.util import deprecate_endpoint, parse_api_param, raise_if_exc, \
                       remove_nones_to_dict
-from api.controllers.util import _json_response, _token_response
+from api.controllers.util import json_response, token_response
 
 from wazuh import security
 from wazuh.core.cluster.control import get_system_nodes
@@ -57,7 +57,7 @@ async def deprecated_login_user(user: str, raw: bool = False) -> Response:
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _token_response(user, data.dikt, raw)
+    return token_response(user, data.dikt, raw)
 
 
 async def login_user(user: str, raw: bool = False) -> Response:
@@ -86,7 +86,7 @@ async def login_user(user: str, raw: bool = False) -> Response:
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _token_response(user, data.dikt, raw)
+    return token_response(user, data.dikt, raw)
 
 
 async def run_as_login(token_info, user: str, raw: bool = False) -> Response:
@@ -119,7 +119,7 @@ async def run_as_login(token_info, user: str, raw: bool = False) -> Response:
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _token_response(user, data.dikt, raw)
+    return token_response(user, data.dikt, raw)
 
 
 async def get_user_me(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -151,7 +151,7 @@ async def get_user_me(token_info, pretty: bool = False, wait_for_complete: bool 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_user_me_policies(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -174,7 +174,7 @@ async def get_user_me_policies(token_info, pretty: bool = False, wait_for_comple
     data = WazuhResult({'data': token_info['rbac_policies'],
                         'message': "Current user processed policies information was returned"})
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def logout_user(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -204,7 +204,7 @@ async def logout_user(token_info, pretty: bool = False, wait_for_complete: bool 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_users(token_info, user_ids: list = None, pretty: bool = False,
@@ -262,7 +262,7 @@ async def get_users(token_info, user_ids: list = None, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def edit_run_as(token_info, user_id: str, allow_run_as: bool, pretty: bool = False,
@@ -300,7 +300,7 @@ async def edit_run_as(token_info, user_id: str, allow_run_as: bool, pretty: bool
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def create_user(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -333,7 +333,7 @@ async def create_user(token_info, pretty: bool = False, wait_for_complete: bool 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def update_user(token_info, user_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -369,7 +369,7 @@ async def update_user(token_info, user_id: str, pretty: bool = False, wait_for_c
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def delete_users(token_info, user_ids: list = None, pretty: bool = False,
@@ -407,7 +407,7 @@ async def delete_users(token_info, user_ids: list = None, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_roles(token_info, role_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
@@ -465,7 +465,7 @@ async def get_roles(token_info, role_ids: list = None, pretty: bool = False, wai
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def add_role(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -498,7 +498,7 @@ async def add_role(token_info, pretty: bool = False, wait_for_complete: bool = F
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def remove_roles(token_info, role_ids: list = None, pretty: bool = False,
@@ -535,7 +535,7 @@ async def remove_roles(token_info, role_ids: list = None, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def update_role(token_info, role_id: int, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -571,7 +571,7 @@ async def update_role(token_info, role_id: int, pretty: bool = False, wait_for_c
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_rules(token_info, rule_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
@@ -629,7 +629,7 @@ async def get_rules(token_info, rule_ids: list = None, pretty: bool = False, wai
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def add_rule(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -662,7 +662,7 @@ async def add_rule(token_info, pretty: bool = False, wait_for_complete: bool = F
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def update_rule(token_info, rule_id: int, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -698,7 +698,7 @@ async def update_rule(token_info, rule_id: int, pretty: bool = False, wait_for_c
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def remove_rules(token_info, rule_ids: list = None, pretty: bool = False,
@@ -735,7 +735,7 @@ async def remove_rules(token_info, rule_ids: list = None, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_policies(token_info, policy_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
@@ -793,7 +793,7 @@ async def get_policies(token_info, policy_ids: list = None, pretty: bool = False
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def add_policy(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -827,7 +827,7 @@ async def add_policy(token_info, pretty: bool = False, wait_for_complete: bool =
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def remove_policies(token_info, policy_ids: list = None, pretty: bool = False,
@@ -864,7 +864,7 @@ async def remove_policies(token_info, policy_ids: list = None, pretty: bool = Fa
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def update_policy(token_info, policy_id: int, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -900,7 +900,7 @@ async def update_policy(token_info, policy_id: int, pretty: bool = False, wait_f
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def set_user_role(token_info, user_id: str, role_ids: list, position: int = None,
@@ -938,7 +938,7 @@ async def set_user_role(token_info, user_id: str, role_ids: list, position: int 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def remove_user_role(token_info, user_id: str, role_ids: list, pretty: bool = False,
@@ -977,7 +977,7 @@ async def remove_user_role(token_info, user_id: str, role_ids: list, pretty: boo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def set_role_policy(token_info, role_id: int, policy_ids: list, position: int = None, pretty: bool = False,
@@ -1016,7 +1016,7 @@ async def set_role_policy(token_info, role_id: int, policy_ids: list, position: 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def remove_role_policy(token_info, role_id: int, policy_ids: list, pretty: bool = False,
@@ -1054,7 +1054,7 @@ async def remove_role_policy(token_info, role_id: int, policy_ids: list, pretty:
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def set_role_rule(token_info, role_id: int, rule_ids: list, pretty: bool = False,
@@ -1091,7 +1091,7 @@ async def set_role_rule(token_info, role_id: int, rule_ids: list, pretty: bool =
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def remove_role_rule(token_info, role_id: int, rule_ids: list, pretty: bool = False,
@@ -1129,7 +1129,7 @@ async def remove_role_rule(token_info, role_id: int, rule_ids: list, pretty: boo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_rbac_resources(resource: str = None, pretty: bool = False) -> Response:
@@ -1158,7 +1158,7 @@ async def get_rbac_resources(resource: str = None, pretty: bool = False) -> Resp
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_rbac_actions(pretty: bool = False, endpoint: str = None) -> Response:
@@ -1187,7 +1187,7 @@ async def get_rbac_actions(pretty: bool = False, endpoint: str = None) -> Respon
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def revoke_all_tokens(token_info, pretty: bool = False) -> Response:
@@ -1224,7 +1224,7 @@ async def revoke_all_tokens(token_info, pretty: bool = False) -> Response:
     if type(data) == AffectedItemsWazuhResult and len(data.affected_items) == 0:
         raise_if_exc(WazuhPermissionError(4000, data.message))
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_security_config(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -1255,7 +1255,7 @@ async def get_security_config(token_info, pretty: bool = False, wait_for_complet
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def security_revoke_tokens():
@@ -1305,7 +1305,7 @@ async def put_security_config(token_info, pretty: bool = False, wait_for_complet
     data = raise_if_exc(await dapi.distribute_function())
     await security_revoke_tokens()
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def delete_security_config(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -1337,4 +1337,4 @@ async def delete_security_config(token_info, pretty: bool = False, wait_for_comp
     data = raise_if_exc(await dapi.distribute_function())
     await security_revoke_tokens()
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)

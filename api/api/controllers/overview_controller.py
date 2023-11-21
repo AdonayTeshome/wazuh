@@ -6,7 +6,7 @@ import logging
 
 from starlette.responses import Response
 
-from api.controllers.util import _json_response
+from api.controllers.util import json_response
 from api.util import raise_if_exc, remove_nones_to_dict
 from wazuh.agent import get_full_overview
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
@@ -43,4 +43,4 @@ async def get_overview_agents(token_info, pretty: bool = False, wait_for_complet
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)

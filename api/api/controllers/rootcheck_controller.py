@@ -6,7 +6,7 @@ import logging
 
 from starlette.responses import Response
 
-from api.controllers.util import _json_response
+from api.controllers.util import json_response
 from api.util import parse_api_param, remove_nones_to_dict, raise_if_exc
 from wazuh import rootcheck
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
@@ -47,7 +47,7 @@ async def put_rootcheck(token_info, agents_list: str = '*', pretty: bool = False
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def delete_rootcheck(token_info, pretty: bool = False, wait_for_complete: bool = False,
@@ -82,7 +82,7 @@ async def delete_rootcheck(token_info, pretty: bool = False, wait_for_complete: 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_rootcheck_agent(token_info, pretty: bool = False, wait_for_complete: bool = False, agent_id: str = None,
@@ -153,7 +153,7 @@ async def get_rootcheck_agent(token_info, pretty: bool = False, wait_for_complet
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_last_scan_agent(token_info, pretty: bool = False, wait_for_complete: bool = False,
@@ -188,4 +188,4 @@ async def get_last_scan_agent(token_info, pretty: bool = False, wait_for_complet
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)

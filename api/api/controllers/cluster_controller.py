@@ -13,7 +13,7 @@ import wazuh.cluster as cluster
 import wazuh.core.common as common
 import wazuh.manager as manager
 import wazuh.stats as stats
-from api.controllers.util import _json_response
+from api.controllers.util import json_response
 from api.models.base_model_ import Body
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc, deserialize_date, deprecate_endpoint
 from api.validator import check_component_configuration_pair
@@ -55,7 +55,7 @@ async def get_cluster_node(token_info, pretty: bool = False, wait_for_complete: 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_cluster_nodes(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
@@ -120,7 +120,7 @@ async def get_cluster_nodes(token_info, pretty: bool = False, wait_for_complete:
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_healthcheck(token_info, pretty: bool = False, wait_for_complete: bool = False,
@@ -161,7 +161,7 @@ async def get_healthcheck(token_info, pretty: bool = False, wait_for_complete: b
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_nodes_ruleset_sync_status(token_info, pretty: bool = False, wait_for_complete: bool = False,
@@ -210,7 +210,7 @@ async def get_nodes_ruleset_sync_status(token_info, pretty: bool = False, wait_f
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_status(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -241,7 +241,7 @@ async def get_status(token_info, pretty: bool = False, wait_for_complete: bool =
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_config(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -275,7 +275,7 @@ async def get_config(token_info, pretty: bool = False, wait_for_complete: bool =
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_status_node(token_info, node_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -311,7 +311,7 @@ async def get_status_node(token_info, node_id: str, pretty: bool = False, wait_f
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_info_node(token_info, node_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
@@ -349,7 +349,7 @@ async def get_info_node(token_info, node_id: str, pretty: bool = False, wait_for
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_configuration_node(token_info, node_id: str, pretty: bool = False, wait_for_complete: bool = False,
@@ -398,7 +398,7 @@ async def get_configuration_node(token_info, node_id: str, pretty: bool = False,
     data = raise_if_exc(await dapi.distribute_function())
 
     if isinstance(data, AffectedItemsWazuhResult):
-        response = _json_response(data, pretty=pretty)
+        response = json_response(data, pretty=pretty)
     else:
         response = ConnexionResponse(body=data["message"], mimetype='application/xml', content_type='application/xml')
     return response
@@ -434,7 +434,7 @@ async def get_daemon_stats_node(token_info, node_id: str, pretty: bool = False, 
                           nodes=nodes)
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_stats_node(token_info, node_id: str, pretty: bool = False, wait_for_complete: bool = False,
@@ -480,7 +480,7 @@ async def get_stats_node(token_info, node_id: str, pretty: bool = False, wait_fo
                           nodes=nodes
                           )
     data = raise_if_exc(await dapi.distribute_function())
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_stats_hourly_node(token_info, node_id: str, pretty: bool = False,
@@ -520,7 +520,7 @@ async def get_stats_hourly_node(token_info, node_id: str, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_stats_weekly_node(token_info, node_id: str, pretty: bool = False,
@@ -560,7 +560,7 @@ async def get_stats_weekly_node(token_info, node_id: str, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 @deprecate_endpoint()
@@ -600,7 +600,7 @@ async def get_stats_analysisd_node(token_info, node_id: str, pretty: bool = Fals
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 @deprecate_endpoint()
@@ -640,7 +640,7 @@ async def get_stats_remoted_node(token_info, node_id: str, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_log_node(token_info, node_id: str, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
@@ -710,7 +710,7 @@ async def get_log_node(token_info, node_id: str, pretty: bool = False, wait_for_
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_log_summary_node(token_info, node_id: str, pretty: bool = False,
@@ -747,7 +747,7 @@ async def get_log_summary_node(token_info, node_id: str, pretty: bool = False,
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_api_config(token_info, pretty: bool = False, wait_for_complete: bool = False,
@@ -785,7 +785,7 @@ async def get_api_config(token_info, pretty: bool = False, wait_for_complete: bo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def put_restart(token_info, pretty: bool = False, wait_for_complete: bool = False,
@@ -823,7 +823,7 @@ async def put_restart(token_info, pretty: bool = False, wait_for_complete: bool 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_conf_validation(token_info, pretty: bool = False, wait_for_complete: bool = False,
@@ -862,7 +862,7 @@ async def get_conf_validation(token_info, pretty: bool = False, wait_for_complet
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def get_node_config(token_info, node_id: str, component: str, wait_for_complete: bool = False, pretty: bool = False,
@@ -907,7 +907,7 @@ async def get_node_config(token_info, node_id: str, component: str, wait_for_com
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
 
 
 async def update_configuration(token_info, node_id: str, body: bytes, pretty: bool = False,
@@ -951,4 +951,4 @@ async def update_configuration(token_info, node_id: str, body: bytes, pretty: bo
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)

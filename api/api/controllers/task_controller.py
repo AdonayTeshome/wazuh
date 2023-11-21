@@ -7,7 +7,7 @@ import logging
 from starlette.responses import Response
 
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc
-from api.controllers.util import _json_response
+from api.controllers.util import json_response
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
 from wazuh.core.common import DATABASE_LIMIT
 from wazuh.task import get_task_status
@@ -82,4 +82,4 @@ async def get_tasks_status(token_info, pretty: bool = False, wait_for_complete: 
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return _json_response(data, pretty=pretty)
+    return json_response(data, pretty=pretty)
