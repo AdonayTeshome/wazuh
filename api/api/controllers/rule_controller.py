@@ -6,7 +6,7 @@ import logging
 from typing import Union
 
 from starlette.responses import Response
-from aiohttp_cache import cache
+#from aiohttp_cache import cache
 from connexion.lifecycle import ConnexionResponse
 
 from api.configuration import api_conf
@@ -20,8 +20,8 @@ from wazuh.core.results import AffectedItemsWazuhResult
 logger = logging.getLogger('wazuh-api')
 
 
-@cache(expires=api_conf['cache']['time'])
-async def get_rules(token_info, rule_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
+#@cache(expires=api_conf['cache']['time'])
+async def get_rules(request, token_info, rule_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                     offset: int = 0, select: str = None, limit: int = None, sort: str = None, search: str = None,
                     q: str = None, status: str = None, group: str = None, level: str = None, filename: list = None,
                     relative_dirname: str = None, pci_dss: str = None, gdpr: str = None, gpg13: str = None,
@@ -30,6 +30,8 @@ async def get_rules(token_info, rule_ids: list = None, pretty: bool = False, wai
 
     Parameters
     ----------
+    request: Request
+        HTTP request
     token_info: dict
         Security information.
     rule_ids : list
@@ -114,7 +116,7 @@ async def get_rules(token_info, rule_ids: list = None, pretty: bool = False, wai
     return json_response(data, pretty=pretty)
 
 
-@cache(expires=api_conf['cache']['time'])
+#@cache(expires=api_conf['cache']['time'])
 async def get_rules_groups(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
                            limit: int = None, sort: str = None, search: str = None) -> Response:
     """Get all rule groups names.
@@ -163,7 +165,7 @@ async def get_rules_groups(token_info, pretty: bool = False, wait_for_complete: 
     return json_response(data, pretty=pretty)
 
 
-@cache(expires=api_conf['cache']['time'])
+#@cache(expires=api_conf['cache']['time'])
 async def get_rules_requirement(token_info, requirement: str = None, pretty: bool = False, wait_for_complete: bool = False,
                                 offset: int = 0, limit: int = None, sort: str = None,
                                 search: str = None) -> Response:
@@ -213,7 +215,7 @@ async def get_rules_requirement(token_info, requirement: str = None, pretty: boo
     return json_response(data, pretty=pretty)
 
 
-@cache(expires=api_conf['cache']['time'])
+#@cache(expires=api_conf['cache']['time'])
 async def get_rules_files(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
                           limit: int = None, sort: str = None, search: str = None, status: str = None,
                           filename: list = None, relative_dirname: str = None, q: str = None,
@@ -281,7 +283,7 @@ async def get_rules_files(token_info, pretty: bool = False, wait_for_complete: b
     return json_response(data, pretty=pretty)
 
 
-@cache(expires=api_conf['cache']['time'])
+#@cache(expires=api_conf['cache']['time'])
 async def get_file(token_info, pretty: bool = False, wait_for_complete: bool = False, 
                    filename: str = None, relative_dirname: str = None, 
                    raw: bool = False) -> Union[Response, ConnexionResponse]:

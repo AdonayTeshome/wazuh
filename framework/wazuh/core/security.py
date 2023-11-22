@@ -49,8 +49,8 @@ def update_security_conf(new_config: dict):
     else:
         raise WazuhError(4021)
     if 'max_login_attempts' in new_config.keys():
-        middlewares.ip_stats = dict()
-        middlewares.ip_block = set()
+        middlewares.IP_STATS = dict()
+        middlewares.IP_BLOCK = set()
     if 'max_request_per_minute' in new_config.keys():
         middlewares.request_counter = 0
 

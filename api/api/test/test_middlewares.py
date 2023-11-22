@@ -58,13 +58,13 @@ def test_cleanup_detail_field():
 @freeze_time(datetime(1970, 1, 1, 0, 0, 10))
 @pytest.mark.asyncio
 async def test_middlewares_unlock_ip():
-    from api.middlewares import ip_block, ip_stats
+    from api.middlewares import IP_BLOCK, IP_STATS
 
     # Assert they are not empty
-    assert ip_stats and ip_block
+    assert IP_STATS and IP_BLOCK
     await unlock_ip(DummyRequest({'remote': "ip"}), 5)
     # Assert that under these conditions, they have been emptied
-    assert not ip_stats and not ip_block
+    assert not IP_STATS and not IP_BLOCK
 
 
 @patch("api.middlewares.ip_stats", new={"ip": {'timestamp': 5}})
@@ -91,18 +91,18 @@ async def test_middlewares_unlock_ip_ko():
 async def test_middlewares_prevent_bruteforce_attack(request_info, stats):
     """Test `prevent_bruteforce_attack` blocks IPs when reaching max number of attempts."""
     with patch("api.middlewares.ip_stats", new=copy(stats)):
-        from api.middlewares import ip_block, ip_stats
-        previous_attempts = ip_stats['ip']['attempts'] if 'ip' in ip_stats else 0
+        from api.middlewares import IP_BLOCK, IP_STATS
+        previous_attempts = IP_STATS['ip']['attempts'] if 'ip' in IP_STATS else 0
         await prevent_bruteforce_attack(DummyRequest(request_info),
                                         attempts=5)
         if stats:
             # There were previous attempts. This one reached the limit
-            assert ip_stats['ip']['attempts'] == previous_attempts + 1
-            assert 'ip' in ip_block
+            assert IP_STATS['ip']['attempts'] == previous_attempts + 1
+            assert 'ip' in IP_BLOCK
         else:
             # There were not previous attempts
-            assert ip_stats['ip']['attempts'] == 1
-            assert 'ip' not in ip_block
+            assert IP_STATS['ip']['attempts'] == 1
+            assert 'ip' not in IP_BLOCK
 
 
 @freeze_time(datetime(1970, 1, 1))
