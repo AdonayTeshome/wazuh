@@ -2,20 +2,23 @@
 # Created by Wazuh, Inc. <info@wazuh.com>.
 # This program is a free software; you can redistribute it and/or modify it under the terms of GPLv2
 
-import os
-from json import JSONDecodeError
+import binascii
+import json
 import logging
-import contextlib
+import hashlib
+import time
+import base64
+from jose.jwt import get_unverified_claims
+from base64 import b64decode
 
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.applications import ASGIApp
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint, DispatchFunction
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.exceptions import HTTPException
-from connexion import ConnexionMiddleware
 from connexion.exceptions import OAuthProblem, ProblemException, Unauthorized
 from connexion.problem import problem as connexion_problem
-from secure.secure import Secure
-from wazuh.core import common
+from secure import Secure, ContentSecurityPolicy, XFrameOptions, Server
 from wazuh.core.wlogging import TimeBasedFileRotatingHandler, SizeBasedFileRotatingHandler
 from wazuh.core.exception import WazuhPermissionError, WazuhTooManyRequests
 from wazuh.core.utils import get_utc_now
@@ -24,10 +27,21 @@ from api import alogging, configuration
 from api.util import raise_if_exc, APILoggerSize
 from api.constants import API_LOG_PATH
 
+# Default of the max event requests allowed per minute
 MAX_REQUESTS_EVENTS_DEFAULT = 30
 
+# Variable used to specify an unknown user
+UNKNOWN_USER_STRING = "unknown_user"
+
+# Run_as login endpoint path
+RUN_AS_LOGIN_ENDPOINT = "/security/user/authenticate/run_as"
+
 # API secure headers
-secure_headers = Secure(server="Wazuh", csp="none", xfo="DENY")
+server = Server().set("Wazuh")
+csp = ContentSecurityPolicy()
+csp.default_src('self')
+xfo = XFrameOptions().deny()
+secure_headers = Secure(server=server, csp=csp, xfo=xfo)
 
 logger = logging.getLogger('wazuh-api')
 
@@ -143,11 +157,11 @@ class RequestLogginMiddleware(BaseHTTPMiddleware):
         Response
             Returned response.
         """
-        self.logger.debug2(f'Receiving headers {dict(request.headers)}')
+        logger.debug2(f'Receiving headers {dict(request.headers)}')
         try:
             body = await request.json()
             request['body'] = body
-        except JSONDecodeError:
+        except json.JSONDecodeError:
             pass
 
         return await call_next(request)
@@ -295,34 +309,122 @@ class RemoveFieldsFromErrorMiddleware(BaseHTTPMiddleware):
 
         return problem
 
-@contextlib.asynccontextmanager
-async def lifespan_handler(app: ConnexionMiddleware):
-    plain_log = 'plain' in configuration.api_conf['logs']['format']
-    json_log = 'json' in configuration.api_conf['logs']['format']
-    if plain_log:
-        log_path=f'{API_LOG_PATH}.log'
-    elif json_log:
-        log_path=f'{API_LOG_PATH}.json'
 
-    if not configuration.api_conf['logs']['max_size']['enabled']:
-        custom_handler = TimeBasedFileRotatingHandler(filename=log_path, when='midnight')
-    else:
-        max_size = APILoggerSize(configuration.api_conf['logs']['max_size']['size']).size
-        custom_handler = SizeBasedFileRotatingHandler(filename=log_path,
-                                                        maxBytes=max_size,
-                                                        backupCount=1)
+class WazuhAccessLoggerMiddleware(BaseHTTPMiddleware):
+    """Middleware to log custom Access messages."""
 
-    for logger_name in ('uvicorn', 'uvicorn.acces', 'uvicorn.error', 'wazuh-api'):
-        foreground_mode = isinstance(logging.getLogger(logger_name).handlers[0], logging.StreamHandler)
-        api_logger = alogging.APILogger(
-            log_path=log_path, foreground_mode=foreground_mode, logger_name=logger_name,
-            debug_level='info' \
-                if logger_name != 'wazuh-api' and configuration.api_conf['logs']['level'] != 'debug2' \
-                    else configuration.api_conf['logs']['level']
-        )
-        api_logger.setup_logger(custom_handler)
-    if os.path.exists(log_path):
-        os.chown(log_path, common.wazuh_uid(), common.wazuh_gid())
-        os.chmod(log_path, 0o660)
+    def custom_logging(self, user, remote, method, path, query,
+                       body, elapsed_time, status, hash_auth_context=''):
+        """Provide the log entry structure depending on the logging format.
 
-    yield
+        Parameters
+        ----------
+        user : str
+            User who perform the request.
+        remote : str
+            IP address of the request.
+        method : str
+            HTTP method used in the request.
+        path : str
+            Endpoint used in the request.
+        query : dict
+            Dictionary with the request parameters.
+        body : dict
+            Dictionary with the request body.
+        elapsed_time : float
+            Required time to compute the request.
+        status : int
+            Status code of the request.
+        hash_auth_context : str, optional
+            Hash representing the authorization context. Default: ''
+        """
+        json_info = {
+            'user': user,
+            'ip': remote,
+            'http_method': method,
+            'uri': f'{method} {path}',
+            'parameters': query,
+            'body': body,
+            'time': f'{elapsed_time:.3f}s',
+            'status_code': status
+        }
+
+        if not hash_auth_context:
+            log_info = f'{user} {remote} "{method} {path}" '
+        else:
+            log_info = f'{user} ({hash_auth_context}) {remote} "{method} {path}" '
+            json_info['hash_auth_context'] = hash_auth_context
+
+        if path == '/events' and logger.level >= 20:
+            # If log level is info simplify the messages for the /events requests.
+            events = body.get('events', [])
+            body = {'events': len(events)}
+            json_info['body'] = body
+
+        log_info += f'with parameters {json.dumps(query)} and body'\
+             f' {json.dumps(body)} done in {elapsed_time:.3f}s: {status}'
+
+        logger.info(log_info, extra={'log_type': 'log'})
+        logger.info(json_info, extra={'log_type': 'json'})
+
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        """Log Wazuh access information.
+
+        Additionally, it cleans the output given by connexion's exceptions.
+        If no exception is raised during the 'await handler(request) it means
+        the output will be a 200 response and no fields needs to be removed.
+
+        Parameters
+        ----------
+        request : Request
+            HTTP Request received.
+        call_next :  RequestResponseEndpoint
+            Endpoint callable to be executed.
+
+        Returns
+        -------
+        Response
+            Returned response.
+        """
+        prev_time = time.time()
+        response = await call_next(request)
+        time_diff = time.time() - prev_time
+
+        query = dict(request.query_params)
+        body = request.get("body", dict())
+        if 'password' in query:
+            query['password'] = '****'
+        if 'password' in body:
+            body['password'] = '****'
+        if 'key' in body and '/agents' in request.path:
+            body['key'] = '****'
+
+        # With permanent redirect, not found responses or any response with no token information,
+        # decode the JWT token to get the username
+        user = request.get('user', '')
+        if not user:
+            try:
+                auth_type, encoded_credentials = request.headers["authorization"].split()
+                if auth_type == 'Basic':
+                    user = base64.b64decode(encoded_credentials).decode("utf-8").split(':')[1]
+                elif auth_type == 'Bearer':
+                    user = get_unverified_claims(encoded_credentials)['sub']
+                else:
+                    user = UNKNOWN_USER_STRING    
+            except (KeyError, IndexError, binascii.Error):
+                user = UNKNOWN_USER_STRING
+
+        # Get or create authorization context hash
+        hash_auth_context = ''
+        # Get hash from token information
+        if 'token_info' in request:
+            hash_auth_context = request['token_info'].get('hash_auth_context', '')
+        # Create hash if run_as login
+        if not hash_auth_context and request.scope['path'] == RUN_AS_LOGIN_ENDPOINT:
+            hash_auth_context = hashlib.blake2b(json.dumps(body).encode(),
+                                                digest_size=16).hexdigest()
+
+        self.custom_logging(user, request.client.host, request.method,
+                            request.scope['path'], query, body, time_diff, response.status_code,
+                            hash_auth_context=hash_auth_context)
+        return response

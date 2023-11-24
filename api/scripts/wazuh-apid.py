@@ -19,21 +19,20 @@ from uvicorn.config import LOGGING_CONFIG
 
 from starlette.middleware.cors import CORSMiddleware
 from content_size_limit_asgi import ContentSizeLimitMiddleware
-from api.middlewares import lifespan_handler
+# from api.middlewares import lifespan_handler
 
 from api.constants import API_LOG_PATH
 from api.api_exception import APIError
-from api import alogging, configuration
+from api import configuration
 from api.configuration import api_conf, read_yaml_config
 from api import __path__ as api_path
 from api.constants import CONFIG_FILE_PATH
 from api.middlewares import SecureHeadersMiddleware, CheckRateLimitsMiddleware, \
-    RequestLogginMiddleware, RemoveFieldsFromErrorMiddleware
+    RequestLogginMiddleware, RemoveFieldsFromErrorMiddleware, WazuhAccessLoggerMiddleware
 # from api.signals import modify_response_headers
 from api.util import APILoggerSize, to_relative_path
 
 from wazuh.rbac.orm import check_database_integrity
-from wazuh.core.wlogging import TimeBasedFileRotatingHandler, SizeBasedFileRotatingHandler
 from wazuh.core import pyDaemonModule, common, utils
 from wazuh.core.cluster import __version__, __author__, __wazuh_name__, __licence__
 
@@ -96,7 +95,7 @@ def start(params, foreground_mode):
         __name__,
         specification_dir=os.path.join(api_path[0], 'spec'),
         swagger_ui_options=SwaggerUIOptions(swagger_ui=False),
-        lifespan=lifespan_handler
+        # lifespan=lifespan_handler
     )
     app.add_api('spec.yaml',
                 arguments={
@@ -109,6 +108,7 @@ def start(params, foreground_mode):
                 )
 
     # Maximum body size that the API can accept (bytes)
+    app.add_middleware(WazuhAccessLoggerMiddleware)
     app.add_middleware(ContentSizeLimitMiddleware,
                        max_content_size=api_conf['max_upload_size'])
     app.add_middleware(SecureHeadersMiddleware)
@@ -178,25 +178,88 @@ def exit_handler(signum, frame):
     pyDaemonModule.delete_child_pids(API_MAIN_PROCESS, api_pid, logger)
     pyDaemonModule.delete_pid(API_MAIN_PROCESS, api_pid)
 
-def get_log_config(log_path=f'{API_LOG_PATH}.log', debug_mode='INFO') -> dict():
-    log_config = LOGGING_CONFIG
-    log_config['handlers']['file'] = {
-        'filename': log_path,
-        'level': debug_mode,
-        'formatter': 'default'
-    }
-    if api_conf['logs']['max_size']['enabled']:
-        max_size = APILoggerSize(api_conf['logs']['max_size']['size']).size
-        log_config['handlers']['file']['class'] = \
-            'wazuh.core.wlogging.SizeBasedFileRotatingHandler'
-        log_config['handlers']['file']['maxBytes'] = max_size
-        log_config['handlers']['file']['backupCount'] = 1
-    else:
-        log_config['handlers']['file']['class'] = \
-            'wazuh.core.wlogging.TimeBasedFileRotatingHandler'
-        log_config['handlers']['file']['when'] = 'midnight'
 
-    log_config['loggers']['wazuh-api'] = {"handlers": ["file"], "level": debug_mode, "propagate": False}
+def add_log_level_debug2():
+    """Add a new debug level"""
+
+    logging.DEBUG2 = 6
+
+    def debug2(self, message, *args, **kws):
+        if self.isEnabledFor(logging.DEBUG2):
+            self._log(logging.DEBUG2, message, args, **kws)
+
+    def error(self, msg, *args, **kws):
+        if self.isEnabledFor(logging.ERROR):
+            if 'exc_info' not in kws:
+                kws['exc_info'] = self.isEnabledFor(logging.DEBUG2)
+            self._log(logging.ERROR, msg, args, **kws)
+
+    logging.addLevelName(logging.DEBUG2, "DEBUG2")
+
+    logging.Logger.debug2 = debug2
+    logging.Logger.error = error
+
+
+def get_log_config(log_path=f'{API_LOG_PATH}.log', debug_mode='INFO',
+                   foreground_mode=False) -> dict():
+    """Create a logging configuration dictionary."""
+
+    log_config = LOGGING_CONFIG
+    log_config['formatters']['wazuh-fmt'] = {}
+    log_config['filters'] = {
+        'wazuh-filter': {
+            '()': 'wazuh.core.wlogging.CustomFilter',
+        }
+    }
+    if foreground_mode:
+        log_config['formatters']['wazuh-fmt']['fmt'] = '%(asctime)s %(levelname)s: %(message)s'
+        log_config['filters']['wazuh-filter']['log_type'] = 'log'
+        log_config['handlers']['console'] = {
+            'level': debug_mode,
+            'formatter': 'wazuh-fmt',
+            'class': 'logging.StreamHandler',
+            'stream': 'ext://sys.stdout',
+            'filters': ['wazuh-filter']
+        }
+        log_config['loggers']['wazuh-api'] = {"handlers": ["console"],
+                                            "level": debug_mode, "propagate": False}
+    else:
+        if log_path.endswith('.json'):
+            log_config['filters']['wazuh-filter']['log_type'] = 'json'
+            log_config['formatters']['wazuh-fmt']['()'] = 'api.alogging.WazuhJsonFormatter'
+            log_config['formatters']['wazuh-fmt']['style'] = '%'
+            log_config['formatters']['wazuh-fmt']['datefmt'] = "%Y/%m/%d %H:%M:%S"
+        else:
+            log_config['filters']['wazuh-filter']['log_type'] = 'log'
+            log_config['formatters']['wazuh-fmt']['fmt'] = '%(asctime)s %(levelname)s: %(message)s'
+
+        log_config['handlers']['file'] = {
+            'filename': log_path,
+            'level': debug_mode,
+            'formatter': 'wazuh-fmt',
+            'filters': ['wazuh-filter']
+        }
+
+        if api_conf['logs']['max_size']['enabled']:
+            max_size = APILoggerSize(api_conf['logs']['max_size']['size']).size
+            log_config['handlers']['file']['class'] = \
+                'wazuh.core.wlogging.SizeBasedFileRotatingHandler'
+            log_config['handlers']['file']['maxBytes'] = max_size
+            log_config['handlers']['file']['backupCount'] = 1
+        else:
+            log_config['handlers']['file']['class'] = \
+                'wazuh.core.wlogging.TimeBasedFileRotatingHandler'
+            log_config['handlers']['file']['when'] = 'midnight'
+
+            log_config['loggers']['wazuh-api'] = {"handlers": ["file"], "level": debug_mode,
+                                                  "propagate": False}
+            # log_config['loggers']['uvicorn'] = {"handlers": ["file"], "level": debug_mode,
+            #                                     "propagate": False}
+            log_config['loggers']['uvicorn.access'] = {"handlers": ["file"], "level": 'WARNING',
+                                                       "propagate": False}
+            log_config['loggers']['uvicorn.error'] = {"handlers": ["file"], "level": debug_mode, 
+                                                      "propagate": False}
+
     return log_config
 
 if __name__ == '__main__':
@@ -239,8 +302,10 @@ if __name__ == '__main__':
     # Set up logger
     plain_log = 'plain' in api_conf['logs']['format']
     json_log = 'json' in api_conf['logs']['format']
+    add_log_level_debug2()
     uvicorn_params['log_config'] = get_log_config(log_path=f'{API_LOG_PATH}.log',
-                                                  debug_mode=api_conf['logs']['level'].upper())
+                                                  debug_mode=api_conf['logs']['level'].upper(),
+                                                  foreground_mode=args.foreground)
 
     logger = logging.getLogger('wazuh-api')
 
