@@ -6,7 +6,6 @@ import logging
 from typing import Union
 
 from starlette.responses import Response
-#from aiohttp_cache import cache
 from connexion.lifecycle import ConnexionResponse
 
 from api.configuration import api_conf
