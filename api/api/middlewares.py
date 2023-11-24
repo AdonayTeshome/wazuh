@@ -8,24 +8,22 @@ import logging
 import hashlib
 import time
 import base64
+import contextlib
 from jose.jwt import get_unverified_claims
-from base64 import b64decode
 
-from starlette.applications import ASGIApp
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint, DispatchFunction
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.exceptions import HTTPException
+from connexion import ConnexionMiddleware
 from connexion.exceptions import OAuthProblem, ProblemException, Unauthorized
 from connexion.problem import problem as connexion_problem
 from secure import Secure, ContentSecurityPolicy, XFrameOptions, Server
-from wazuh.core.wlogging import TimeBasedFileRotatingHandler, SizeBasedFileRotatingHandler
 from wazuh.core.exception import WazuhPermissionError, WazuhTooManyRequests
 from wazuh.core.utils import get_utc_now
 
-from api import alogging, configuration
-from api.util import raise_if_exc, APILoggerSize
-from api.constants import API_LOG_PATH
+from api import configuration
+from api.util import raise_if_exc
 
 # Default of the max event requests allowed per minute
 MAX_REQUESTS_EVENTS_DEFAULT = 30
@@ -428,3 +426,13 @@ class WazuhAccessLoggerMiddleware(BaseHTTPMiddleware):
                             request.scope['path'], query, body, time_diff, response.status_code,
                             hash_auth_context=hash_auth_context)
         return response
+
+@contextlib.asynccontextmanager
+async def lifespan_handler(_: ConnexionMiddleware):
+    """Lifespan handler to start tasks at startup."""
+
+    # Log the initial server startup message.
+    msg = f'Listening on {configuration.api_conf["host"]}:{configuration.api_conf["port"]}.'
+    logger.info(msg)
+    yield
+    logger.info('Shutdown wazuh-apid server.')

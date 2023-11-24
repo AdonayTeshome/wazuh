@@ -19,7 +19,7 @@ from uvicorn.config import LOGGING_CONFIG
 
 from starlette.middleware.cors import CORSMiddleware
 from content_size_limit_asgi import ContentSizeLimitMiddleware
-# from api.middlewares import lifespan_handler
+from api.middlewares import lifespan_handler
 
 from api.constants import API_LOG_PATH
 from api.api_exception import APIError
@@ -95,7 +95,7 @@ def start(params):
         __name__,
         specification_dir=os.path.join(api_path[0], 'spec'),
         swagger_ui_options=SwaggerUIOptions(swagger_ui=False),
-        # lifespan=lifespan_handler
+        lifespan=lifespan_handler
     )
     app.add_api('spec.yaml',
                 arguments={
@@ -201,7 +201,7 @@ def add_log_level_debug2():
 
 
 def create_log_config_dict(log_path=f'{API_LOG_PATH}.log', log_level='INFO',
-                   foreground_mode=False) -> dict():
+                           foreground_mode=False) -> dict():
     """Create a logging configuration dictionary.
     
     Parameters
@@ -220,10 +220,12 @@ def create_log_config_dict(log_path=f'{API_LOG_PATH}.log', log_level='INFO',
         Logging configuraction dictionary.
     """
     log_config = LOGGING_CONFIG
-    log_config['formatters']['default']['fmt'] = "%(asctime)s %(levelprefix)s %(message)s"
+    log_config['formatters']['default']['fmt'] = "%(asctime)s %(levelname)s: %(message)s"
     log_config['formatters']['default']['datefmt'] = "%Y-%m-%d %H:%M:%S"
-    log_config['formatters']['access']['fmt'] = '%(asctime)s %(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s'
+    log_config['formatters']['access']['fmt'] = '%(asctime)s %(levelname)s: %(client_addr)s - "%(request_line)s" %(status_code)s'
     log_config['formatters']['access']['datefmt'] = "%Y-%m-%d %H:%M:%S"
+    log_config['loggers']['uvicorn']['level'] = 'WARNING'
+    log_config['loggers']['uvicorn.error']['level'] = 'WARNING'
     log_config['loggers']['uvicorn.access']['level'] = 'WARNING'
 
     log_config['filters'] = {
@@ -273,8 +275,11 @@ def create_log_config_dict(log_path=f'{API_LOG_PATH}.log', log_level='INFO',
 
         log_config['loggers']['wazuh-api'] = {"handlers": ["file"], "level": log_level,
                                                 "propagate": False}
-        log_config['loggers']['uvicorn.error'] = {"handlers": ["file"], "level": log_level,
+        log_config['loggers']['uvicorn.error'] = {"handlers": ["file"], "level": 'WARNING',
                                                     "propagate": False}
+        log_config['loggers']['uvicorn'] = {"handlers": ["file"], "level": 'WARNING',
+                                                    "propagate": False}
+
 
     return log_config
 
