@@ -69,7 +69,7 @@ def spawn_authentication_pool():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
-def start(params, foreground_mode):
+def start(params):
     """Run the Wazuh API.
 
     If another Wazuh API is running, this function fails.
@@ -180,7 +180,7 @@ def exit_handler(signum, frame):
 
 
 def add_log_level_debug2():
-    """Add a new debug level"""
+    """Add a new debug level used by wazuh api and framework."""
 
     logging.DEBUG2 = 6
 
@@ -200,43 +200,63 @@ def add_log_level_debug2():
     logging.Logger.error = error
 
 
-def get_log_config(log_path=f'{API_LOG_PATH}.log', debug_mode='INFO',
+def create_log_config_dict(log_path=f'{API_LOG_PATH}.log', log_level='INFO',
                    foreground_mode=False) -> dict():
-    """Create a logging configuration dictionary."""
+    """Create a logging configuration dictionary.
+    
+    Parameters
+    ----------
+    log_path : str
+        Log file path.
+    log_level :  str
+        Logger Log level.
+    foreground_mode: bool
+        Log output to console streams when true
+        else Log output to file.
 
+    Returns
+    -------
+    dict
+        Logging configuraction dictionary.
+    """
     log_config = LOGGING_CONFIG
-    log_config['formatters']['wazuh-fmt'] = {}
+    log_config['formatters']['default']['fmt'] = "%(asctime)s %(levelprefix)s %(message)s"
+    log_config['formatters']['default']['datefmt'] = "%Y-%m-%d %H:%M:%S"
+    log_config['formatters']['access']['fmt'] = '%(asctime)s %(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s'
+    log_config['formatters']['access']['datefmt'] = "%Y-%m-%d %H:%M:%S"
+    log_config['loggers']['uvicorn.access']['level'] = 'WARNING'
+
     log_config['filters'] = {
         'wazuh-filter': {
             '()': 'wazuh.core.wlogging.CustomFilter',
         }
     }
     if foreground_mode:
-        log_config['formatters']['wazuh-fmt']['fmt'] = '%(asctime)s %(levelname)s: %(message)s'
         log_config['filters']['wazuh-filter']['log_type'] = 'log'
         log_config['handlers']['console'] = {
-            'level': debug_mode,
-            'formatter': 'wazuh-fmt',
+            'level': log_level,
+            'formatter': 'default',
             'class': 'logging.StreamHandler',
             'stream': 'ext://sys.stdout',
             'filters': ['wazuh-filter']
         }
         log_config['loggers']['wazuh-api'] = {"handlers": ["console"],
-                                            "level": debug_mode, "propagate": False}
+                                            "level": log_level, "propagate": False}
     else:
         if log_path.endswith('.json'):
             log_config['filters']['wazuh-filter']['log_type'] = 'json'
-            log_config['formatters']['wazuh-fmt']['()'] = 'api.alogging.WazuhJsonFormatter'
-            log_config['formatters']['wazuh-fmt']['style'] = '%'
-            log_config['formatters']['wazuh-fmt']['datefmt'] = "%Y/%m/%d %H:%M:%S"
+            log_config['formatters']['json'] = {
+                '()': 'api.alogging.WazuhJsonFormatter',
+                'style': '%',
+                'datefmt' : "%Y/%m/%d %H:%M:%S"
+            }
         else:
             log_config['filters']['wazuh-filter']['log_type'] = 'log'
-            log_config['formatters']['wazuh-fmt']['fmt'] = '%(asctime)s %(levelname)s: %(message)s'
 
         log_config['handlers']['file'] = {
             'filename': log_path,
-            'level': debug_mode,
-            'formatter': 'wazuh-fmt',
+            'level': log_level,
+            'formatter': 'json' if log_path.endswith('.json') else 'default',
             'filters': ['wazuh-filter']
         }
 
@@ -251,14 +271,10 @@ def get_log_config(log_path=f'{API_LOG_PATH}.log', debug_mode='INFO',
                 'wazuh.core.wlogging.TimeBasedFileRotatingHandler'
             log_config['handlers']['file']['when'] = 'midnight'
 
-            log_config['loggers']['wazuh-api'] = {"handlers": ["file"], "level": debug_mode,
-                                                  "propagate": False}
-            # log_config['loggers']['uvicorn'] = {"handlers": ["file"], "level": debug_mode,
-            #                                     "propagate": False}
-            log_config['loggers']['uvicorn.access'] = {"handlers": ["file"], "level": 'WARNING',
-                                                       "propagate": False}
-            log_config['loggers']['uvicorn.error'] = {"handlers": ["file"], "level": debug_mode, 
-                                                      "propagate": False}
+        log_config['loggers']['wazuh-api'] = {"handlers": ["file"], "level": log_level,
+                                                "propagate": False}
+        log_config['loggers']['uvicorn.error'] = {"handlers": ["file"], "level": log_level,
+                                                    "propagate": False}
 
     return log_config
 
@@ -303,8 +319,8 @@ if __name__ == '__main__':
     plain_log = 'plain' in api_conf['logs']['format']
     json_log = 'json' in api_conf['logs']['format']
     add_log_level_debug2()
-    uvicorn_params['log_config'] = get_log_config(log_path=f'{API_LOG_PATH}.log',
-                                                  debug_mode=api_conf['logs']['level'].upper(),
+    uvicorn_params['log_config'] = create_log_config_dict(log_path=f'{API_LOG_PATH}.log',
+                                                  log_level=api_conf['logs']['level'].upper(),
                                                   foreground_mode=args.foreground)
 
     logger = logging.getLogger('wazuh-api')
@@ -403,7 +419,7 @@ if __name__ == '__main__':
     uvicorn_params['port'] = api_conf['port']
     uvicorn_params['loop'] = 'uvloop'
     try:
-        start(uvicorn_params, foreground_mode=args.foreground)
+        start(uvicorn_params)
     except APIError as e:
         print(f"Error when trying to start the Wazuh API. {e}")
         sys.exit(1)
