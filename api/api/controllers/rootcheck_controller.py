@@ -20,7 +20,7 @@ async def put_rootcheck(token_info, agents_list: str = '*', pretty: bool = False
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     agents_list : str
         List of agent's IDs.
@@ -56,7 +56,7 @@ async def delete_rootcheck(token_info, pretty: bool = False, wait_for_complete: 
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty: bool
         Show results in human-readable format.
@@ -93,7 +93,7 @@ async def get_rootcheck_agent(token_info, pretty: bool = False, wait_for_complet
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.
@@ -162,7 +162,7 @@ async def get_last_scan_agent(token_info, pretty: bool = False, wait_for_complet
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.

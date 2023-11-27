@@ -8,6 +8,7 @@ from typing import Union
 
 from starlette.responses import Response
 from connexion.lifecycle import ConnexionResponse
+from connexion import request
 
 import wazuh.manager as manager
 import wazuh.stats as stats
@@ -27,7 +28,7 @@ async def get_status(token_info, pretty: bool = False, wait_for_complete: bool =
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.
@@ -59,7 +60,7 @@ async def get_info(token_info, pretty: bool = False, wait_for_complete: bool = F
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.
@@ -93,7 +94,7 @@ async def get_configuration(token_info, pretty: bool = False, wait_for_complete:
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool, optional
         Show results in human-readable format. It only works when `raw` is False (JSON format). Default `False`
@@ -172,7 +173,7 @@ async def get_stats(token_info, pretty: bool = False, wait_for_complete: bool = 
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool, optional
         Show results in human-readable format.
@@ -214,7 +215,7 @@ async def get_stats_hourly(token_info, pretty: bool = False, wait_for_complete: 
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool, optional
         Show results in human-readable format.
@@ -249,7 +250,7 @@ async def get_stats_weekly(token_info, pretty: bool = False, wait_for_complete: 
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool, optional
         Show results in human-readable format.
@@ -351,7 +352,7 @@ async def get_log(token_info, pretty: bool = False, wait_for_complete: bool = Fa
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty: bool
         Show results in human-readable format.
@@ -412,7 +413,7 @@ async def get_log_summary(token_info, pretty: bool = False, wait_for_complete: b
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty: bool
         Show results in human-readable format.
@@ -444,7 +445,7 @@ async def get_api_config(token_info, pretty: bool = False, wait_for_complete: bo
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty: bool
         Show results in human-readable format.
@@ -476,7 +477,7 @@ async def put_restart(token_info, pretty: bool = False, wait_for_complete: bool 
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty: bool
         Show results in human-readable format.
@@ -508,7 +509,7 @@ async def get_conf_validation(token_info, pretty: bool = False, wait_for_complet
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty: bool
         Show results in human-readable format.
@@ -541,7 +542,7 @@ async def get_manager_config_ondemand(token_info, component: str, pretty: bool =
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty: bool
         Show results in human-readable format.
@@ -574,13 +575,13 @@ async def get_manager_config_ondemand(token_info, component: str, pretty: bool =
     return json_response(data, pretty=pretty)
 
 
-async def update_configuration(token_info, body: bytes, pretty: bool = False,
+async def update_configuration(token_info: dict, body: bytes, pretty: bool = False,
                                wait_for_complete: bool = False) -> Response:
     """Update manager's or local_node's configuration (ossec.conf).
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty: bool
         Show results in human-readable format.
@@ -595,7 +596,7 @@ async def update_configuration(token_info, body: bytes, pretty: bool = False,
         API response.
     """
     # Parse body to utf-8
-    Body.validate_content_type(token_info, expected_content_type='application/octet-stream')
+    Body.validate_content_type(request, expected_content_type='application/octet-stream')
     parsed_body = Body.decode_body(body, unicode_error=1911, attribute_error=1912)
 
     f_kwargs = {'new_conf': parsed_body}

@@ -2,7 +2,7 @@ import sys
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
-from starlette.responses import Response_response
+from starlette.responses import Response
 
 from api.controllers.test.utils import CustomAffectedItems
 
@@ -32,7 +32,7 @@ async def test_forward_event(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_
             'api.controllers.event_controller.EventIngestModel.get_kwargs', return_value=AsyncMock()
         ) as mock_getkwargs:
 
-            result = await forward_event(request=mock_request)
+            result = await forward_event(token_info)
             mock_dapi.assert_called_once_with(
                 f=send_event_to_analysisd,
                 f_kwargs=mock_remove.return_value,
@@ -44,4 +44,4 @@ async def test_forward_event(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_
             )
             mock_exc.assert_called_once_with(mock_dfunc.return_value)
             mock_remove.assert_called_once_with(mock_getkwargs.return_value)
-            assert isinstance(result, web_response.Response)
+            assert isinstance(result, Response)

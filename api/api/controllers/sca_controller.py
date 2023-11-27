@@ -24,7 +24,7 @@ async def get_sca_agent(token_info, agent_id: str = None, pretty: bool = False, 
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     agent_id : str
         Agent ID. All possible values since 000 onwards.
@@ -97,7 +97,7 @@ async def get_sca_checks(token_info, agent_id: str = None, pretty: bool = False,
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     agent_id : str
         Agent ID. All possible values since 000 onwards.

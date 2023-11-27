@@ -2,7 +2,7 @@ import sys
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
-from starlette.responses import Response_response
+from starlette.responses import Response
 from api.controllers.test.utils import CustomAffectedItems
 
 with patch('wazuh.common.wazuh_uid'):
@@ -26,7 +26,7 @@ with patch('wazuh.common.wazuh_uid'):
 @patch('api.controllers.rootcheck_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_put_rootcheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'put_rootcheck' endpoint is working as expected."""
-    result = await put_rootcheck(request=mock_request)
+    result = await put_rootcheck(token_info)
     f_kwargs = {'agent_list': '*'
                 }
     mock_dapi.assert_called_once_with(f=rootcheck.run,
@@ -40,7 +40,7 @@ async def test_put_rootcheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -50,7 +50,7 @@ async def test_put_rootcheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_
 @patch('api.controllers.rootcheck_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_delete_rootcheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'delete_rootcheck' endpoint is working as expected."""
-    result = await delete_rootcheck(request=mock_request)
+    result = await delete_rootcheck(token_info)
     f_kwargs = {'agent_list': ['']
                 }
     mock_dapi.assert_called_once_with(f=rootcheck.clear,
@@ -63,7 +63,7 @@ async def test_delete_rootcheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, mo
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -73,7 +73,7 @@ async def test_delete_rootcheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, mo
 @patch('api.controllers.rootcheck_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_rootcheck_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_rootcheck_agent' endpoint is working as expected."""
-    result = await get_rootcheck_agent(request=mock_request)
+    result = await get_rootcheck_agent(token_info)
     f_kwargs = {'agent_list': [None],
                 'offset': 0,
                 'limit': None,
@@ -98,7 +98,7 @@ async def test_get_rootcheck_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc,
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -108,7 +108,7 @@ async def test_get_rootcheck_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc,
 @patch('api.controllers.rootcheck_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_last_scan_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_last_scan_agent' endpoint is working as expected."""
-    result = await get_last_scan_agent(request=mock_request)
+    result = await get_last_scan_agent(token_info)
     f_kwargs = {'agent_list': [None]
                 }
     mock_dapi.assert_called_once_with(f=rootcheck.get_last_scan,
@@ -121,4 +121,4 @@ async def test_get_last_scan_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc,
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)

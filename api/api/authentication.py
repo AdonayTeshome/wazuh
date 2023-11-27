@@ -191,7 +191,8 @@ def generate_token(user_id: str = None, data: dict = None, auth_context: dict = 
                   "run_as": auth_context is not None,
                   "rbac_roles": data['roles'],
                   "rbac_mode": result['rbac_mode']
-              } | ({"hash_auth_context": hashlib.blake2b(json.dumps(auth_context).encode(), digest_size=16).hexdigest()}
+              } | ({"hash_auth_context": hashlib.blake2b(json.dumps(auth_context).encode(),
+                                                         digest_size=16).hexdigest()}
                    if auth_context is not None else {})
 
     return jwt.encode(payload, generate_keypair()[0], algorithm=JWT_ALGORITHM)

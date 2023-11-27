@@ -7,6 +7,7 @@ from typing import Union
 
 from starlette.responses import Response
 from connexion.lifecycle import ConnexionResponse
+from connexion import request
 
 from api.configuration import api_conf
 from api.controllers.util import json_response
@@ -31,7 +32,7 @@ async def get_rules(request, token_info, rule_ids: list = None, pretty: bool = F
     ----------
     request: Request
         HTTP request
-    token_info: dict
+    token_info : dict
         Security information.
     rule_ids : list
         Filters by rule ID.
@@ -122,7 +123,7 @@ async def get_rules_groups(token_info, pretty: bool = False, wait_for_complete: 
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.
@@ -172,7 +173,7 @@ async def get_rules_requirement(token_info, requirement: str = None, pretty: boo
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     requirement : str
         Get the specified requirement in all rules in the system.
@@ -223,7 +224,7 @@ async def get_rules_files(token_info, pretty: bool = False, wait_for_complete: b
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.
@@ -290,7 +291,7 @@ async def get_file(token_info, pretty: bool = False, wait_for_complete: bool = F
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool, optional
         Show results in human-readable format. It only works when `raw` is False (JSON format). Default `True`.
@@ -330,14 +331,14 @@ async def get_file(token_info, pretty: bool = False, wait_for_complete: bool = F
     return response
 
 
-async def put_file(token_info, body: bytes, filename: str = None, overwrite: bool = False,
+async def put_file(token_info: dict, body: bytes, filename: str = None, overwrite: bool = False,
                    pretty: bool = False, relative_dirname: str = None,
                    wait_for_complete: bool = False) -> Response:
     """Upload a rule file.
     
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     body : bytes
         Body request with the file content to be uploaded.
@@ -359,7 +360,7 @@ async def put_file(token_info, body: bytes, filename: str = None, overwrite: boo
         API response.
     """
     # Parse body to utf-8
-    Body.validate_content_type(token_info, expected_content_type='application/octet-stream')
+    Body.validate_content_type(request, expected_content_type='application/octet-stream')
     parsed_body = Body.decode_body(body, unicode_error=1911, attribute_error=1912)
 
     f_kwargs = {'filename': filename,
@@ -388,7 +389,7 @@ async def delete_file(token_info, filename: str = None,
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     filename : str, optional
         Name of the file.

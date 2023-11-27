@@ -2,7 +2,7 @@ import sys
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
-from starlette.responses import Response_response
+from starlette.responses import Response
 from api.controllers.test.utils import CustomAffectedItems
 
 with patch('wazuh.common.wazuh_uid'):
@@ -24,7 +24,7 @@ with patch('wazuh.common.wazuh_uid'):
 @patch('api.controllers.task_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_tasks_status(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_tasks_status' endpoint is working as expected."""
-    result = await get_tasks_status(request=mock_request)
+    result = await get_tasks_status(token_info)
     f_kwargs = {'select': None,
                 'search': None,
                 'offset': 0,
@@ -50,4 +50,4 @@ async def test_get_tasks_status(mock_exc, mock_dapi, mock_remove, mock_dfunc, mo
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)

@@ -2,7 +2,7 @@ import sys
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
-from starlette.responses import Response_response
+from starlette.responses import Response
 from api.controllers.test.utils import CustomAffectedItems
 
 with patch('wazuh.common.wazuh_uid'):
@@ -25,7 +25,7 @@ with patch('wazuh.common.wazuh_uid'):
 @patch('api.controllers.sca_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_sca_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_sca_agent' endpoint is working as expected."""
-    result = await get_sca_agent(request=mock_request)
+    result = await get_sca_agent(token_info)
     filters = {'name': None,
                'description': None,
                'references': None
@@ -50,7 +50,7 @@ async def test_get_sca_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -60,7 +60,7 @@ async def test_get_sca_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_
 @patch('api.controllers.sca_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_sca_checks(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_sca_checks' endpoint is working as expected."""
-    result = await get_sca_checks(request=mock_request)
+    result = await get_sca_checks(token_info)
     filters = {'title': None,
                'description': None,
                'rationale': None,
@@ -96,4 +96,4 @@ async def test_get_sca_checks(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)

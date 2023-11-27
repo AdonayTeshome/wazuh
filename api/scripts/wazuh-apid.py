@@ -28,7 +28,7 @@ from api.configuration import api_conf, read_yaml_config
 from api import __path__ as api_path
 from api.constants import CONFIG_FILE_PATH
 from api.middlewares import SecureHeadersMiddleware, CheckRateLimitsMiddleware, \
-    RequestLogginMiddleware, RemoveFieldsFromErrorMiddleware, WazuhAccessLoggerMiddleware
+    RemoveFieldsFromErrorMiddleware, WazuhAccessLoggerMiddleware
 # from api.signals import modify_response_headers
 from api.util import APILoggerSize, to_relative_path
 
@@ -95,6 +95,7 @@ def start(params):
         __name__,
         specification_dir=os.path.join(api_path[0], 'spec'),
         swagger_ui_options=SwaggerUIOptions(swagger_ui=False),
+        pythonic_params=True,
         lifespan=lifespan_handler
     )
     app.add_api('spec.yaml',
@@ -114,7 +115,6 @@ def start(params):
     app.add_middleware(SecureHeadersMiddleware)
     app.add_middleware(RemoveFieldsFromErrorMiddleware)
     app.add_middleware(CheckRateLimitsMiddleware)
-    app.add_middleware(RequestLogginMiddleware)
 
     # Enable CORS
     if api_conf['cors']['enabled']:

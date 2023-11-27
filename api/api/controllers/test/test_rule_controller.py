@@ -2,7 +2,7 @@ import sys
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
-from starlette.responses import Response_response
+from starlette.responses import Response
 from api.controllers.test.utils import CustomAffectedItems
 from connexion.lifecycle import ConnexionResponse
 
@@ -30,7 +30,7 @@ with patch('wazuh.common.wazuh_uid'):
 @patch('api.controllers.rule_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_rules(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_rules' endpoint is working as expected."""
-    result = await get_rules(request=mock_request)
+    result = await get_rules(token_info)
     f_kwargs = {'rule_ids': None,
                 'offset': 0,
                 'limit': None,
@@ -64,7 +64,7 @@ async def test_get_rules(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_requ
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -74,7 +74,7 @@ async def test_get_rules(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_requ
 @patch('api.controllers.rule_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_rules_groups(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_rules_groups' endpoint is working as expected."""
-    result = await get_rules_groups(request=mock_request)
+    result = await get_rules_groups(token_info)
     f_kwargs = {'offset': 0,
                 'limit': None,
                 'sort_by': [''],
@@ -92,7 +92,7 @@ async def test_get_rules_groups(mock_exc, mock_dapi, mock_remove, mock_dfunc, mo
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -102,7 +102,7 @@ async def test_get_rules_groups(mock_exc, mock_dapi, mock_remove, mock_dfunc, mo
 @patch('api.controllers.rule_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_rules_requirement(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_rules_requirement' endpoint is working as expected."""
-    result = await get_rules_requirement(request=mock_request,
+    result = await get_rules_requirement(token_info,
                                          requirement='-')
     f_kwargs = {'requirement': '_',
                 'sort_by': [''],
@@ -122,7 +122,7 @@ async def test_get_rules_requirement(mock_exc, mock_dapi, mock_remove, mock_dfun
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -132,7 +132,7 @@ async def test_get_rules_requirement(mock_exc, mock_dapi, mock_remove, mock_dfun
 @patch('api.controllers.rule_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_rules_files(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_rules_files' endpoint is working as expected."""
-    result = await get_rules_files(request=mock_request)
+    result = await get_rules_files(token_info)
     f_kwargs = {'offset': 0,
                 'limit': None,
                 'sort_by': ['filename'],
@@ -156,7 +156,7 @@ async def test_get_rules_files(mock_exc, mock_dapi, mock_remove, mock_dfunc, moc
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -168,7 +168,7 @@ async def test_get_rules_files(mock_exc, mock_dapi, mock_remove, mock_dfunc, moc
 async def test_get_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_bool, mock_request=MagicMock()):
     """Verify 'get_file' endpoint is working as expected."""
     with patch('api.controllers.rule_controller.isinstance', return_value=mock_bool) as mock_isinstance:
-        result = await get_file(request=mock_request)
+        result = await get_file(token_info)
         f_kwargs = {'filename': None,
                     'raw': False,
                     'relative_dirname': None
@@ -184,7 +184,7 @@ async def test_get_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_bool,
         mock_exc.assert_called_once_with(mock_dfunc.return_value)
         mock_remove.assert_called_once_with(f_kwargs)
         if mock_isinstance.return_value:
-            assert isinstance(result, web_response.Response)
+            assert isinstance(result, Response)
         else:
             assert isinstance(result, ConnexionResponse)
 
@@ -198,7 +198,7 @@ async def test_put_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_reque
     """Verify 'put_file' endpoint is working as expected."""
     with patch('api.controllers.rule_controller.Body.validate_content_type'):
         with patch('api.controllers.rule_controller.Body.decode_body') as mock_dbody:
-            result = await put_file(request=mock_request,
+            result = await put_file(token_info,
                                     body={})
             f_kwargs = {'filename': None,
                         'overwrite': False,
@@ -215,7 +215,7 @@ async def test_put_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_reque
                                               )
             mock_exc.assert_called_once_with(mock_dfunc.return_value)
             mock_remove.assert_called_once_with(f_kwargs)
-            assert isinstance(result, web_response.Response)
+            assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -225,7 +225,7 @@ async def test_put_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_reque
 @patch('api.controllers.rule_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_delete_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'delete_file' endpoint is working as expected."""
-    result = await delete_file(request=mock_request)
+    result = await delete_file(token_info)
     f_kwargs = {'filename': None, 
                 'relative_dirname': None}
     
@@ -239,4 +239,4 @@ async def test_delete_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_re
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)

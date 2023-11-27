@@ -29,7 +29,7 @@ async def get_cluster_node(token_info, pretty: bool = False, wait_for_complete: 
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.
@@ -65,7 +65,7 @@ async def get_cluster_nodes(token_info, pretty: bool = False, wait_for_complete:
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.
@@ -132,7 +132,7 @@ async def get_healthcheck(token_info, pretty: bool = False, wait_for_complete: b
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.
@@ -172,7 +172,7 @@ async def get_nodes_ruleset_sync_status(token_info, pretty: bool = False, wait_f
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.
@@ -218,7 +218,7 @@ async def get_status(token_info, pretty: bool = False, wait_for_complete: bool =
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.
@@ -249,7 +249,7 @@ async def get_config(token_info, pretty: bool = False, wait_for_complete: bool =
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.
@@ -283,7 +283,7 @@ async def get_status_node(token_info, node_id: str, pretty: bool = False, wait_f
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     node_id : str
         Cluster node name.
@@ -321,7 +321,7 @@ async def get_info_node(token_info, node_id: str, pretty: bool = False, wait_for
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     node_id : str
         Cluster node name.
@@ -445,7 +445,7 @@ async def get_stats_node(token_info, node_id: str, pretty: bool = False, wait_fo
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     node_id : str
         Cluster node name.
@@ -492,7 +492,7 @@ async def get_stats_hourly_node(token_info, node_id: str, pretty: bool = False,
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     node_id : str
         Cluster node name.
@@ -532,7 +532,7 @@ async def get_stats_weekly_node(token_info, node_id: str, pretty: bool = False,
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     node_id : str
         Cluster node name.
@@ -652,7 +652,7 @@ async def get_log_node(token_info, node_id: str, pretty: bool = False, wait_for_
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     node_id : str
         Cluster node name.
@@ -719,7 +719,7 @@ async def get_log_summary_node(token_info, node_id: str, pretty: bool = False,
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     node_id : str
         Cluster node name.
@@ -756,7 +756,7 @@ async def get_api_config(token_info, pretty: bool = False, wait_for_complete: bo
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.
@@ -794,7 +794,7 @@ async def put_restart(token_info, pretty: bool = False, wait_for_complete: bool 
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.
@@ -833,7 +833,7 @@ async def get_conf_validation(token_info, pretty: bool = False, wait_for_complet
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.
@@ -871,7 +871,7 @@ async def get_node_config(token_info, node_id: str, component: str, wait_for_com
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     node_id : str
         Node ID.
@@ -910,14 +910,16 @@ async def get_node_config(token_info, node_id: str, component: str, wait_for_com
     return json_response(data, pretty=pretty)
 
 
-async def update_configuration(token_info, node_id: str, body: bytes, pretty: bool = False,
+async def update_configuration(token_info: dict, body: dict, node_id: str, body: bytes, pretty: bool = False,
                                wait_for_complete: bool = False) -> Response:
     """Update Wazuh configuration (ossec.conf) in node node_id.
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
+    body : dict
+        HTTP body parsed from json into dict
     node_id : str
         Node ID.
     body : bytes
@@ -933,7 +935,7 @@ async def update_configuration(token_info, node_id: str, body: bytes, pretty: bo
         API response.
     """
     # Parse body to utf-8
-    Body.validate_content_type(token_info, expected_content_type='application/octet-stream')
+    Body.validate_content_type(request, expected_content_type='application/octet-stream')
     parsed_body = Body.decode_body(body, unicode_error=1911, attribute_error=1912)
 
     f_kwargs = {'node_id': node_id,

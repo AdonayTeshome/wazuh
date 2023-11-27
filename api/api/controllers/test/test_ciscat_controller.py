@@ -2,7 +2,7 @@ import sys
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
-from starlette.responses import Response_response
+from starlette.responses import Response
 from api.controllers.test.utils import CustomAffectedItems
 
 with patch('wazuh.common.wazuh_uid'):
@@ -23,7 +23,7 @@ with patch('wazuh.common.wazuh_uid'):
 @patch('api.controllers.ciscat_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_agents_ciscat_results(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_agents_ciscat_results' endpoint is working as expected."""
-    result = await get_agents_ciscat_results(request=mock_request,
+    result = await get_agents_ciscat_results(token_info,
                                              agent_id='001')
     f_kwargs = {
         'agent_list': ['001'],
@@ -54,4 +54,4 @@ async def test_get_agents_ciscat_results(mock_exc, mock_dapi, mock_remove, mock_
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)

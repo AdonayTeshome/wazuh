@@ -6,6 +6,7 @@ import logging
 from typing import List
 
 from starlette.responses import Response
+from connexion import request
 
 import wazuh.ciscat as ciscat
 from api.controllers.util import json_response
@@ -26,7 +27,7 @@ async def get_agents_ciscat_results(token_info, agent_id: str, pretty: bool = Fa
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     agent_id : str
         Agent ID. All posible values since 000 onwards.
@@ -97,4 +98,4 @@ async def get_agents_ciscat_results(token_info, agent_id: str, pretty: bool = Fa
                           )
     response = raise_if_exc(await dapi.distribute_function())
 
-    return web.json_response(data=response, status=200, dumps=prettify if pretty else dumps)
+    return json_response(response, pretty=pretty)

@@ -5,7 +5,8 @@
 import logging
 
 from starlette.responses import Response
-from starlette.requests import Request
+from connexion import request
+
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
 from wazuh.event import send_event_to_analysisd
 
@@ -17,13 +18,15 @@ from api.util import raise_if_exc, remove_nones_to_dict
 logger = logging.getLogger('wazuh-api')
 
 
-async def forward_event(request: Request, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def forward_event(token_info: dict, body: dict, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Forward events to analysisd.
 
     Parameters
     ----------
-    request : web.Request
-        API Request.
+    token_info : dict
+        Security information.
+    body : dict
+        HTTP body parsed from json into dict.
     pretty : bool, optional
         Show results in human-readable format, by default False.
     wait_for_complete : bool, optional
@@ -34,8 +37,8 @@ async def forward_event(request: Request, pretty: bool = False, wait_for_complet
     Response
         API Response.
     """
-    Body.validate_content_type(token_info, expected_content_type='application/json')
-    f_kwargs = await EventIngestModel.get_kwargs(request)
+    Body.validate_content_type(request, expected_content_type='application/json')
+    f_kwargs = await EventIngestModel.get_kwargs(body)
 
     dapi = DistributedAPI(f=send_event_to_analysisd,
                           f_kwargs=remove_nones_to_dict(f_kwargs),

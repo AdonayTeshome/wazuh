@@ -43,4 +43,4 @@ async def default_info(pretty: bool = False) -> Response:
     }
     response = WazuhResult({'data': BasicInfo.from_dict(data)})
 
-    return web.json_response(data=response, status=200, dumps=prettify if pretty else dumps)
+    return json_response(data, pretty=pretty)

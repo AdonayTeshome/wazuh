@@ -29,7 +29,7 @@ async def get_decoders(token_info, decoder_names: list = None, pretty: bool = Fa
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     decoder_names : list
         Filters by decoder name.
@@ -102,7 +102,7 @@ async def get_decoders_files(token_info, pretty: bool = False, wait_for_complete
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty: bool
         Show results in human-readable format.
@@ -172,7 +172,7 @@ async def get_decoders_parents(token_info, pretty: bool = False, wait_for_comple
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty: bool
         Show results in human-readable format.
@@ -224,7 +224,7 @@ async def get_file(token_info, pretty: bool = False, wait_for_complete: bool = F
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format. It only works when `raw` is False (JSON format).
@@ -272,7 +272,7 @@ async def put_file(token_info, body: bytes, filename: str = None, relative_dirna
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     body : bytes
         Body request with the file content to be uploaded.
@@ -294,7 +294,7 @@ async def put_file(token_info, body: bytes, filename: str = None, relative_dirna
         API response.
     """
     # Parse body to utf-8
-    Body.validate_content_type(token_info, expected_content_type='application/octet-stream')
+    Body.validate_content_type(request, expected_content_type='application/octet-stream')
     parsed_body = Body.decode_body(body, unicode_error=1911, attribute_error=1912)
 
     f_kwargs = {'filename': filename,
@@ -323,7 +323,7 @@ async def delete_file(token_info, filename: str = None,
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     filename : str
         Name of the file.

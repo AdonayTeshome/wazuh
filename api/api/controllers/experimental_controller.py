@@ -40,7 +40,7 @@ async def clear_rootcheck_database(token_info, pretty: bool = False, wait_for_co
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.
@@ -81,7 +81,7 @@ async def clear_syscheck_database(token_info, pretty: bool = False, wait_for_com
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.
@@ -125,7 +125,7 @@ async def get_cis_cat_results(token_info, pretty: bool = False, wait_for_complet
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     agents_list : str
         List of agent's IDs.
@@ -204,7 +204,7 @@ async def get_hardware_info(token_info, pretty: bool = False, wait_for_complete:
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     agents_list : str
         List of agent's IDs.
@@ -271,7 +271,7 @@ async def get_network_address_info(token_info, pretty: bool = False, wait_for_co
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     agents_list : str
         List of agent's IDs.
@@ -345,7 +345,7 @@ async def get_network_interface_info(token_info, pretty: bool = False, wait_for_
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     agents_list : str
         List of agent's IDs.
@@ -420,7 +420,7 @@ async def get_network_protocol_info(token_info, pretty: bool = False, wait_for_c
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     agents_list : str
         List of agent's IDs.
@@ -489,7 +489,7 @@ async def get_os_info(token_info, pretty: bool = False, wait_for_complete: bool 
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     agents_list : str
         List of agent's IDs.
@@ -563,7 +563,7 @@ async def get_packages_info(token_info, pretty: bool = False, wait_for_complete:
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     agents_list : str
         List of agent's IDs.
@@ -635,7 +635,7 @@ async def get_ports_info(token_info, pretty: bool = False, wait_for_complete: bo
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     agents_list : str
         List of agent's IDs.
@@ -717,7 +717,7 @@ async def get_processes_info(token_info, pretty: bool = False, wait_for_complete
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     agents_list : str
         List of agent's IDs.
@@ -817,7 +817,7 @@ async def get_hotfixes_info(token_info, pretty: bool = False, wait_for_complete:
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     agents_list : str
         List of agent's IDs.

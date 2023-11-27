@@ -7,8 +7,6 @@ import logging
 import re
 from pythonjsonlogger import jsonlogger
 
-from wazuh.core.wlogging import WazuhLogger
-
 # Compile regex when the module is imported so it's not necessary to compile it everytime log.info is called
 request_pattern = re.compile(r'\[.+]|\s+\*\s+')
 
@@ -17,42 +15,6 @@ UNKNOWN_USER_STRING = "unknown_user"
 
 # Run_as login endpoint path
 RUN_AS_LOGIN_ENDPOINT = "/security/user/authenticate/run_as"
-
-
-class APILogger(WazuhLogger):
-    """
-    Define the logger used by wazuh-apid.
-    """
-
-    def __init__(self, *args: dict, **kwargs: dict):
-        """APIlogger class constructor."""
-        log_path = kwargs.get('log_path', '')
-        super().__init__(*args, **kwargs,
-                         custom_formatter=WazuhJsonFormatter if log_path.endswith('json') else None)
-
-    def setup_logger(self, custom_handler: logging.Handler = None):
-        """
-        Set ups API logger. In addition to super().setup_logger() this method adds:
-            * Sets up log level based on the log level defined in API configuration file.
-
-        :param custom_handler: custom handler that can be set instead of the default one from the WazuhLogger class.
-        """
-        super().setup_logger(handler=custom_handler)
-
-        if self.debug_level == 'debug2':
-            debug_level = logging.DEBUG2
-        elif self.debug_level == 'debug':
-            debug_level = logging.DEBUG
-        elif self.debug_level == 'critical':
-            debug_level = logging.CRITICAL
-        elif self.debug_level == 'error':
-            debug_level = logging.ERROR
-        elif self.debug_level == 'warning':
-            debug_level = logging.WARNING
-        else:  # self.debug_level == 'info'
-            debug_level = logging.INFO
-
-        self.logger.setLevel(debug_level)
 
 
 class WazuhJsonFormatter(jsonlogger.JsonFormatter):

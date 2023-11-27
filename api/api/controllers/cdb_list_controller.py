@@ -7,6 +7,7 @@ from typing import Union
 
 from starlette.responses import Response
 from connexion.lifecycle import ConnexionResponse
+from connexion import request
 
 from api.controllers.util import json_response
 from api.models.base_model_ import Body
@@ -25,7 +26,7 @@ async def get_lists(token_info, pretty: bool = False, wait_for_complete: bool = 
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.
@@ -89,7 +90,7 @@ async def get_file(token_info, pretty: bool = False, wait_for_complete: bool = F
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.
@@ -133,7 +134,7 @@ async def put_file(token_info, body: bytes, overwrite: bool = False, pretty: boo
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     body : bytes
         Bytes object with the content of the file to be uploaded.
@@ -152,7 +153,7 @@ async def put_file(token_info, body: bytes, overwrite: bool = False, pretty: boo
         API response.
     """
     # Parse body to utf-8
-    Body.validate_content_type(token_info, expected_content_type='application/octet-stream')
+    Body.validate_content_type(request, expected_content_type='application/octet-stream')
     parsed_body = Body.decode_body(body, unicode_error=1911, attribute_error=1912)
 
     f_kwargs = {'filename': filename,
@@ -178,7 +179,7 @@ async def delete_file(token_info, pretty: bool = False, wait_for_complete: bool 
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.
@@ -214,7 +215,7 @@ async def get_lists_files(token_info, pretty: bool = False, wait_for_complete: b
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.

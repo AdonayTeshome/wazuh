@@ -19,7 +19,7 @@ async def get_metadata(token_info, pretty: bool = False, wait_for_complete: bool
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool, optional
         Show results in human-readable format.
@@ -52,7 +52,7 @@ async def get_references(token_info, reference_ids: list = None, pretty: bool = 
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     reference_ids : list
         List of reference ids to be obtained.
@@ -113,7 +113,7 @@ async def get_tactics(token_info, tactic_ids: list = None, pretty: bool = False,
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     tactic_ids : list
         List of tactic ids to be obtained.
@@ -177,7 +177,7 @@ async def get_techniques(token_info, technique_ids: list = None, pretty: bool = 
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     technique_ids : list, optional
         List of technique ids to be obtained.
@@ -239,7 +239,7 @@ async def get_mitigations(token_info, mitigation_ids: list = None, pretty: bool 
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     mitigation_ids : list, optional
         List of mitigation ids to be obtained.
@@ -301,7 +301,7 @@ async def get_groups(token_info, group_ids: list = None, pretty: bool = False, w
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     group_ids : list, optional
         List of group IDs to be obtained.
@@ -364,7 +364,7 @@ async def get_software(token_info, software_ids: list = None, pretty: bool = Fal
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     software_ids : list, optional
         List of softwware IDs to be obtained.

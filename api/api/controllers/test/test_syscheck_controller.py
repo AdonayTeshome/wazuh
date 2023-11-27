@@ -2,7 +2,7 @@ import sys
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
-from starlette.responses import Response_response
+from starlette.responses import Response
 from api.controllers.test.utils import CustomAffectedItems
 
 with patch('wazuh.common.wazuh_uid'):
@@ -26,7 +26,7 @@ with patch('wazuh.common.wazuh_uid'):
 @patch('api.controllers.syscheck_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_put_syscheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'put_syscheck' endpoint is working as expected."""
-    result = await put_syscheck(request=mock_request)
+    result = await put_syscheck(token_info)
     f_kwargs = {'agent_list': '*'
                 }
     mock_dapi.assert_called_once_with(f=syscheck.run,
@@ -40,7 +40,7 @@ async def test_put_syscheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_r
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -50,7 +50,7 @@ async def test_put_syscheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_r
 @patch('api.controllers.syscheck_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_syscheck_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_syscheck_agent' endpoint is working as expected."""
-    result = await get_syscheck_agent(request=mock_request,
+    result = await get_syscheck_agent(token_info,
                                       agent_id='001')
     type_ = mock_request.query.get('type', None)
     hash_ = mock_request.query.get('hash', None)
@@ -86,7 +86,7 @@ async def test_get_syscheck_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, 
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -96,7 +96,7 @@ async def test_get_syscheck_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, 
 @patch('api.controllers.syscheck_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_delete_syscheck_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'delete_syscheck_agent' endpoint is working as expected."""
-    result = await delete_syscheck_agent(request=mock_request)
+    result = await delete_syscheck_agent(token_info)
     f_kwargs = {'agent_list': ['*']
                 }
     mock_dapi.assert_called_once_with(f=syscheck.clear,
@@ -109,7 +109,7 @@ async def test_delete_syscheck_agent(mock_exc, mock_dapi, mock_remove, mock_dfun
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -119,7 +119,7 @@ async def test_delete_syscheck_agent(mock_exc, mock_dapi, mock_remove, mock_dfun
 @patch('api.controllers.syscheck_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_last_scan_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_last_scan_agent' endpoint is working as expected."""
-    result = await get_last_scan_agent(request=mock_request,
+    result = await get_last_scan_agent(token_info,
                                        agent_id='001')
     f_kwargs = {'agent_list': ['001']
                 }
@@ -133,4 +133,4 @@ async def test_get_last_scan_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc,
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)

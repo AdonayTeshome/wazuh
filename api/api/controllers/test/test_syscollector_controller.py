@@ -2,7 +2,7 @@ import sys
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
-from starlette.responses import Response_response
+from starlette.responses import Response
 from api.controllers.test.utils import CustomAffectedItems
 
 with patch('wazuh.common.wazuh_uid'):
@@ -26,7 +26,7 @@ with patch('wazuh.common.wazuh_uid'):
 @patch('api.controllers.syscollector_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_hardware_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_hardware_info' endpoint is working as expected."""
-    result = await get_hardware_info(request=mock_request,
+    result = await get_hardware_info(token_info,
                                      agent_id='001')
     f_kwargs = {'agent_list': ['001'],
                 'select': None,
@@ -42,7 +42,7 @@ async def test_get_hardware_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, m
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -52,7 +52,7 @@ async def test_get_hardware_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, m
 @patch('api.controllers.syscollector_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_hotfix_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_hotfix_info' endpoint is working as expected."""
-    result = await get_hotfix_info(request=mock_request,
+    result = await get_hotfix_info(token_info,
                                    agent_id='001')
     filters = {'hotfix': None}
     f_kwargs = {'agent_list': ['001'],
@@ -76,7 +76,7 @@ async def test_get_hotfix_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, moc
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -86,7 +86,7 @@ async def test_get_hotfix_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, moc
 @patch('api.controllers.syscollector_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_network_address_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_network_address_info' endpoint is working as expected."""
-    result = await get_network_address_info(request=mock_request,
+    result = await get_network_address_info(token_info,
                                             agent_id='001')
     filters = {'iface': None,
                'proto': None,
@@ -115,7 +115,7 @@ async def test_get_network_address_info(mock_exc, mock_dapi, mock_remove, mock_d
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -125,7 +125,7 @@ async def test_get_network_address_info(mock_exc, mock_dapi, mock_remove, mock_d
 @patch('api.controllers.syscollector_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_network_interface_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_network_interface_info' endpoint is working as expected."""
-    result = await get_network_interface_info(request=mock_request,
+    result = await get_network_interface_info(token_info,
                                               agent_id='001')
     filters = {'adapter': None,
                'type': mock_request.query.get('type', None),
@@ -157,7 +157,7 @@ async def test_get_network_interface_info(mock_exc, mock_dapi, mock_remove, mock
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -167,7 +167,7 @@ async def test_get_network_interface_info(mock_exc, mock_dapi, mock_remove, mock
 @patch('api.controllers.syscollector_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_network_protocol_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_network_protocol_info' endpoint is working as expected."""
-    result = await get_network_protocol_info(request=mock_request,
+    result = await get_network_protocol_info(token_info,
                                              agent_id='001')
     filters = {'iface': None,
                'type': mock_request.query.get('type', None),
@@ -195,7 +195,7 @@ async def test_get_network_protocol_info(mock_exc, mock_dapi, mock_remove, mock_
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -205,7 +205,7 @@ async def test_get_network_protocol_info(mock_exc, mock_dapi, mock_remove, mock_
 @patch('api.controllers.syscollector_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_os_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_os_info' endpoint is working as expected."""
-    result = await get_os_info(request=mock_request,
+    result = await get_os_info(token_info,
                                agent_id='001')
     f_kwargs = {'agent_list': ['001'],
                 'select': None,
@@ -221,7 +221,7 @@ async def test_get_os_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_re
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -231,7 +231,7 @@ async def test_get_os_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_re
 @patch('api.controllers.syscollector_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_packages_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_packages_info' endpoint is working as expected."""
-    result = await get_packages_info(request=mock_request,
+    result = await get_packages_info(token_info,
                                      agent_id='001')
     filters = {'vendor': None,
                'name': None,
@@ -260,7 +260,7 @@ async def test_get_packages_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, m
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -270,7 +270,7 @@ async def test_get_packages_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, m
 @patch('api.controllers.syscollector_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_ports_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_ports_info' endpoint is working as expected."""
-    result = await get_ports_info(request=mock_request,
+    result = await get_ports_info(token_info,
                                   agent_id='001')
     filters = {'pid': None,
                'protocol': None,
@@ -302,7 +302,7 @@ async def test_get_ports_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -312,7 +312,7 @@ async def test_get_ports_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
 @patch('api.controllers.syscollector_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_processes_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_processes_info' endpoint is working as expected."""
-    result = await get_processes_info(request=mock_request,
+    result = await get_processes_info(token_info,
                                       agent_id='001')
     filters = {'state': None,
                'pid': None,
@@ -350,4 +350,4 @@ async def test_get_processes_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, 
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)

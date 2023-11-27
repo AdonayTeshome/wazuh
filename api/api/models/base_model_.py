@@ -232,5 +232,5 @@ class Body(Model):
 
     @classmethod
     def validate_content_type(cls, request, expected_content_type):
-        if request.content_type != expected_content_type:
+        if request.mimetype != expected_content_type:
             raise_if_exc(WazuhNotAcceptable(6002))

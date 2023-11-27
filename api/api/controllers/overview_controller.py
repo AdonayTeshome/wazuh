@@ -19,7 +19,7 @@ async def get_overview_agents(token_info, pretty: bool = False, wait_for_complet
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty: bool
         Show results in human-readable format.

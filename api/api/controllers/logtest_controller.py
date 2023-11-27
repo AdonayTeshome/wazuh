@@ -5,6 +5,7 @@
 import logging
 
 from starlette.responses import Response
+from connexion import request
 
 from api.controllers.util import json_response
 from api.models.base_model_ import Body
@@ -16,13 +17,15 @@ from wazuh.core.cluster.dapi.dapi import DistributedAPI
 logger = logging.getLogger('wazuh-api')
 
 
-async def run_logtest_tool(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def run_logtest_tool(token_info: dict, body: dict, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get the logtest output after sending a JSON to its socket.
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
+    body : dict
+        HTTP body parsed from json into dict.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -33,8 +36,8 @@ async def run_logtest_tool(token_info, pretty: bool = False, wait_for_complete: 
     Response
         API response.
     """
-    Body.validate_content_type(token_info, expected_content_type='application/json')
-    f_kwargs = await LogtestModel.get_kwargs(request)
+    Body.validate_content_type(request, expected_content_type='application/json')
+    f_kwargs = await LogtestModel.get_kwargs(body)
 
     dapi = DistributedAPI(f=logtest.run_logtest,
                           f_kwargs=remove_nones_to_dict(f_kwargs),
@@ -55,7 +58,7 @@ async def end_logtest_session(token_info, pretty: bool = False, wait_for_complet
 
     Parameters
     ----------
-    token_info: dict
+    token_info : dict
         Security information.
     pretty : bool
         Show results in human-readable format.

@@ -95,7 +95,7 @@ async def unlock_ip(request: Request, block_time: int):
 
     Parameters
     ----------
-    request : web_request.BaseRequest
+    request : Request
         API request.
     block_time : int
         Block time used to decide if the IP is going to be unlocked.
@@ -109,7 +109,8 @@ async def unlock_ip(request: Request, block_time: int):
         pass
 
     if request.client.host in IP_BLOCK:
-        logger.warning(f'IP blocked due to exceeded number of logins attempts: {request.client.host}')
+        msg = f'IP blocked due to exceeded number of logins attempts: {request.client.host}'
+        logger.warning(msg)
         raise_if_exc(WazuhPermissionError(6000))
 
 
@@ -137,36 +138,8 @@ async def prevent_bruteforce_attack(request: Request, attempts: int = 5):
             IP_BLOCK.add(request.client.host)
 
 
-class RequestLogginMiddleware(BaseHTTPMiddleware):
-    """Log request middleware."""
-
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        """Add request info to logging.
-
-        Parameters
-        ----------
-        request : Request
-            HTTP Request received.
-        call_next :  RequestResponseEndpoint
-            Endpoint callable to be executed.
-
-        Returns
-        -------
-        Response
-            Returned response.
-        """
-        logger.debug2(f'Receiving headers {dict(request.headers)}')
-        try:
-            body = await request.json()
-            request['body'] = body
-        except json.JSONDecodeError:
-            pass
-
-        return await call_next(request)
-
-
 async def check_rate_limit(
-    request:Request,
+    request: Request,
     request_counter_key: str,
     current_time_key: str,
     max_requests: int
@@ -176,8 +149,8 @@ async def check_rate_limit(
 
     Parameters
     ----------
-    request : Request
-        API request.
+    request : connexion.resquest
+        HTTP request.
     request_counter_key : str
         Key of the request counter variable to get from globals() dict.
     current_time_key : str
@@ -312,7 +285,8 @@ class WazuhAccessLoggerMiddleware(BaseHTTPMiddleware):
     """Middleware to log custom Access messages."""
 
     def custom_logging(self, user, remote, method, path, query,
-                       body, elapsed_time, status, hash_auth_context=''):
+                       body, elapsed_time, status, hash_auth_context='',
+                       headers: dict = dict()):
         """Provide the log entry structure depending on the logging format.
 
         Parameters
@@ -335,6 +309,8 @@ class WazuhAccessLoggerMiddleware(BaseHTTPMiddleware):
             Status code of the request.
         hash_auth_context : str, optional
             Hash representing the authorization context. Default: ''
+        headers: dict
+            Optional dictionary of request headers.
         """
         json_info = {
             'user': user,
@@ -364,6 +340,7 @@ class WazuhAccessLoggerMiddleware(BaseHTTPMiddleware):
 
         logger.info(log_info, extra={'log_type': 'log'})
         logger.info(json_info, extra={'log_type': 'json'})
+        logger.debug2(f'Receiving headers {headers}')
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         """Log Wazuh access information.
@@ -399,8 +376,7 @@ class WazuhAccessLoggerMiddleware(BaseHTTPMiddleware):
 
         # With permanent redirect, not found responses or any response with no token information,
         # decode the JWT token to get the username
-        user = request.get('user', '')
-        if not user:
+        if not request.scope.get('user', None):
             try:
                 auth_type, encoded_credentials = request.headers["authorization"].split()
                 if auth_type == 'Basic':
@@ -424,8 +400,9 @@ class WazuhAccessLoggerMiddleware(BaseHTTPMiddleware):
 
         self.custom_logging(user, request.client.host, request.method,
                             request.scope['path'], query, body, time_diff, response.status_code,
-                            hash_auth_context=hash_auth_context)
+                            hash_auth_context=hash_auth_context, headers=request.headers)
         return response
+
 
 @contextlib.asynccontextmanager
 async def lifespan_handler(_: ConnexionMiddleware):

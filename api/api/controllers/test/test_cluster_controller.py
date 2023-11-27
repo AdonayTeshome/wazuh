@@ -2,7 +2,7 @@ import sys
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 import pytest
-from starlette.responses import Response_response
+from starlette.responses import Response
 from connexion.lifecycle import ConnexionResponse
 
 from api.controllers.test.utils import CustomAffectedItems
@@ -33,7 +33,7 @@ with patch('wazuh.common.wazuh_uid'):
 async def test_get_cluster_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_cluster_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_cluster_node(request=mock_request)
+        result = await get_cluster_node(token_info)
         mock_dapi.assert_called_once_with(f=cluster.get_node_wrapper,
                                           f_kwargs=mock_remove.return_value,
                                           request_type='local_any',
@@ -47,7 +47,7 @@ async def test_get_cluster_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mo
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with({})
-        assert isinstance(result, web_response.Response)
+        assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -58,7 +58,7 @@ async def test_get_cluster_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mo
 async def test_get_cluster_nodes(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_cluster_nodes' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_cluster_nodes(request=mock_request)
+        result = await get_cluster_nodes(token_info)
         f_kwargs = {'filter_node': None,
                     'offset': 0,
                     'limit': None,
@@ -83,7 +83,7 @@ async def test_get_cluster_nodes(mock_exc, mock_dapi, mock_remove, mock_dfunc, m
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, web_response.Response)
+        assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -94,7 +94,7 @@ async def test_get_cluster_nodes(mock_exc, mock_dapi, mock_remove, mock_dfunc, m
 async def test_get_healthcheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_healthcheck' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_healthcheck(request=mock_request)
+        result = await get_healthcheck(token_info)
         f_kwargs = {'filter_node': None
                     }
         mock_dapi.assert_called_once_with(f=cluster.get_health_nodes,
@@ -111,7 +111,7 @@ async def test_get_healthcheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, moc
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, web_response.Response)
+        assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -122,7 +122,7 @@ async def test_get_healthcheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, moc
 async def test_get_nodes_ruleset_sync_status(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_nodes_ruleset_sync_status' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_nodes_ruleset_sync_status(request=mock_request)
+        result = await get_nodes_ruleset_sync_status(token_info)
         f_kwargs = {'node_list': '*',
                     'master_md5': {'dikt_key': 'dikt_value'}
                     }
@@ -145,7 +145,7 @@ async def test_get_nodes_ruleset_sync_status(mock_exc, mock_dapi, mock_remove, m
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 3
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, web_response.Response)
+        assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -155,7 +155,7 @@ async def test_get_nodes_ruleset_sync_status(mock_exc, mock_dapi, mock_remove, m
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_status(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_status' endpoint is working as expected."""
-    result = await get_status(request=mock_request)
+    result = await get_status(token_info)
     mock_dapi.assert_called_once_with(f=cluster.get_status_json,
                                       f_kwargs=mock_remove.return_value,
                                       request_type='local_master',
@@ -166,7 +166,7 @@ async def test_get_status(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_req
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with({})
-    assert isinstance(result, web_response.Response)
+    assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -177,7 +177,7 @@ async def test_get_status(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_req
 async def test_get_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_config' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_config(request=mock_request)
+        result = await get_config(token_info)
         mock_dapi.assert_called_once_with(f=cluster.read_config_wrapper,
                                           f_kwargs=mock_remove.return_value,
                                           request_type='local_any',
@@ -191,7 +191,7 @@ async def test_get_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_req
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with({})
-        assert isinstance(result, web_response.Response)
+        assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -202,7 +202,7 @@ async def test_get_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_req
 async def test_get_status_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_status_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_status_node(request=mock_request,
+        result = await get_status_node(token_info,
                                        node_id='001')
         f_kwargs = {'node_id': '001'
                     }
@@ -219,7 +219,7 @@ async def test_get_status_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, moc
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, web_response.Response)
+        assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -230,7 +230,7 @@ async def test_get_status_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, moc
 async def test_get_info_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_info_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_info_node(request=mock_request,
+        result = await get_info_node(token_info,
                                      node_id='001')
         f_kwargs = {'node_id': '001'
                     }
@@ -247,7 +247,7 @@ async def test_get_info_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, web_response.Response)
+        assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -261,7 +261,7 @@ async def test_get_configuration_node(mock_exc, mock_dapi, mock_remove, mock_dfu
     """Verify 'get_configuration_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         with patch('api.controllers.cluster_controller.isinstance', return_value=mock_bool) as mock_isinstance:
-            result = await get_configuration_node(request=mock_request,
+            result = await get_configuration_node(token_info,
                                                   node_id='001')
             f_kwargs = {'node_id': '001',
                         'section': None,
@@ -282,7 +282,7 @@ async def test_get_configuration_node(mock_exc, mock_dapi, mock_remove, mock_dfu
             assert mock_exc.call_count == 2
             mock_remove.assert_called_once_with(f_kwargs)
             if mock_isinstance.return_value:
-                assert isinstance(result, web_response.Response)
+                assert isinstance(result, Response)
             else:
                 assert isinstance(result, ConnexionResponse)
 
@@ -296,7 +296,7 @@ async def test_get_daemon_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfun
     """Verify 'get_daemon_stats_node' function is working as expected."""
     mock_request = MagicMock()
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_daemon_stats_node(request=mock_request,
+        result = await get_daemon_stats_node(token_info,
                                              node_id='worker1',
                                              daemons_list=['daemon_1', 'daemon_2'])
 
@@ -314,7 +314,7 @@ async def test_get_daemon_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfun
         mock_exc.assert_has_calls([call(mock_snodes.return_value), call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
 
-        assert isinstance(result, web_response.Response)
+        assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -327,7 +327,7 @@ async def test_get_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
     """Verify 'get_stats_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         with patch('api.controllers.cluster_controller.deserialize_date', return_value='desdate_value') as mock_desdate:
-            result = await get_stats_node(request=mock_request,
+            result = await get_stats_node(token_info,
                                           node_id='001',
                                           date=mock_date)
             if not mock_date:
@@ -351,7 +351,7 @@ async def test_get_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
                                        call(mock_dfunc.return_value)])
             assert mock_exc.call_count == 2
             mock_remove.assert_called_once_with(f_kwargs)
-            assert isinstance(result, web_response.Response)
+            assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -362,7 +362,7 @@ async def test_get_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
 async def test_get_stats_hourly_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_stats_hourly_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_stats_hourly_node(request=mock_request,
+        result = await get_stats_hourly_node(token_info,
                                              node_id='001')
         f_kwargs = {'node_id': '001'
                     }
@@ -379,7 +379,7 @@ async def test_get_stats_hourly_node(mock_exc, mock_dapi, mock_remove, mock_dfun
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, web_response.Response)
+        assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -390,7 +390,7 @@ async def test_get_stats_hourly_node(mock_exc, mock_dapi, mock_remove, mock_dfun
 async def test_get_stats_weekly_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_stats_weekly_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_stats_weekly_node(request=mock_request,
+        result = await get_stats_weekly_node(token_info,
                                              node_id='001')
         f_kwargs = {'node_id': '001'
                     }
@@ -407,7 +407,7 @@ async def test_get_stats_weekly_node(mock_exc, mock_dapi, mock_remove, mock_dfun
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, web_response.Response)
+        assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -418,7 +418,7 @@ async def test_get_stats_weekly_node(mock_exc, mock_dapi, mock_remove, mock_dfun
 async def test_get_stats_analysisd_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_stats_analysisd_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_stats_analysisd_node(request=mock_request,
+        result = await get_stats_analysisd_node(token_info,
                                                 node_id='001')
         f_kwargs = {'node_id': '001',
                     'filename': common.ANALYSISD_STATS
@@ -436,7 +436,7 @@ async def test_get_stats_analysisd_node(mock_exc, mock_dapi, mock_remove, mock_d
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, web_response.Response)
+        assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -447,7 +447,7 @@ async def test_get_stats_analysisd_node(mock_exc, mock_dapi, mock_remove, mock_d
 async def test_get_stats_remoted_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_stats_remoted_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_stats_remoted_node(request=mock_request,
+        result = await get_stats_remoted_node(token_info,
                                               node_id='001')
         f_kwargs = {'node_id': '001',
                     'filename': common.REMOTED_STATS
@@ -465,7 +465,7 @@ async def test_get_stats_remoted_node(mock_exc, mock_dapi, mock_remove, mock_dfu
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, web_response.Response)
+        assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -476,7 +476,7 @@ async def test_get_stats_remoted_node(mock_exc, mock_dapi, mock_remove, mock_dfu
 async def test_get_log_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_log_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_log_node(request=mock_request,
+        result = await get_log_node(token_info,
                                     node_id='001')
         f_kwargs = {'node_id': '001',
                     'offset': 0,
@@ -504,7 +504,7 @@ async def test_get_log_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_r
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, web_response.Response)
+        assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -515,7 +515,7 @@ async def test_get_log_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_r
 async def test_get_log_summary_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_log_summary_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_log_summary_node(request=mock_request,
+        result = await get_log_summary_node(token_info,
                                             node_id='001')
         f_kwargs = {'node_id': '001'
                     }
@@ -532,7 +532,7 @@ async def test_get_log_summary_node(mock_exc, mock_dapi, mock_remove, mock_dfunc
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, web_response.Response)
+        assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -543,7 +543,7 @@ async def test_get_log_summary_node(mock_exc, mock_dapi, mock_remove, mock_dfunc
 async def test_get_api_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_api_config' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_api_config(request=mock_request)
+        result = await get_api_config(token_info)
         f_kwargs = {'node_list': '*'
                     }
         mock_dapi.assert_called_once_with(f=manager.get_api_config,
@@ -560,7 +560,7 @@ async def test_get_api_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, web_response.Response)
+        assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -571,7 +571,7 @@ async def test_get_api_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
 async def test_put_restart(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'put_restart' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await put_restart(request=mock_request)
+        result = await put_restart(token_info)
         f_kwargs = {'node_list': '*'
                     }
         mock_dapi.assert_called_once_with(f=manager.restart,
@@ -588,7 +588,7 @@ async def test_put_restart(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_re
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, web_response.Response)
+        assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -599,7 +599,7 @@ async def test_put_restart(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_re
 async def test_get_conf_validation(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
     """Verify 'get_conf_validation' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_conf_validation(request=mock_request)
+        result = await get_conf_validation(token_info)
         f_kwargs = {'node_list': '*'
                     }
         mock_dapi.assert_called_once_with(f=manager.validation,
@@ -616,7 +616,7 @@ async def test_get_conf_validation(mock_exc, mock_dapi, mock_remove, mock_dfunc,
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, web_response.Response)
+        assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -630,7 +630,7 @@ async def test_get_node_config(mock_check_pair, mock_exc, mock_dapi, mock_remove
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         kwargs_param = {'configuration': 'configuration_value'
                         }
-        result = await get_node_config(request=mock_request,
+        result = await get_node_config(token_info,
                                        node_id='001',
                                        component='component_value',
                                        **kwargs_param)
@@ -653,7 +653,7 @@ async def test_get_node_config(mock_check_pair, mock_exc, mock_dapi, mock_remove
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 3
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, web_response.Response)
+        assert isinstance(result, Response)
 
 
 @pytest.mark.asyncio
@@ -666,7 +666,7 @@ async def test_update_configuration(mock_exc, mock_dapi, mock_remove, mock_dfunc
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         with patch('api.controllers.cluster_controller.Body.validate_content_type'):
             with patch('api.controllers.cluster_controller.Body.decode_body') as mock_dbody:
-                result = await update_configuration(request=mock_request,
+                result = await update_configuration(token_info,
                                                     node_id='001',
                                                     body={})
                 f_kwargs = {'node_id': '001',
@@ -685,4 +685,4 @@ async def test_update_configuration(mock_exc, mock_dapi, mock_remove, mock_dfunc
                                            call(mock_dfunc.return_value)])
                 assert mock_exc.call_count == 2
                 mock_remove.assert_called_once_with(f_kwargs)
-                assert isinstance(result, web_response.Response)
+                assert isinstance(result, Response)

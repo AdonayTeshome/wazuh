@@ -1,4 +1,5 @@
 from unittest.mock import patch
+import pytest
 
 with patch('wazuh.common.wazuh_uid'):
     with patch('wazuh.common.wazuh_gid'):
@@ -17,3 +18,12 @@ class CustomAffectedItems(AffectedItemsWazuhResult):
 
     def __getitem__(self, key):
         return self.render()[key]
+
+@pytest.fixture
+def token_info():
+    """token_info fixture."""
+    return {
+        "token": "1234567890",
+        "sub": "wazuh",
+        'rbac_policies': {}
+    }
