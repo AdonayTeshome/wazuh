@@ -79,6 +79,7 @@ def test_default_config(mock_botocore, file_exists, options, retry_attempts, ret
         if file_exists:
             with patch('aws_tools.get_aws_config_params') as mock_config, \
                     patch('aws_tools.set_profile_dict_config'):
+                profile = f"profile {profile}"
                 mock_config.options(profile).return_value = options
                 profile_config = {option: mock_config.get(profile, option) for option in mock_config.options(profile)}
 
