@@ -14,13 +14,14 @@ from wazuh.core.cluster.dapi.dapi import DistributedAPI
 logger = logging.getLogger('wazuh-api')
 
 
-async def get_hardware_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_hardware_info(token_info: dict, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                             select: str = None) -> Response:
     """Get hardware info of an agent.
 
     Parameters
     ----------
-    request : request.connexion
+    token_info : dict
+        Security information.
     agent_id : str
         Agent ID.
     pretty : bool
@@ -51,14 +52,15 @@ async def get_hardware_info(token_info, agent_id: str, pretty: bool = False, wai
     return json_response(data, pretty=pretty)
 
 
-async def get_hotfix_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_hotfix_info(token_info: dict, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                           offset: int = 0, limit: int = None, sort: str = None, search: str = None, select: str = None,
                           hotfix: str = None, q: str = None, distinct: bool = False) -> Response:
     """Get info about an agent's hotfixes.
 
     Parameters
     ----------
-    request : request.connexion
+    token_info : dict
+        Security information.
     agent_id : str
         Agent ID.
     offset : int
@@ -115,7 +117,7 @@ async def get_hotfix_info(token_info, agent_id: str, pretty: bool = False, wait_
     return json_response(data, pretty=pretty)
 
 
-async def get_network_address_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_network_address_info(token_info: dict, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                                    offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                                    search: str = None, iface: str = None, proto: str = None, address: str = None,
                                    broadcast: str = None, netmask: str = None, q: str = None,
@@ -124,7 +126,8 @@ async def get_network_address_info(token_info, agent_id: str, pretty: bool = Fal
 
     Parameters
     ----------
-    request : request.connexion
+    token_info : dict
+        Security information.
     agent_id : str
         Agent ID.
     offset : int
@@ -192,7 +195,7 @@ async def get_network_address_info(token_info, agent_id: str, pretty: bool = Fal
     return json_response(data, pretty=pretty)
 
 
-async def get_network_interface_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_network_interface_info(token_info: dict, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                                      offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                                      search: str = None, name: str = None, adapter: str = None, state: str = None,
                                      mtu: str = None, q: str = None, distinct: bool = False) -> Response:
@@ -200,7 +203,8 @@ async def get_network_interface_info(token_info, agent_id: str, pretty: bool = F
 
     Parameters
     ----------
-    request : request.connexion
+    token_info : dict
+        Security information.
     agent_id : str
         Agent ID.
     offset : int
@@ -270,7 +274,7 @@ async def get_network_interface_info(token_info, agent_id: str, pretty: bool = F
     return json_response(data, pretty=pretty)
 
 
-async def get_network_protocol_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_network_protocol_info(token_info: dict, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                                     offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                                     search: str = None, iface: str = None, gateway: str = None, dhcp: str = None,
                                     q: str = None, distinct: bool = False) -> Response:
@@ -278,7 +282,8 @@ async def get_network_protocol_info(token_info, agent_id: str, pretty: bool = Fa
 
     Parameters
     ----------
-    request : request.connexion
+    token_info : dict
+        Security information.
     agent_id : str
         Agent ID.
     offset : int
@@ -341,13 +346,14 @@ async def get_network_protocol_info(token_info, agent_id: str, pretty: bool = Fa
     return json_response(data, pretty=pretty)
 
 
-async def get_os_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_os_info(token_info: dict, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                       select: str = None) -> Response:
     """Get OS info of an agent.
 
     Parameters
     ----------
-    request : request.connexion
+    token_info : dict
+        Security information.
     agent_id : str
         Agent ID.
     select : str
@@ -379,7 +385,7 @@ async def get_os_info(token_info, agent_id: str, pretty: bool = False, wait_for_
     return json_response(data, pretty=pretty)
 
 
-async def get_packages_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_packages_info(token_info: dict, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                             offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                             search: str = None, vendor: str = None, name: str = None, architecture: str = None,
                             version: str = None, q: str = None, distinct: bool = False) -> Response:
@@ -387,7 +393,8 @@ async def get_packages_info(token_info, agent_id: str, pretty: bool = False, wai
 
     Parameters
     ----------
-    request : request.connexion
+    token_info : dict
+        Security information.
     agent_id : str
         Agent ID.
     offset : int
@@ -453,7 +460,7 @@ async def get_packages_info(token_info, agent_id: str, pretty: bool = False, wai
     return json_response(data, pretty=pretty)
 
 
-async def get_ports_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
+async def get_ports_info(token_info: dict, agent_id: str, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
                          limit: int = None, select: str = None, sort: str = None, search: str = None, pid: str = None,
                          protocol: str = None, tx_queue: str = None, state: str = None, process: str = None,
                          q: str = None, distinct: bool = False) -> Response:
@@ -461,7 +468,8 @@ async def get_ports_info(token_info, agent_id: str, pretty: bool = False, wait_f
 
     Parameters
     ----------
-    request : request.connexion
+    token_info : dict
+        Security information.
     agent_id : str
         Agent ID.
     offset : int
@@ -533,7 +541,7 @@ async def get_ports_info(token_info, agent_id: str, pretty: bool = False, wait_f
     return json_response(data, pretty=pretty)
 
 
-async def get_processes_info(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_processes_info(token_info: dict, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                              offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                              search: str = None, pid: str = None, state: str = None, ppid: str = None,
                              egroup: str = None, euser: str = None, fgroup: str = None, name: str = None,
@@ -544,7 +552,8 @@ async def get_processes_info(token_info, agent_id: str, pretty: bool = False, wa
 
     Parameters
     ----------
-    request : request.connexion
+    token_info : dict
+        Security information.
     agent_id : str
         Agent ID.
     offset : int

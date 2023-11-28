@@ -5,6 +5,7 @@
 import logging
 
 from starlette.responses import Response
+from connexion import request
 
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc
 from api.controllers.util import json_response
@@ -14,13 +15,14 @@ from wazuh.syscheck import run, clear, files, last_scan
 logger = logging.getLogger('wazuh-api')
 
 
-async def put_syscheck(token_info, agents_list: str = '*', pretty: bool = False,
+async def put_syscheck(token_info: dict, agents_list: str = '*', pretty: bool = False,
                        wait_for_complete: bool = False) -> Response:
     """Run a syscheck scan in the specified agents.
 
     Parameters
     ----------
-    request : request.connexion
+    token_info : dict
+
     agents_list : str
         List of agent ids.
     pretty : bool
@@ -49,7 +51,7 @@ async def put_syscheck(token_info, agents_list: str = '*', pretty: bool = False,
     return json_response(data, pretty=pretty)
 
 
-async def get_syscheck_agent(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_syscheck_agent(token_info: dict, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                              offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                              search: str = None, distinct: bool = False, summary: bool = False, md5: str = None,
                              sha1: str = None, sha256: str = None, q: str = None, arch: str = None) -> Response:
@@ -57,7 +59,8 @@ async def get_syscheck_agent(token_info, agent_id: str, pretty: bool = False, wa
 
     Parameters
     ----------
-    request : request.connexion
+    token_info : dict
+        Security information.
     agent_id : str
         Agent ID.
     pretty : bool
@@ -123,13 +126,14 @@ async def get_syscheck_agent(token_info, agent_id: str, pretty: bool = False, wa
     return json_response(data, pretty=pretty)
 
 
-async def delete_syscheck_agent(token_info, agent_id: str = '*', pretty: bool = False,
+async def delete_syscheck_agent(token_info: dict, agent_id: str = '*', pretty: bool = False,
                                 wait_for_complete: bool = False) -> Response:
     """Clear file integrity monitoring scan results for a specified agent.
 
     Parameters
     ----------
-    request : request.connexion
+    token_info : dict
+        Security information.
     agent_id : str
         Agent ID.
     pretty : bool
@@ -157,13 +161,14 @@ async def delete_syscheck_agent(token_info, agent_id: str = '*', pretty: bool = 
     return json_response(data, pretty=pretty)
 
 
-async def get_last_scan_agent(token_info, agent_id: str, pretty: bool = False,
+async def get_last_scan_agent(token_info: dict, agent_id: str, pretty: bool = False,
                               wait_for_complete: bool = False) -> Response:
     """Return when the last syscheck scan of a specified agent started and ended.
 
     Parameters
     ----------
-    request : request.connexion
+    token_info : dict
+        Security information.
     agent_id : str
         Agent ID.
     pretty : bool

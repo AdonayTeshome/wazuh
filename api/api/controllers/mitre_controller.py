@@ -14,7 +14,7 @@ from wazuh.core.cluster.dapi.dapi import DistributedAPI
 logger = logging.getLogger('wazuh-api')
 
 
-async def get_metadata(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def get_metadata(token_info: dict, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Return the metadata of the MITRE's database.
 
     Parameters
@@ -45,7 +45,7 @@ async def get_metadata(token_info, pretty: bool = False, wait_for_complete: bool
     return json_response(data, pretty=pretty)
 
 
-async def get_references(token_info, reference_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_references(token_info: dict, reference_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                          offset: int = None, limit: int = None, sort: str = None, search: str = None,
                          select: list = None, q: str = None) -> Response:
     """Get information of specified MITRE's references.
@@ -106,7 +106,7 @@ async def get_references(token_info, reference_ids: list = None, pretty: bool = 
     return json_response(data, pretty=pretty)
 
 
-async def get_tactics(token_info, tactic_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_tactics(token_info: dict, tactic_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                       offset: int = None, limit: int = None, sort: str = None, search: str = None, select: list = None,
                       q: str = None, distinct: bool = False) -> Response:
     """Get information of specified MITRE's tactics.
@@ -170,7 +170,7 @@ async def get_tactics(token_info, tactic_ids: list = None, pretty: bool = False,
     return json_response(data, pretty=pretty)
 
 
-async def get_techniques(token_info, technique_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_techniques(token_info: dict, technique_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                          offset: int = None, limit: int = None, sort: str = None, search: str = None,
                          select: list = None, q: str = None, distinct: bool = False) -> Response:
     """Get information of specified MITRE's techniques.
@@ -232,7 +232,7 @@ async def get_techniques(token_info, technique_ids: list = None, pretty: bool = 
     return json_response(data, pretty=pretty)
 
 
-async def get_mitigations(token_info, mitigation_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_mitigations(token_info: dict, mitigation_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                           offset: int = None, limit: int = None, sort: str = None, search: str = None,
                           select: list = None, q: str = None, distinct: bool = False) -> Response:
     """Get information of specified MITRE's mitigations.
@@ -294,7 +294,7 @@ async def get_mitigations(token_info, mitigation_ids: list = None, pretty: bool 
     return json_response(data, pretty=pretty)
 
 
-async def get_groups(token_info, group_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_groups(token_info: dict, group_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                      offset: int = None, limit: int = None, sort: str = None, search: str = None, select: list = None,
                      q: str = None, distinct: bool = False) -> Response:
     """Get information of specified MITRE's groups.
@@ -357,7 +357,7 @@ async def get_groups(token_info, group_ids: list = None, pretty: bool = False, w
     return json_response(data, pretty=pretty)
 
 
-async def get_software(token_info, software_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_software(token_info: dict, software_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                        offset: int = None, limit: int = None, sort: str = None, search: str = None, select: list = None,
                        q: str = None, distinct: bool = False) -> Response:
     """Get information of specified MITRE's software.

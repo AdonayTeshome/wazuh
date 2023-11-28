@@ -122,7 +122,8 @@ async def run_as_login(json, user: str, raw: bool = False) -> Response:
     return token_response(user, data.dikt, raw)
 
 
-async def get_user_me(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def get_user_me(token_info: dict, pretty: bool = False,
+                      wait_for_complete: bool = False) -> Response:
     """Returns information about the current user.
 
     Parameters
@@ -154,7 +155,7 @@ async def get_user_me(token_info, pretty: bool = False, wait_for_complete: bool 
     return json_response(data, pretty=pretty)
 
 
-async def get_user_me_policies(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def get_user_me_policies(token_info: dict, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Return processed RBAC policies and rbac_mode for the current user.
 
     Parameters
@@ -177,7 +178,7 @@ async def get_user_me_policies(token_info, pretty: bool = False, wait_for_comple
     return json_response(data, pretty=pretty)
 
 
-async def logout_user(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def logout_user(token_info: dict, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Invalidate all current user's tokens.
 
     Parameters
@@ -207,7 +208,7 @@ async def logout_user(token_info, pretty: bool = False, wait_for_complete: bool 
     return json_response(data, pretty=pretty)
 
 
-async def get_users(token_info, user_ids: list = None, pretty: bool = False,
+async def get_users(token_info: dict, user_ids: list = None, pretty: bool = False,
                     wait_for_complete: bool = False, offset: int = 0, limit: int = None,
                     search: str = None, select: str = None,
                     sort: str = None, q: str = None, distinct: bool = False) -> Response:
@@ -265,7 +266,7 @@ async def get_users(token_info, user_ids: list = None, pretty: bool = False,
     return json_response(data, pretty=pretty)
 
 
-async def edit_run_as(token_info, user_id: str, allow_run_as: bool, pretty: bool = False,
+async def edit_run_as(token_info: dict, user_id: str, allow_run_as: bool, pretty: bool = False,
                       wait_for_complete: bool = False) -> Response:
     """Modify the specified user's allow_run_as flag.
 
@@ -338,7 +339,7 @@ async def create_user(token_info: dict, body: dict, pretty: bool = False, wait_f
     return json_response(data, pretty=pretty)
 
 
-async def update_user(token_info, user_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def update_user(token_info: dict, user_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Modify an existent user.
 
     Parameters
@@ -358,7 +359,7 @@ async def update_user(token_info, user_id: str, pretty: bool = False, wait_for_c
         API response.
     """
     Body.validate_content_type(request, expected_content_type='application/json')
-    f_kwargs = await UpdateUserModel.get_kwargs(token_info, additional_kwargs={'user_id': user_id,
+    f_kwargs = await UpdateUserModel.get_kwargs(token_info: dict, additional_kwargs={'user_id': user_id,
                                                                             'current_user': request.get("user")})
 
     dapi = DistributedAPI(f=security.update_user,
@@ -374,7 +375,7 @@ async def update_user(token_info, user_id: str, pretty: bool = False, wait_for_c
     return json_response(data, pretty=pretty)
 
 
-async def delete_users(token_info, user_ids: list = None, pretty: bool = False,
+async def delete_users(token_info: dict, user_ids: list = None, pretty: bool = False,
                        wait_for_complete: bool = False) -> Response:
     """Delete an existent list of users.
 
@@ -412,7 +413,7 @@ async def delete_users(token_info, user_ids: list = None, pretty: bool = False,
     return json_response(data, pretty=pretty)
 
 
-async def get_roles(token_info, role_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_roles(token_info: dict, role_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                     offset: int = 0, limit: int = None, search: str = None, select: str = None,
                     sort: str = None, q: str = None, distinct: bool = False) -> Response:
     """Get information about the security roles in the system.
@@ -506,7 +507,7 @@ async def add_role(token_info: dict, body: dict, pretty: bool = False, wait_for_
     return json_response(data, pretty=pretty)
 
 
-async def remove_roles(token_info, role_ids: list = None, pretty: bool = False,
+async def remove_roles(token_info: dict, role_ids: list = None, pretty: bool = False,
                        wait_for_complete: bool = False) -> Response:
     """Removes a list of roles in the system.
 
@@ -543,7 +544,7 @@ async def remove_roles(token_info, role_ids: list = None, pretty: bool = False,
     return json_response(data, pretty=pretty)
 
 
-async def update_role(token_info, role_id: int, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def update_role(token_info: dict, role_id: int, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Update the information of a specified role.
 
     Parameters
@@ -564,7 +565,7 @@ async def update_role(token_info, role_id: int, pretty: bool = False, wait_for_c
     """
     # Get body parameters
     Body.validate_content_type(request, expected_content_type='application/json')
-    f_kwargs = await RoleModel.get_kwargs(token_info, additional_kwargs={'role_id': role_id})
+    f_kwargs = await RoleModel.get_kwargs(token_info: dict, additional_kwargs={'role_id': role_id})
 
     dapi = DistributedAPI(f=security.update_role,
                           f_kwargs=remove_nones_to_dict(f_kwargs),
@@ -579,7 +580,7 @@ async def update_role(token_info, role_id: int, pretty: bool = False, wait_for_c
     return json_response(data, pretty=pretty)
 
 
-async def get_rules(token_info, rule_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_rules(token_info: dict, rule_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                     offset: int = 0, limit: int = None, search: str = None, select: str = None,
                     sort: str = None, q: str = '', distinct: bool = False) -> Response:
     """Get information about the security rules in the system.
@@ -673,7 +674,7 @@ async def add_rule(token_info: dict, body: dict, pretty: bool = False, wait_for_
     return json_response(data, pretty=pretty)
 
 
-async def update_rule(token_info, rule_id: int, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def update_rule(token_info: dict, rule_id: int, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Update the information of a specified rule.
 
     Parameters
@@ -694,7 +695,7 @@ async def update_rule(token_info, rule_id: int, pretty: bool = False, wait_for_c
     """
     # Get body parameters
     Body.validate_content_type(request, expected_content_type='application/json')
-    f_kwargs = await RuleModel.get_kwargs(token_info, additional_kwargs={'rule_id': rule_id})
+    f_kwargs = await RuleModel.get_kwargs(token_info: dict, additional_kwargs={'rule_id': rule_id})
 
     dapi = DistributedAPI(f=security.update_rule,
                           f_kwargs=remove_nones_to_dict(f_kwargs),
@@ -709,7 +710,7 @@ async def update_rule(token_info, rule_id: int, pretty: bool = False, wait_for_c
     return json_response(data, pretty=pretty)
 
 
-async def remove_rules(token_info, rule_ids: list = None, pretty: bool = False,
+async def remove_rules(token_info: dict, rule_ids: list = None, pretty: bool = False,
                        wait_for_complete: bool = False) -> Response:
     """Remove a list of rules from the system.
 
@@ -746,7 +747,7 @@ async def remove_rules(token_info, rule_ids: list = None, pretty: bool = False,
     return json_response(data, pretty=pretty)
 
 
-async def get_policies(token_info, policy_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_policies(token_info: dict, policy_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                        offset: int = 0, limit: int = None, search: str = None, select: str = None,
                        sort: str = None, q: str = None, distinct: bool = False) -> Response:
     """Returns information from all system policies.
@@ -840,7 +841,7 @@ async def add_policy(token_info: dict, body: dict,  pretty: bool = False, wait_f
     return json_response(data, pretty=pretty)
 
 
-async def remove_policies(token_info, policy_ids: list = None, pretty: bool = False,
+async def remove_policies(token_info: dict, policy_ids: list = None, pretty: bool = False,
                           wait_for_complete: bool = False) -> Response:
     """Removes a list of roles in the system.
 
@@ -877,7 +878,7 @@ async def remove_policies(token_info, policy_ids: list = None, pretty: bool = Fa
     return json_response(data, pretty=pretty)
 
 
-async def update_policy(token_info, policy_id: int, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def update_policy(token_info: dict, policy_id: int, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Update the information of a specified policy.
 
     Parameters
@@ -898,7 +899,7 @@ async def update_policy(token_info, policy_id: int, pretty: bool = False, wait_f
     """
     # Get body parameters
     Body.validate_content_type(request, expected_content_type='application/json')
-    f_kwargs = await PolicyModel.get_kwargs(token_info, additional_kwargs={'policy_id': policy_id})
+    f_kwargs = await PolicyModel.get_kwargs(token_info: dict, additional_kwargs={'policy_id': policy_id})
 
     dapi = DistributedAPI(f=security.update_policy,
                           f_kwargs=remove_nones_to_dict(f_kwargs),
@@ -913,7 +914,7 @@ async def update_policy(token_info, policy_id: int, pretty: bool = False, wait_f
     return json_response(data, pretty=pretty)
 
 
-async def set_user_role(token_info, user_id: str, role_ids: list, position: int = None,
+async def set_user_role(token_info: dict, user_id: str, role_ids: list, position: int = None,
                         pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Add a list of roles to a specified user.
 
@@ -951,7 +952,7 @@ async def set_user_role(token_info, user_id: str, role_ids: list, position: int 
     return json_response(data, pretty=pretty)
 
 
-async def remove_user_role(token_info, user_id: str, role_ids: list, pretty: bool = False,
+async def remove_user_role(token_info: dict, user_id: str, role_ids: list, pretty: bool = False,
                            wait_for_complete: bool = False) -> Response:
     """Delete a list of roles of a specified user.
 
@@ -990,7 +991,7 @@ async def remove_user_role(token_info, user_id: str, role_ids: list, pretty: boo
     return json_response(data, pretty=pretty)
 
 
-async def set_role_policy(token_info, role_id: int, policy_ids: list, position: int = None, pretty: bool = False,
+async def set_role_policy(token_info: dict, role_id: int, policy_ids: list, position: int = None, pretty: bool = False,
                           wait_for_complete: bool = False) -> Response:
     """Add a list of policies to a specified role.
 
@@ -1029,13 +1030,14 @@ async def set_role_policy(token_info, role_id: int, policy_ids: list, position: 
     return json_response(data, pretty=pretty)
 
 
-async def remove_role_policy(token_info, role_id: int, policy_ids: list, pretty: bool = False,
+async def remove_role_policy(token_info: dict, role_id: int, policy_ids: list, pretty: bool = False,
                              wait_for_complete: bool = False) -> Response:
     """Delete a list of policies of a specified role.
 
     Parameters
     ----------
-    request : request.connexion
+    token_info : dict
+        Security information.
     role_id : int
         Role ID.
     policy_ids : list
@@ -1067,13 +1069,14 @@ async def remove_role_policy(token_info, role_id: int, policy_ids: list, pretty:
     return json_response(data, pretty=pretty)
 
 
-async def set_role_rule(token_info, role_id: int, rule_ids: list, pretty: bool = False,
+async def set_role_rule(token_info: dict, role_id: int, rule_ids: list, pretty: bool = False,
                         wait_for_complete: bool = False) -> Response:
     """Add a list of rules to a specified role.
 
     Parameters
     ----------
-    request : request.connexion
+    token_info : dict
+        Security information.
     role_id : int
         Role ID.
     rule_ids : list
@@ -1104,13 +1107,14 @@ async def set_role_rule(token_info, role_id: int, rule_ids: list, pretty: bool =
     return json_response(data, pretty=pretty)
 
 
-async def remove_role_rule(token_info, role_id: int, rule_ids: list, pretty: bool = False,
+async def remove_role_rule(token_info: dict, role_id: int, rule_ids: list, pretty: bool = False,
                            wait_for_complete: bool = False) -> Response:
     """Delete a list of rules of a specified role.
 
     Parameters
     ----------
-    request : request.connexion
+    token_info : dict
+        Security information.
     role_id : int
         Role ID.
     rule_ids : list
@@ -1200,12 +1204,13 @@ async def get_rbac_actions(pretty: bool = False, endpoint: str = None) -> Respon
     return json_response(data, pretty=pretty)
 
 
-async def revoke_all_tokens(token_info, pretty: bool = False) -> Response:
+async def revoke_all_tokens(token_info: dict, pretty: bool = False) -> Response:
     """Revoke all tokens.
 
     Parameters
     ----------
-    request : request.connexion
+    token_info : dict
+        Security information.
     pretty : bool, optional
         Show results in human-readable format.
 
@@ -1237,12 +1242,13 @@ async def revoke_all_tokens(token_info, pretty: bool = False) -> Response:
     return json_response(data, pretty=pretty)
 
 
-async def get_security_config(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def get_security_config(token_info: dict, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get active security configuration.
 
     Parameters
     ----------
-    request : request.connexion
+    token_info : dict
+        Security information.
     pretty : bool, optional
         Show results in human-readable format.
     wait_for_complete : bool, optional
@@ -1321,12 +1327,13 @@ async def put_security_config(token_info: dict, body: dict, pretty: bool = False
     return json_response(data, pretty=pretty)
 
 
-async def delete_security_config(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def delete_security_config(token_info: dict, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Restore default security configuration.
 
     Parameters
     ----------
-    request : request.connexion
+    token_info : dict
+        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool

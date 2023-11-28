@@ -28,7 +28,7 @@ logger = logging.getLogger('wazuh-api')
 async def delete_agents(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = None,
                         purge: bool = False, status: str = None, q: str = None, older_than: str = None,
                         manager: str = None, version: str = None, group: str = None, node_name: str = None,
-                        name: str = None, ip: str = None) -> Response:
+                        name: str = None, ip: str = None, register_ip: str = None) -> Response:
     """Delete all agents or a list of them based on optional criteria.
 
     Parameters
@@ -62,6 +62,8 @@ async def delete_agents(token_info: dict, pretty: bool = False, wait_for_complet
         Filter by agent name.
     ip : str
         Filter by agent IP.
+    register_ip : str
+        Filter by agent register IP.
 
     Returns
     -------
@@ -81,7 +83,7 @@ async def delete_agents(token_info: dict, pretty: bool = False, wait_for_complet
                     'node_name': node_name,
                     'name': name,
                     'ip': ip,
-                    'registerIP': request.query.get('registerIP', None)
+                    'registerIP': register_ip
                 },
                 'q': q
                 }

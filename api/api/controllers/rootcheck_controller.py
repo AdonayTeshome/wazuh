@@ -14,7 +14,7 @@ from wazuh.core.cluster.dapi.dapi import DistributedAPI
 logger = logging.getLogger('wazuh-api')
 
 
-async def put_rootcheck(token_info, agents_list: str = '*', pretty: bool = False,
+async def put_rootcheck(token_info: dict, agents_list: str = '*', pretty: bool = False,
                         wait_for_complete: bool = False) -> Response:
     """Run rootcheck scan over the agent_ids.
 
@@ -50,7 +50,7 @@ async def put_rootcheck(token_info, agents_list: str = '*', pretty: bool = False
     return json_response(data, pretty=pretty)
 
 
-async def delete_rootcheck(token_info, pretty: bool = False, wait_for_complete: bool = False,
+async def delete_rootcheck(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
                            agent_id: str = '') -> Response:
     """Clear the rootcheck database for a list of agents.
 
@@ -85,7 +85,7 @@ async def delete_rootcheck(token_info, pretty: bool = False, wait_for_complete: 
     return json_response(data, pretty=pretty)
 
 
-async def get_rootcheck_agent(token_info, pretty: bool = False, wait_for_complete: bool = False, agent_id: str = None,
+async def get_rootcheck_agent(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, agent_id: str = None,
                               offset: int = 0, limit: int = None, sort: str = None, search: str = None,
                               select: str = None, q: str = '', distinct: bool = False, status: str = 'all',
                               pci_dss: str = None, cis: str = None) -> Response:
@@ -156,7 +156,7 @@ async def get_rootcheck_agent(token_info, pretty: bool = False, wait_for_complet
     return json_response(data, pretty=pretty)
 
 
-async def get_last_scan_agent(token_info, pretty: bool = False, wait_for_complete: bool = False,
+async def get_last_scan_agent(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
                               agent_id: str = None) -> Response:
     """Get the last rootcheck scan of an agent.
 

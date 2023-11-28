@@ -117,7 +117,7 @@ async def get_rules(request, token_info, rule_ids: list = None, pretty: bool = F
 
 
 #@cache(expires=api_conf['cache']['time'])
-async def get_rules_groups(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
+async def get_rules_groups(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
                            limit: int = None, sort: str = None, search: str = None) -> Response:
     """Get all rule groups names.
 
@@ -136,8 +136,8 @@ async def get_rules_groups(token_info, pretty: bool = False, wait_for_complete: 
     search : str
         Looks for elements with the specified string.
     sort : str
-        Sorts the collection by a field or fields (separated by comma). Use +/- at the beginning to list in
-        ascending or descending order.
+        Sorts the collection by a field or fields (separated by comma). Use +/-
+        at the beginning to list in ascending or descending order.
 
     Returns
     -------
@@ -166,7 +166,8 @@ async def get_rules_groups(token_info, pretty: bool = False, wait_for_complete: 
 
 
 #@cache(expires=api_conf['cache']['time'])
-async def get_rules_requirement(token_info, requirement: str = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_rules_requirement(token_info: dict, requirement: str = None,
+                                pretty: bool = False, wait_for_complete: bool = False,
                                 offset: int = 0, limit: int = None, sort: str = None,
                                 search: str = None) -> Response:
     """Get all specified requirements.
@@ -188,8 +189,8 @@ async def get_rules_requirement(token_info, requirement: str = None, pretty: boo
     search : str
         Looks for elements with the specified string.
     sort : str
-        Sorts the collection by a field or fields (separated by comma). Use +/- at the beginning to list in
-        ascending or descending order.
+        Sorts the collection by a field or fields (separated by comma). Use +/-
+        at the beginning to list in ascending or descending order.
 
     Returns
     -------
@@ -216,8 +217,9 @@ async def get_rules_requirement(token_info, requirement: str = None, pretty: boo
 
 
 #@cache(expires=api_conf['cache']['time'])
-async def get_rules_files(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
-                          limit: int = None, sort: str = None, search: str = None, status: str = None,
+async def get_rules_files(token_info: dict, pretty: bool = False,
+                          wait_for_complete: bool = False, offset: int = 0, limit: int = None,
+                          sort: str = None, search: str = None, status: str = None,
                           filename: list = None, relative_dirname: str = None, q: str = None,
                           select: str = None, distinct: bool = False) -> Response:
     """Get all the rules files.
@@ -237,8 +239,8 @@ async def get_rules_files(token_info, pretty: bool = False, wait_for_complete: b
     search : str
         Looks for elements with the specified string.
     sort : str
-        Sorts the collection by a field or fields (separated by comma). Use +/- at the beginning to list in
-        ascending or descending order.
+        Sorts the collection by a field or fields (separated by comma).
+        Use +/- at the beginning to list in ascending or descending order.
     status : str
         Filters by rules status.
     filename : list
@@ -284,7 +286,7 @@ async def get_rules_files(token_info, pretty: bool = False, wait_for_complete: b
 
 
 #@cache(expires=api_conf['cache']['time'])
-async def get_file(token_info, pretty: bool = False, wait_for_complete: bool = False, 
+async def get_file(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
                    filename: str = None, relative_dirname: str = None, 
                    raw: bool = False) -> Union[Response, ConnexionResponse]:
     """Get rule file content.
@@ -326,7 +328,8 @@ async def get_file(token_info, pretty: bool = False, wait_for_complete: bool = F
     if isinstance(data, AffectedItemsWazuhResult):
         response = json_response(data, pretty=pretty)
     else:
-        response = ConnexionResponse(body=data["message"], mimetype='application/xml', content_type='application/xml')
+        response = ConnexionResponse(body=data["message"],
+                                     mimetype='application/xml', content_type='application/xml')
 
     return response
 
@@ -381,7 +384,7 @@ async def put_file(token_info: dict, body: bytes, filename: str = None, overwrit
     return json_response(data, pretty=pretty)
 
 
-async def delete_file(token_info, filename: str = None, 
+async def delete_file(token_info: dict, filename: str = None, 
                       relative_dirname: str = None, 
                       pretty: bool = False,
                       wait_for_complete: bool = False) -> Response:

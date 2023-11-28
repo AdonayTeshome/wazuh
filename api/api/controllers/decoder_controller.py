@@ -18,7 +18,7 @@ from wazuh.core.results import AffectedItemsWazuhResult
 logger = logging.getLogger('wazuh-api')
 
 
-async def get_decoders(token_info, decoder_names: list = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_decoders(token_info: dict, decoder_names: list = None, pretty: bool = False, wait_for_complete: bool = False,
                        offset: int = 0, limit: int = None, select: list = None, sort: str = None, search: str = None,
                        q: str = None, filename: str = None, relative_dirname: str = None,
                        status: str = None, distinct: bool = False) -> Response:
@@ -91,7 +91,7 @@ async def get_decoders(token_info, decoder_names: list = None, pretty: bool = Fa
     return json_response(data, pretty=pretty)
 
 
-async def get_decoders_files(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
+async def get_decoders_files(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
                              limit: int = None, sort: str = None, search: str = None, filename: str = None,
                              relative_dirname: str = None, status: str = None, q: str = None,
                              select: str = None, distinct: bool = False) -> Response:
@@ -163,7 +163,7 @@ async def get_decoders_files(token_info, pretty: bool = False, wait_for_complete
     return json_response(data, pretty=pretty)
 
 
-async def get_decoders_parents(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
+async def get_decoders_parents(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
                                limit: int = None, select: list = None, sort: str = None,
                                search: str = None) -> Response:
     """Get decoders by parents.
@@ -217,7 +217,7 @@ async def get_decoders_parents(token_info, pretty: bool = False, wait_for_comple
     return json_response(data, pretty=pretty)
 
 
-async def get_file(token_info, pretty: bool = False, wait_for_complete: bool = False, 
+async def get_file(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, 
                    filename: str = None, relative_dirname: str = None, 
                    raw: bool = False) -> Union[Response, ConnexionResponse]:
     """Get decoder file content.
@@ -265,7 +265,7 @@ async def get_file(token_info, pretty: bool = False, wait_for_complete: bool = F
     return response
 
 
-async def put_file(token_info, body: bytes, filename: str = None, relative_dirname: str = None,
+async def put_file(token_info: dict, body: bytes, filename: str = None, relative_dirname: str = None,
                    overwrite: bool = False, pretty: bool = False,
                    wait_for_complete: bool = False) -> Response:
     """Upload a decoder file.
@@ -315,7 +315,7 @@ async def put_file(token_info, body: bytes, filename: str = None, relative_dirna
     return json_response(data, pretty=pretty)
 
 
-async def delete_file(token_info, filename: str = None, 
+async def delete_file(token_info: dict, filename: str = None, 
                       relative_dirname: str = None,
                       pretty: bool = False,
                       wait_for_complete: bool = False) -> Response:

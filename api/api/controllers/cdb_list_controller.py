@@ -19,7 +19,7 @@ from wazuh.core.results import AffectedItemsWazuhResult
 logger = logging.getLogger('wazuh-api')
 
 
-async def get_lists(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0, limit: int = None,
+async def get_lists(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0, limit: int = None,
                     select: list = None, sort: str = None, search: str = None, filename: str = None,
                     relative_dirname: str = None, q: str = None, distinct: bool = False) -> Response:
     """Get all CDB lists.
@@ -84,7 +84,7 @@ async def get_lists(token_info, pretty: bool = False, wait_for_complete: bool = 
     return json_response(data, pretty=pretty)
 
 
-async def get_file(token_info, pretty: bool = False, wait_for_complete: bool = False, filename: str = None,
+async def get_file(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, filename: str = None,
                    raw: bool = False) -> Union[Response, ConnexionResponse]:
     """Get content of one CDB list file, in raw or dict format.
 
@@ -128,7 +128,7 @@ async def get_file(token_info, pretty: bool = False, wait_for_complete: bool = F
     return response
 
 
-async def put_file(token_info, body: bytes, overwrite: bool = False, pretty: bool = False, wait_for_complete: bool = False,
+async def put_file(token_info: dict, body: bytes, overwrite: bool = False, pretty: bool = False, wait_for_complete: bool = False,
                    filename: str = None) -> Response:
     """Upload content of CDB list file.
 
@@ -173,7 +173,7 @@ async def put_file(token_info, body: bytes, overwrite: bool = False, pretty: boo
     return json_response(data, pretty=pretty)
 
 
-async def delete_file(token_info, pretty: bool = False, wait_for_complete: bool = False,
+async def delete_file(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
                       filename: str = None) -> Response:
     """Delete a CDB list file.
 
@@ -208,7 +208,7 @@ async def delete_file(token_info, pretty: bool = False, wait_for_complete: bool 
     return json_response(data, pretty=pretty)
 
 
-async def get_lists_files(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
+async def get_lists_files(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
                           limit: int = None, sort: str = None, search: str = None, filename: str = None,
                           relative_dirname: str = None) -> Response:
     """Get paths from all CDB lists.

@@ -8,6 +8,7 @@ from typing import Union
 
 from starlette.responses import Response
 from connexion.lifecycle import ConnexionResponse
+from connexion import request
 
 import wazuh.cluster as cluster
 import wazuh.core.common as common
@@ -24,7 +25,8 @@ from wazuh.core.results import AffectedItemsWazuhResult
 logger = logging.getLogger('wazuh-api')
 
 
-async def get_cluster_node(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def get_cluster_node(token_info: dict, pretty: bool = False,
+                           wait_for_complete: bool = False) -> Response:
     """Get basic information about the local node.
 
     Parameters
@@ -58,9 +60,10 @@ async def get_cluster_node(token_info, pretty: bool = False, wait_for_complete: 
     return json_response(data, pretty=pretty)
 
 
-async def get_cluster_nodes(token_info, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
-                            limit: int = None, sort: str = None, search: str = None, select: str = None,
-                            nodes_list: str = None, q: str = None, distinct: bool = False) -> Response:
+async def get_cluster_nodes(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
+                            offset: int = 0, limit: int = None, sort: str = None,
+                            search: str = None, select: str = None, nodes_list: str = None,
+                            q: str = None, distinct: bool = False) -> Response:
     """Get information about all nodes in the cluster or a list of them.
 
     Parameters
@@ -123,7 +126,7 @@ async def get_cluster_nodes(token_info, pretty: bool = False, wait_for_complete:
     return json_response(data, pretty=pretty)
 
 
-async def get_healthcheck(token_info, pretty: bool = False, wait_for_complete: bool = False,
+async def get_healthcheck(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
                           nodes_list: str = None) -> Response:
     """Get cluster healthcheck.
 
@@ -164,7 +167,7 @@ async def get_healthcheck(token_info, pretty: bool = False, wait_for_complete: b
     return json_response(data, pretty=pretty)
 
 
-async def get_nodes_ruleset_sync_status(token_info, pretty: bool = False, wait_for_complete: bool = False,
+async def get_nodes_ruleset_sync_status(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
                                         nodes_list: str = "*") -> Response:
     """Get cluster ruleset synchronization status.
 
@@ -213,7 +216,7 @@ async def get_nodes_ruleset_sync_status(token_info, pretty: bool = False, wait_f
     return json_response(data, pretty=pretty)
 
 
-async def get_status(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def get_status(token_info: dict, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get cluster status.
 
     Parameters
@@ -244,7 +247,7 @@ async def get_status(token_info, pretty: bool = False, wait_for_complete: bool =
     return json_response(data, pretty=pretty)
 
 
-async def get_config(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def get_config(token_info: dict, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get the current node cluster configuration.
 
     Parameters
@@ -278,7 +281,7 @@ async def get_config(token_info, pretty: bool = False, wait_for_complete: bool =
     return json_response(data, pretty=pretty)
 
 
-async def get_status_node(token_info, node_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def get_status_node(token_info: dict, node_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get a specified node's Wazuh daemons status.
 
     Parameters
@@ -314,7 +317,7 @@ async def get_status_node(token_info, node_id: str, pretty: bool = False, wait_f
     return json_response(data, pretty=pretty)
 
 
-async def get_info_node(token_info, node_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def get_info_node(token_info: dict, node_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get a specified node's information.
 
     Returns basic information about a specified node such as version, compilation date, installation path.
@@ -352,7 +355,7 @@ async def get_info_node(token_info, node_id: str, pretty: bool = False, wait_for
     return json_response(data, pretty=pretty)
 
 
-async def get_configuration_node(token_info, node_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_configuration_node(token_info: dict, node_id: str, pretty: bool = False, wait_for_complete: bool = False,
                                  section: str = None, field: str = None,
                                  raw: bool = False) -> Union[Response, ConnexionResponse]:
     """Get a specified node's configuration (ossec.conf).
@@ -404,7 +407,7 @@ async def get_configuration_node(token_info, node_id: str, pretty: bool = False,
     return response
 
 
-async def get_daemon_stats_node(token_info, node_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_daemon_stats_node(token_info: dict, node_id: str, pretty: bool = False, wait_for_complete: bool = False,
                                 daemons_list: list = None):
     """Get Wazuh statistical information from the specified daemons of a specified cluster node.
 
@@ -437,7 +440,7 @@ async def get_daemon_stats_node(token_info, node_id: str, pretty: bool = False, 
     return json_response(data, pretty=pretty)
 
 
-async def get_stats_node(token_info, node_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_stats_node(token_info: dict, node_id: str, pretty: bool = False, wait_for_complete: bool = False,
                          date: str = None) -> Response:
     """Get a specified node's stats.
 
@@ -483,7 +486,7 @@ async def get_stats_node(token_info, node_id: str, pretty: bool = False, wait_fo
     return json_response(data, pretty=pretty)
 
 
-async def get_stats_hourly_node(token_info, node_id: str, pretty: bool = False,
+async def get_stats_hourly_node(token_info: dict, node_id: str, pretty: bool = False,
                                 wait_for_complete: bool = False) -> Response:
     """Get a specified node's stats by hour.
 
@@ -523,7 +526,7 @@ async def get_stats_hourly_node(token_info, node_id: str, pretty: bool = False,
     return json_response(data, pretty=pretty)
 
 
-async def get_stats_weekly_node(token_info, node_id: str, pretty: bool = False,
+async def get_stats_weekly_node(token_info: dict, node_id: str, pretty: bool = False,
                                 wait_for_complete: bool = False) -> Response:
     """Get a specified node's stats by week.
 
@@ -564,7 +567,7 @@ async def get_stats_weekly_node(token_info, node_id: str, pretty: bool = False,
 
 
 @deprecate_endpoint()
-async def get_stats_analysisd_node(token_info, node_id: str, pretty: bool = False,
+async def get_stats_analysisd_node(token_info: dict, node_id: str, pretty: bool = False,
                                    wait_for_complete: bool = False) -> Response:
     """Get a specified node's analysisd statistics.
 
@@ -604,7 +607,7 @@ async def get_stats_analysisd_node(token_info, node_id: str, pretty: bool = Fals
 
 
 @deprecate_endpoint()
-async def get_stats_remoted_node(token_info, node_id: str, pretty: bool = False,
+async def get_stats_remoted_node(token_info: dict, node_id: str, pretty: bool = False,
                                  wait_for_complete: bool = False) -> Response:
     """Get a specified node's remoted statistics.
 
@@ -643,7 +646,7 @@ async def get_stats_remoted_node(token_info, node_id: str, pretty: bool = False,
     return json_response(data, pretty=pretty)
 
 
-async def get_log_node(token_info, node_id: str, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
+async def get_log_node(token_info: dict, node_id: str, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
                        limit: int = None, sort: str = None, search: str = None, tag: str = None, level: str = None,
                        q: str = None, select: str = None, distinct: bool = False) -> Response:
     """Get a specified node's wazuh logs.
@@ -713,7 +716,7 @@ async def get_log_node(token_info, node_id: str, pretty: bool = False, wait_for_
     return json_response(data, pretty=pretty)
 
 
-async def get_log_summary_node(token_info, node_id: str, pretty: bool = False,
+async def get_log_summary_node(token_info: dict, node_id: str, pretty: bool = False,
                                wait_for_complete: bool = False) -> Response:
     """Get a summary of a specified node's wazuh logs.
 
@@ -750,7 +753,7 @@ async def get_log_summary_node(token_info, node_id: str, pretty: bool = False,
     return json_response(data, pretty=pretty)
 
 
-async def get_api_config(token_info, pretty: bool = False, wait_for_complete: bool = False,
+async def get_api_config(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
                          nodes_list: str = '*') -> Response:
     """Get active API configuration in manager or local_node.
 
@@ -788,7 +791,7 @@ async def get_api_config(token_info, pretty: bool = False, wait_for_complete: bo
     return json_response(data, pretty=pretty)
 
 
-async def put_restart(token_info, pretty: bool = False, wait_for_complete: bool = False,
+async def put_restart(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
                       nodes_list: str = '*') -> Response:
     """Restarts all nodes in the cluster or a list of them.
 
@@ -826,7 +829,7 @@ async def put_restart(token_info, pretty: bool = False, wait_for_complete: bool 
     return json_response(data, pretty=pretty)
 
 
-async def get_conf_validation(token_info, pretty: bool = False, wait_for_complete: bool = False,
+async def get_conf_validation(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
                               nodes_list: str = '*') -> Response:
     """Check whether the Wazuh configuration in a list of cluster nodes is correct or not.
 
@@ -865,7 +868,7 @@ async def get_conf_validation(token_info, pretty: bool = False, wait_for_complet
     return json_response(data, pretty=pretty)
 
 
-async def get_node_config(token_info, node_id: str, component: str, wait_for_complete: bool = False, pretty: bool = False,
+async def get_node_config(token_info: dict, node_id: str, component: str, wait_for_complete: bool = False, pretty: bool = False,
                           **kwargs: dict) -> Response:
     """Get active configuration in node node_id [on demand]
 
@@ -910,7 +913,7 @@ async def get_node_config(token_info, node_id: str, component: str, wait_for_com
     return json_response(data, pretty=pretty)
 
 
-async def update_configuration(token_info: dict, body: dict, node_id: str, body: bytes, pretty: bool = False,
+async def update_configuration(token_info: dict, body: dict, node_id: str, pretty: bool = False,
                                wait_for_complete: bool = False) -> Response:
     """Update Wazuh configuration (ossec.conf) in node node_id.
 

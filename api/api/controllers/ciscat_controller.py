@@ -16,7 +16,7 @@ from wazuh.core.cluster.dapi.dapi import DistributedAPI
 logger = logging.getLogger('wazuh-api')
 
 
-async def get_agents_ciscat_results(token_info, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_agents_ciscat_results(token_info: dict, agent_id: str, pretty: bool = False, wait_for_complete: bool = False,
                                     offset: int = 0, limit: int = None, select: List[str] = None, sort: str = None,
                                     search: str = None, benchmark: str = None, profile: str = None, fail: int = None,
                                     error: int = None, notchecked: int = None, unknown: int = None, score: int = None,

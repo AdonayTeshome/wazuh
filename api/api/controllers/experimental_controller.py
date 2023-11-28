@@ -6,6 +6,7 @@ import logging
 from functools import wraps
 
 from starlette.responses import Response
+from connexion import request
 
 import wazuh.ciscat as ciscat
 import wazuh.rootcheck as rootcheck
@@ -34,7 +35,7 @@ def check_experimental_feature_value(func):
 
 
 @check_experimental_feature_value
-async def clear_rootcheck_database(token_info, pretty: bool = False, wait_for_complete: bool = False,
+async def clear_rootcheck_database(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
                                    agents_list: list = None) -> Response:
     """Clear the rootcheck database for all the agents or a list of them.
 
@@ -75,7 +76,7 @@ async def clear_rootcheck_database(token_info, pretty: bool = False, wait_for_co
 
 
 @check_experimental_feature_value
-async def clear_syscheck_database(token_info, pretty: bool = False, wait_for_complete: bool = False,
+async def clear_syscheck_database(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
                                   agents_list: list = None) -> Response:
     """Clear the syscheck database for all agents or a list of them.
 
@@ -116,7 +117,7 @@ async def clear_syscheck_database(token_info, pretty: bool = False, wait_for_com
 
 
 @check_experimental_feature_value
-async def get_cis_cat_results(token_info, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
+async def get_cis_cat_results(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
                               offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                               search: str = None, benchmark: str = None, profile: str = None, fail: int = None,
                               error: int = None, notchecked: int = None, unknown: int = None,
@@ -197,7 +198,7 @@ async def get_cis_cat_results(token_info, pretty: bool = False, wait_for_complet
 
 
 @check_experimental_feature_value
-async def get_hardware_info(token_info, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
+async def get_hardware_info(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
                             offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                             search: str = None, board_serial: str = None) -> Response:
     """Get hardware info from all agents or a list of them.
@@ -263,7 +264,7 @@ async def get_hardware_info(token_info, pretty: bool = False, wait_for_complete:
 
 
 @check_experimental_feature_value
-async def get_network_address_info(token_info, pretty: bool = False, wait_for_complete: bool = False,
+async def get_network_address_info(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
                                    agents_list: str = '*', offset: int = 0, limit: str = None, select: str = None,
                                    sort: str = None, search: str = None, iface_name: str = None, proto: str = None,
                                    address: str = None, broadcast: str = None, netmask: str = None) -> Response:
@@ -337,7 +338,7 @@ async def get_network_address_info(token_info, pretty: bool = False, wait_for_co
 
 
 @check_experimental_feature_value
-async def get_network_interface_info(token_info, pretty: bool = False, wait_for_complete: bool = False,
+async def get_network_interface_info(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
                                      agents_list: str = '*', offset: int = 0, limit: int = None, select: str = None,
                                      sort: str = None, search: str = None, adapter: str = None, state: str = None,
                                      mtu: str = None) -> Response:
@@ -412,7 +413,7 @@ async def get_network_interface_info(token_info, pretty: bool = False, wait_for_
 
 
 @check_experimental_feature_value
-async def get_network_protocol_info(token_info, pretty: bool = False, wait_for_complete: bool = False,
+async def get_network_protocol_info(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
                                     agents_list: str = '*', offset: int = 0, limit: int = None, select: str = None,
                                     sort: str = None, search: str = None, iface: str = None, gateway: str = None,
                                     dhcp: str = None) -> Response:
@@ -481,7 +482,7 @@ async def get_network_protocol_info(token_info, pretty: bool = False, wait_for_c
 
 
 @check_experimental_feature_value
-async def get_os_info(token_info, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
+async def get_os_info(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
                       offset: int = 0, limit: int = None, select: str = None, sort: str = None, search: str = None,
                       os_name: str = None, architecture: str = None, os_version: str = None, version: str = None,
                       release: str = None) -> Response:
@@ -555,7 +556,7 @@ async def get_os_info(token_info, pretty: bool = False, wait_for_complete: bool 
 
 
 @check_experimental_feature_value
-async def get_packages_info(token_info, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
+async def get_packages_info(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
                             offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                             search: str = None, vendor: str = None, name: str = None, architecture: str = None,
                             version: str = None) -> Response:
@@ -627,7 +628,7 @@ async def get_packages_info(token_info, pretty: bool = False, wait_for_complete:
 
 
 @check_experimental_feature_value
-async def get_ports_info(token_info, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
+async def get_ports_info(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
                          offset: int = 0, limit: int = None, select: str = None, sort: str = None, search: str = None,
                          pid: str = None, protocol: str = None, tx_queue: str = None, state: str = None,
                          process: str = None) -> Response:
@@ -707,7 +708,7 @@ async def get_ports_info(token_info, pretty: bool = False, wait_for_complete: bo
 
 
 @check_experimental_feature_value
-async def get_processes_info(token_info, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
+async def get_processes_info(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
                              offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                              search: str = None, pid: str = None, state: str = None, ppid: str = None,
                              egroup: str = None, euser: str = None, fgroup: str = None, name: str = None,
@@ -810,7 +811,7 @@ async def get_processes_info(token_info, pretty: bool = False, wait_for_complete
 
 
 @check_experimental_feature_value
-async def get_hotfixes_info(token_info, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
+async def get_hotfixes_info(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
                             offset: int = 0, limit: int = None, sort: str = None, search: str = None,
                             select: str = None, hotfix: str = None) -> Response:
     """Get hotfixes info from all agents or a list of them.

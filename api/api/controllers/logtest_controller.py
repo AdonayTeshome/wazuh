@@ -52,8 +52,8 @@ async def run_logtest_tool(token_info: dict, body: dict, pretty: bool = False, w
     return json_response(data, pretty=pretty)
 
 
-async def end_logtest_session(token_info, pretty: bool = False, wait_for_complete: bool = False,
-                              token: str = None) -> Response:
+async def end_logtest_session(token_info: dict, pretty: bool = False,
+                              wait_for_complete: bool = False, token: str = None) -> Response:
     """Delete the saved session corresponding to the specified token.
 
     Parameters

@@ -14,7 +14,7 @@ from wazuh.core.cluster.dapi.dapi import DistributedAPI
 logger = logging.getLogger('wazuh-api')
 
 
-async def get_overview_agents(token_info, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def get_overview_agents(token_info: dict, pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Get full summary of agents.
 
     Parameters

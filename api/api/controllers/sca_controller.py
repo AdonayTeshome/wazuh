@@ -16,9 +16,10 @@ from wazuh.core.common import DATABASE_LIMIT
 logger = logging.getLogger('wazuh-api')
 
 
-async def get_sca_agent(token_info, agent_id: str = None, pretty: bool = False, wait_for_complete: bool = False,
-                        name: str = None, description: str = None, references: str = None, offset: int = 0,
-                        limit: int = DATABASE_LIMIT, sort: str = None, search: str = None, select: str = None,
+async def get_sca_agent(token_info: dict, agent_id: str = None, pretty: bool = False,
+                        wait_for_complete: bool = False, name: str = None, description: str = None,
+                        references: str = None, offset: int = 0, limit: int = DATABASE_LIMIT,
+                        sort: str = None, search: str = None, select: str = None,
                         q: str = None, distinct: bool = False) -> Response:
     """Get security configuration assessment (SCA) database of an agent.
 
@@ -86,13 +87,15 @@ async def get_sca_agent(token_info, agent_id: str = None, pretty: bool = False, 
     return json_response(data, pretty=pretty)
 
 
-async def get_sca_checks(token_info, agent_id: str = None, pretty: bool = False, wait_for_complete: bool = False,
-                         policy_id: str = None, title: str = None, description: str = None, rationale: str = None,
-                         remediation: str = None, command: str = None, reason: str = None,
-                         file: str = None, process: str = None, directory: str = None, registry: str = None,
-                         references: str = None, result: str = None, condition: str = None, offset: int = 0,
-                         limit: int = DATABASE_LIMIT, sort: str = None, search: str = None, select: str = None,
-                         q: str = None, distinct: bool = False) -> Response:
+async def get_sca_checks(token_info: dict, agent_id: str = None, pretty: bool = False,
+                         wait_for_complete: bool = False, policy_id: str = None, title: str = None,
+                         description: str = None, rationale: str = None, remediation: str = None,
+                         command: str = None, reason: str = None, file: str = None,
+                         process: str = None,directory: str = None, registry: str = None,
+                         references: str = None, result: str = None, condition: str = None,
+                         offset: int = 0, limit: int = DATABASE_LIMIT, sort: str = None,
+                         search: str = None, select: str = None, q: str = None,
+                         distinct: bool = False) -> Response:
     """Get policy monitoring alerts for a given policy.
 
     Parameters
