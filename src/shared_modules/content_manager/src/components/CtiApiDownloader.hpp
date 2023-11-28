@@ -73,7 +73,7 @@ private:
         // Set the type of the content.
         m_context->data.at("type") = "offsets";
 
-        logDebug2(WM_CONTENTUPDATER, "CtiApiDownloader - Starting");
+        logDebug2(WM_CONTENTUPDATER, "Initial API offset: %d", m_context->currentOffset);
         // Get the parameters needed to download the content.
         getParameters();
 
@@ -103,7 +103,6 @@ private:
 
         // Set the status of the stage.
         m_context->data.at("stageStatus").push_back(R"({"stage": "CtiApiDownloader", "status": "ok"})"_json);
-        logDebug2(WM_CONTENTUPDATER, "CtiApiDownloader - Finishing");
     }
 
     /**
@@ -142,6 +141,8 @@ private:
 
         // Make a get request to the API to get the consumer offset.
         performQueryWithRetry(onSuccess);
+
+        logDebug2(WM_CONTENTUPDATER, "Last consumer offset: %d", m_consumerLastOffset);
     }
 
     /**
@@ -156,11 +157,9 @@ private:
         const auto queryParameters = "/changes?from_offset=" + std::to_string(m_context->currentOffset) +
                                      "&to_offset=" + std::to_string(toOffset);
 
-        // On download success routine.
-        const auto onSuccess {[]([[maybe_unused]] const std::string& data)
-                              {
-                                  logDebug2(WM_CONTENTUPDATER, "CtiApiDownloader - Request processed successfully.");
-                              }};
+        // Empty on download success routine.
+        const auto onSuccess {[]([[maybe_unused]] const std::string& data) {
+        }};
 
         // Download the content.
         performQueryWithRetry(onSuccess, queryParameters, fullFilePath);
@@ -192,6 +191,9 @@ private:
                 throw std::runtime_error {exceptionMessage};
             }};
 
+        const auto fullUrl {m_url + queryParameters};
+        logDebug2(WM_CONTENTUPDATER, "Attempting to download content from: '%s'", fullUrl.c_str());
+
         constexpr auto INITIAL_SLEEP_TIME {1};
         auto sleepTime {INITIAL_SLEEP_TIME};
         auto retryAttempt {1};
@@ -200,7 +202,7 @@ private:
         {
             try
             {
-                m_urlRequest.get(HttpURL(m_url + queryParameters), onSuccess, onError, outputFilepath);
+                m_urlRequest.get(HttpURL(fullUrl), onSuccess, onError, outputFilepath);
                 retry = false;
             }
             catch (const cti_server_error& e)
@@ -250,6 +252,8 @@ public:
      */
     std::shared_ptr<UpdaterContext> handleRequest(std::shared_ptr<UpdaterContext> context) override
     {
+        logDebug2(WM_CONTENTUPDATER, "CtiApiDownloader - Starting process");
+
         m_context = context;
 
         try
