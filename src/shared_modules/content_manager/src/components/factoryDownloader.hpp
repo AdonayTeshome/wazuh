@@ -20,7 +20,6 @@
 #include "offlineDownloader.hpp"
 #include "updaterContext.hpp"
 #include "utils/chainOfResponsability.hpp"
-#include <iostream>
 #include <memory>
 #include <string>
 
