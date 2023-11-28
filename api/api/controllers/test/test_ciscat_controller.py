@@ -3,7 +3,8 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
 from starlette.responses import Response
-from api.controllers.test.utils import CustomAffectedItems
+from connexion.testing import TestContext
+from api.controllers.test.utils import CustomAffectedItems, token_info
 
 with patch('wazuh.common.wazuh_uid'):
     with patch('wazuh.common.wazuh_gid'):
@@ -15,13 +16,24 @@ with patch('wazuh.common.wazuh_uid'):
         wazuh.rbac.decorators.expose_resources = RBAC_bypasser
         del sys.modules['wazuh.rbac.orm']
 
+@pytest.fixture
+def mock_request():
+    """fixture to wrap functions with request"""
+    operation = MagicMock(name="operation")
+    operation.method = "post"
+    with TestContext(operation=operation):
+        with patch('api.controllers.ciscat_controller.request') as m_req:
+            m_req.query.get = MagicMock(return_value='')
+            yield m_req
+
 
 @pytest.mark.asyncio
 @patch('api.controllers.ciscat_controller.DistributedAPI.distribute_function', return_value=AsyncMock())
 @patch('api.controllers.ciscat_controller.remove_nones_to_dict')
 @patch('api.controllers.ciscat_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.ciscat_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_agents_ciscat_results(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_agents_ciscat_results(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                                         mock_request, token_info):
     """Verify 'get_agents_ciscat_results' endpoint is working as expected."""
     result = await get_agents_ciscat_results(token_info,
                                              agent_id='001')
@@ -50,7 +62,7 @@ async def test_get_agents_ciscat_results(mock_exc, mock_dapi, mock_remove, mock_
                                       is_async=False,
                                       wait_for_complete=False,
                                       logger=ANY,
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=token_info['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)

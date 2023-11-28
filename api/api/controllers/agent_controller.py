@@ -624,7 +624,7 @@ async def put_upgrade_agents(token_info: dict, agents_list: str = None, pretty: 
                              wpk_repo: str = None, upgrade_version: str = None, use_http: bool = False,
                              force: bool = False, q: str = None, manager: str = None, version: str = None,
                              group: str = None, node_name: str = None, name: str = None,
-                             ip: str = None) -> Response:
+                             ip: str = None, register_ip: str = None) -> Response:
     """Upgrade agents using a WPK file from an online repository.
 
     Parameters
@@ -659,6 +659,8 @@ async def put_upgrade_agents(token_info: dict, agents_list: str = None, pretty: 
         Filter by agent name.
     ip : str
         Filter by agent IP.
+    register_ip : str
+        Filter by agent registration IP.
 
     Returns
     -------
@@ -681,7 +683,7 @@ async def put_upgrade_agents(token_info: dict, agents_list: str = None, pretty: 
                     'node_name': node_name,
                     'name': name,
                     'ip': ip,
-                    'registerIP': request.query.get('registerIP', None)
+                    'registerIP': register_ip
                 },
                 'q': q
                 }
@@ -785,7 +787,7 @@ async def put_upgrade_custom_agents(token_info: dict, agents_list: str = None, p
 
 async def get_agent_upgrade(token_info: dict, agents_list: str = None, pretty: bool = False, wait_for_complete: bool = False,
                             q: str = None, manager: str = None, version: str = None, group: str = None,
-                            node_name: str = None, name: str = None, ip: str = None) -> Response:
+                            node_name: str = None, name: str = None, ip: str = None, register_ip: str = None) -> Response:
     """Get upgrade results from agents.
 
     Parameters
@@ -812,6 +814,8 @@ async def get_agent_upgrade(token_info: dict, agents_list: str = None, pretty: b
         Filter by agent name.
     ip : str
         Filter by agent IP.
+    register_ip : str
+        Filter by agent registration IP.
 
     Returns
     -------
@@ -826,7 +830,7 @@ async def get_agent_upgrade(token_info: dict, agents_list: str = None, pretty: b
                     'node_name': node_name,
                     'name': name,
                     'ip': ip,
-                    'registerIP': request.query.get('registerIP', None)
+                    'registerIP': register_ip
                 },
                 'q': q
                 }

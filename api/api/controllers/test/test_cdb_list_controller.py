@@ -3,8 +3,10 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
 from starlette.responses import Response
-from api.controllers.test.utils import CustomAffectedItems
 from connexion.lifecycle import ConnexionResponse
+from connexion.testing import TestContext
+from api.controllers.test.utils import CustomAffectedItems
+from api.controllers.test.utils import token_info
 
 with patch('wazuh.common.wazuh_uid'):
     with patch('wazuh.common.wazuh_gid'):
@@ -19,13 +21,24 @@ with patch('wazuh.common.wazuh_uid'):
         wazuh.rbac.decorators.expose_resources = RBAC_bypasser
         del sys.modules['wazuh.rbac.orm']
 
+@pytest.fixture
+def mock_request():
+    """fixture to wrap functions with request"""
+    operation = MagicMock(name="operation")
+    operation.method = "post"
+    with TestContext(operation=operation):
+        with patch('api.controllers.agent_controller.request') as m_req:
+            m_req.query.get = MagicMock(return_value='')
+            yield m_req
+
 
 @pytest.mark.asyncio
 @patch('api.controllers.cdb_list_controller.DistributedAPI.distribute_function', return_value=AsyncMock())
 @patch('api.controllers.cdb_list_controller.remove_nones_to_dict')
 @patch('api.controllers.cdb_list_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cdb_list_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_lists(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_lists(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                         mock_request, token_info):
     """Verify 'get_lists' endpoint is working as expected."""
     result = await get_lists(token_info)
     f_kwargs = {'offset': 0,
@@ -46,7 +59,7 @@ async def test_get_lists(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_requ
                                       is_async=False,
                                       wait_for_complete=False,
                                       logger=ANY,
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=token_info['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
@@ -59,7 +72,8 @@ async def test_get_lists(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_requ
 @patch('api.controllers.cdb_list_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cdb_list_controller.raise_if_exc', return_value=CustomAffectedItems())
 @pytest.mark.parametrize('mock_bool', [True, False])
-async def test_get_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_bool, mock_request=MagicMock()):
+async def test_get_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_bool,
+                        mock_request, token_info):
     """Verify 'get_file' endpoint is working as expected."""
     with patch('api.controllers.cdb_list_controller.isinstance', return_value=mock_bool) as mock_isinstance:
         result = await get_file(token_info)
@@ -72,7 +86,7 @@ async def test_get_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_bool,
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=mock_request['token_info']['rbac_policies']
+                                          rbac_permissions=token_info['rbac_policies']
                                           )
         mock_exc.assert_called_once_with(mock_dfunc.return_value)
         mock_remove.assert_called_once_with(f_kwargs)
@@ -87,7 +101,8 @@ async def test_get_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_bool,
 @patch('api.controllers.cdb_list_controller.remove_nones_to_dict')
 @patch('api.controllers.cdb_list_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cdb_list_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_put_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_put_file(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                         mock_request, token_info):
     """Verify 'put_file' endpoint is working as expected."""
     with patch('api.controllers.cdb_list_controller.Body.validate_content_type'):
         with patch('api.controllers.cdb_list_controller.Body.decode_body') as mock_dbody:
@@ -103,7 +118,7 @@ async def test_put_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_reque
                                               is_async=False,
                                               wait_for_complete=False,
                                               logger=ANY,
-                                              rbac_permissions=mock_request['token_info']['rbac_policies']
+                                              rbac_permissions=token_info['rbac_policies']
                                               )
             mock_exc.assert_called_once_with(mock_dfunc.return_value)
             mock_remove.assert_called_once_with(f_kwargs)
@@ -115,7 +130,8 @@ async def test_put_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_reque
 @patch('api.controllers.cdb_list_controller.remove_nones_to_dict')
 @patch('api.controllers.cdb_list_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cdb_list_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_delete_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_delete_file(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                            mock_request, token_info):
     """Verify 'delete_file' endpoint is working as expected."""
     result = await delete_file(token_info)
     f_kwargs = {'filename': None
@@ -126,7 +142,7 @@ async def test_delete_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_re
                                       is_async=False,
                                       wait_for_complete=False,
                                       logger=ANY,
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=token_info['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
@@ -138,7 +154,8 @@ async def test_delete_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_re
 @patch('api.controllers.cdb_list_controller.remove_nones_to_dict')
 @patch('api.controllers.cdb_list_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cdb_list_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_lists_files(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_lists_files(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                               mock_request, token_info):
     """Verify 'get_lists_files' endpoint is working as expected."""
     result = await get_lists_files(token_info)
     f_kwargs = {'offset': 0,
@@ -157,7 +174,7 @@ async def test_get_lists_files(mock_exc, mock_dapi, mock_remove, mock_dfunc, moc
                                       is_async=False,
                                       wait_for_complete=False,
                                       logger=ANY,
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=token_info['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)

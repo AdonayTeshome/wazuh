@@ -41,6 +41,6 @@ async def default_info(pretty: bool = False) -> Response:
         'hostname': socket.gethostname(),
         'timestamp': get_utc_now().strftime(DATE_FORMAT)
     }
-    response = WazuhResult({'data': BasicInfo.from_dict(data)})
+    data = WazuhResult({'data': BasicInfo.from_dict(data)})
 
     return json_response(data, pretty=pretty)

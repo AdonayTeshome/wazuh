@@ -4,9 +4,26 @@ from starlette.responses import Response
 
 import pytest
 from connexion.lifecycle import ConnexionResponse
+from connexion.testing import TestContext
 
+from api.controllers.test.utils import token_info
 from api.controllers.test.utils import CustomAffectedItems
-from api.controllers.agent_controller import add_agent, delete_agents, delete_groups, \
+
+@pytest.fixture
+def mock_request():
+    """fixture to wrap functions with request"""
+    operation = MagicMock(name="operation")
+    operation.method = "post"
+    with TestContext(operation=operation):
+        with patch('api.controllers.agent_controller.request') as m_req:
+            m_req.query.get = MagicMock(return_value='')
+            yield m_req
+
+with patch('wazuh.common.wazuh_uid'):
+    with patch('wazuh.common.wazuh_gid'):
+        sys.modules['wazuh.rbac.orm'] = MagicMock()
+        import wazuh.rbac.decorators
+        from api.controllers.agent_controller import add_agent, delete_agents, delete_groups, \
             delete_multiple_agent_single_group, \
             delete_single_agent_multiple_groups, \
             delete_single_agent_single_group, \
@@ -20,15 +37,9 @@ from api.controllers.agent_controller import add_agent, delete_agents, delete_gr
             put_multiple_agent_single_group, put_upgrade_agents, \
             put_upgrade_custom_agents, reconnect_agents, restart_agent, \
             restart_agents, restart_agents_by_group, restart_agents_by_node
-
-with patch('wazuh.common.wazuh_uid'):
-    with patch('wazuh.common.wazuh_gid'):
-        sys.modules['wazuh.rbac.orm'] = MagicMock()
-        import wazuh.rbac.decorators
         from wazuh import agent, stats
         from wazuh.core.common import DATABASE_LIMIT
         from wazuh.tests.util import RBAC_bypasser
-
         wazuh.rbac.decorators.expose_resources = RBAC_bypasser
         del sys.modules['wazuh.rbac.orm']
 
@@ -39,11 +50,11 @@ with patch('wazuh.common.wazuh_uid'):
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
 @pytest.mark.parametrize('mock_alist', ['001', 'all'])
-async def test_delete_agents(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_alist,
-                             token_info):
+async def test_delete_agents(mock_exc, mock_dapi, mock_remove, mock_dfunc, 
+                             mock_alist, mock_request, token_info):
     """Verify 'delete_agents' endpoint is working as expected."""
     result = await delete_agents(token_info,
-                                 agents_list=mock_alist)
+                                agents_list=mock_alist)
     if 'all' in mock_alist:
         mock_alist = None
     f_kwargs = {'agent_list': mock_alist,
@@ -57,7 +68,7 @@ async def test_delete_agents(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_
                     'node_name': None,
                     'name': None,
                     'ip': None,
-                    'registerIP': mock_request.query.get('registerIP', None)
+                    'registerIP': None
                 },
                 'q': None
                 }
@@ -65,13 +76,13 @@ async def test_delete_agents(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_
     for field in nested:
         f_kwargs['filters'][field] = mock_request.query.get(field, None)
     mock_dapi.assert_called_once_with(f=agent.delete_agents,
-                                      f_kwargs=mock_remove.return_value,
-                                      request_type='local_master',
-                                      is_async=False,
-                                      wait_for_complete=False,
-                                      logger=ANY,
-                                      rbac_permissions=token_info['rbac_policies']
-                                      )
+                                    f_kwargs=mock_remove.return_value,
+                                    request_type='local_master',
+                                    is_async=False,
+                                    wait_for_complete=False,
+                                    logger=ANY,
+                                    rbac_permissions=token_info['rbac_policies']
+                                    )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
     assert isinstance(result, Response)
@@ -83,7 +94,7 @@ async def test_delete_agents(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_agents(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, token_info):
+async def test_get_agents(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, mock_request, token_info):
     """Verify 'get_agents' endpoint is working as expected."""
     result = await get_agents(token_info)
     f_kwargs = {'agent_list': None,
@@ -129,12 +140,12 @@ async def test_get_agents(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_add_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, token_info):
+async def test_add_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, mock_request, token_info):
     """Verify 'add_agent' endpoint is working as expected."""
     with patch('api.controllers.agent_controller.Body.validate_content_type'):
         with patch('api.controllers.agent_controller.AgentAddedModel.get_kwargs',
                    return_value=AsyncMock()) as mock_getkwargs:
-            result = await add_agent(token_info)
+            result = await add_agent(token_info, body={})
             mock_dapi.assert_called_once_with(f=agent.add_agent,
                                               f_kwargs=mock_remove.return_value,
                                               request_type='local_master',
@@ -154,7 +165,7 @@ async def test_add_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp,
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_reconnect_agents(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, token_info):
+async def test_reconnect_agents(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, mock_request, token_info):
     """Verify 'reconnect_agents' endpoint is working as expected."""
     result = await reconnect_agents(token_info)
     f_kwargs = {'agent_list': '*'
@@ -179,7 +190,7 @@ async def test_reconnect_agents(mock_exc, mock_dapi, mock_remove, mock_dfunc, mo
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_restart_agents(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, token_info):
+async def test_restart_agents(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, mock_request, token_info):
     """Verify 'restart_agents' endpoint is working as expected."""
     result = await restart_agents(token_info)
     f_kwargs = {'agent_list': '*'
@@ -204,7 +215,7 @@ async def test_restart_agents(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_restart_agents_by_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, token_info):
+async def test_restart_agents_by_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, mock_request, token_info):
     """Verify 'restart_agents_by_node' endpoint is working as expected."""
     with patch('api.controllers.agent_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         result = await restart_agents_by_node(token_info,
@@ -235,13 +246,11 @@ async def test_restart_agents_by_node(mock_exc, mock_dapi, mock_remove, mock_dfu
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
 @patch('api.controllers.agent_controller.check_component_configuration_pair')
-async def test_get_agent_config(mock_check_pair, mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp,
-                                token_info):
+async def test_get_agent_config(mock_check_pair, mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                                mock_exp, mock_request, token_info):
     """Verify 'get_agent_config' endpoint is working as expected."""
-    kwargs_param = {'configuration': 'configuration_value'
-                    }
-    result = await get_agent_config(token_info,
-                                    **kwargs_param)
+    kwargs_param = {'configuration': 'configuration_value'}
+    result = await agent.get_agent_config(token_info,**kwargs_param)
     f_kwargs = {'agent_list': [None],
                 'component': None,
                 'config': kwargs_param.get('configuration', None)
@@ -266,7 +275,7 @@ async def test_get_agent_config(mock_check_pair, mock_exc, mock_dapi, mock_remov
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_delete_single_agent_multiple_groups(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp,
-                                                   token_info):
+                                                   mock_request, token_info):
     """Verify 'delete_single_agent_multiple_groups' endpoint is working as expected."""
     result = await delete_single_agent_multiple_groups(token_info,
                                                        agent_id='001')
@@ -292,7 +301,8 @@ async def test_delete_single_agent_multiple_groups(mock_exc, mock_dapi, mock_rem
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_sync_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, token_info):
+async def test_get_sync_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                              mock_exp, mock_request, token_info):
     """Verify 'get_sync_agent' endpoint is working as expected."""
     result = await get_sync_agent(token_info,
                                   agent_id='001')
@@ -345,7 +355,8 @@ async def test_delete_single_agent_single_group(mock_exc, mock_dapi, mock_remove
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_put_agent_single_group(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, token_info):
+async def test_put_agent_single_group(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp,
+                                      mock_request, token_info):
     """Verify 'put_agent_single_group' endpoint is working as expected."""
     result = await put_agent_single_group(token_info,
                                           agent_id='001',
@@ -373,7 +384,8 @@ async def test_put_agent_single_group(mock_exc, mock_dapi, mock_remove, mock_dfu
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_agent_key(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, token_info):
+async def test_get_agent_key(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp,
+                             mock_request, token_info):
     """Verify 'get_agent_key' endpoint is working as expected."""
     result = await get_agent_key(token_info,
                                  agent_id='001')
@@ -427,9 +439,9 @@ async def test_restart_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_put_upgrade_agents(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, agents_list):
+async def test_put_upgrade_agents(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                                  mock_exp, agents_list, mock_request, token_info):
     """Verify 'put_upgrade_agents' endpoint is working as expected."""
-    mock_request = MagicMock()
     result = await put_upgrade_agents(token_info, agents_list=agents_list)
 
     if 'all' in agents_list:
@@ -446,7 +458,7 @@ async def test_put_upgrade_agents(mock_exc, mock_dapi, mock_remove, mock_dfunc, 
                     'node_name': None,
                     'name': None,
                     'ip': None,
-                    'registerIP': mock_request.query.get('registerIP', None)
+                    'registerIP': None
                 },
                 'q': None
                 }
@@ -525,9 +537,9 @@ async def test_put_upgrade_custom_agents(mock_exc, mock_dapi, mock_remove, mock_
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_daemon_stats(mock_exc, mock_dapi, mock_remove, mock_dfunc):
+async def test_get_daemon_stats(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                                mock_request, token_info):
     """Verify 'get_daemon_stats' function is working as expected."""
-    mock_request = MagicMock()
     result = await get_daemon_stats(token_info,
                                     agent_id='001',
                                     daemons_list=['daemon_1', 'daemon_2'])
@@ -553,7 +565,8 @@ async def test_get_daemon_stats(mock_exc, mock_dapi, mock_remove, mock_dfunc):
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_component_stats(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, token_info):
+async def test_get_component_stats(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp,
+                                   mock_request, token_info):
     """Verify 'get_component_stats' endpoint is working as expected."""
     result = await get_component_stats(token_info)
     f_kwargs = {'agent_list': [None],
@@ -578,9 +591,9 @@ async def test_get_component_stats(mock_exc, mock_dapi, mock_remove, mock_dfunc,
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_agent_upgrade(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp):
+async def test_get_agent_upgrade(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp,
+                                 mock_request, token_info):
     """Verify 'get_agent_upgrade' endpoint is working as expected."""
-    mock_request = MagicMock()
     result = await get_agent_upgrade(token_info)
     f_kwargs = {'agent_list': None,
                 'filters': {
@@ -590,7 +603,7 @@ async def test_get_agent_upgrade(mock_exc, mock_dapi, mock_remove, mock_dfunc, m
                     'node_name': None,
                     'name': None,
                     'ip': None,
-                    'registerIP': mock_request.query.get('registerIP', None)
+                    'registerIP': None
                 },
                 'q': None
                 }
@@ -618,7 +631,8 @@ async def test_get_agent_upgrade(mock_exc, mock_dapi, mock_remove, mock_dfunc, m
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_post_new_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, token_info):
+async def test_post_new_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                              mock_request, token_info):
     """Verify 'post_new_agent' endpoint is working as expected."""
     result = await post_new_agent(token_info,
                                   agent_name='agent_name_value')
@@ -685,8 +699,8 @@ async def test_delete_multiple_agent_single_group(mock_exc, mock_dapi, mock_remo
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_put_multiple_agent_single_group(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp,
-                                               token_info):
+async def test_put_multiple_agent_single_group(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                                               mock_exp, mock_request, token_info):
     """Verify 'put_multiple_agent_single_group' endpoint is working as expected."""
     result = await put_multiple_agent_single_group(token_info,
                                                    group_id='001',
@@ -743,7 +757,8 @@ async def test_delete_groups(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_list_group(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, token_info):
+async def test_get_list_group(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp,
+                              mock_request, token_info):
     """Verify 'get_list_group' endpoint is working as expected."""
     result = await get_list_group(token_info)
     hash_ = mock_request.query.get('hash', 'md5')
@@ -778,7 +793,8 @@ async def test_get_list_group(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_agents_in_group(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, token_info):
+async def test_get_agents_in_group(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                                   mock_exp, mock_request, token_info):
     """Verify 'get_agents_in_group' endpoint is working as expected."""
     result = await get_agents_in_group(token_info,
                                        group_id='001')
@@ -813,12 +829,13 @@ async def test_get_agents_in_group(mock_exc, mock_dapi, mock_remove, mock_dfunc,
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_post_group(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, token_info):
+async def test_post_group(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                          mock_exp, mock_request, token_info):
     """Verify 'post_group' endpoint is working as expected."""
     with patch('api.controllers.agent_controller.Body.validate_content_type'):
         with patch('api.controllers.agent_controller.GroupAddedModel.get_kwargs',
                    return_value=AsyncMock()) as mock_getkwargs:
-            result = await post_group(token_info)
+            result = await post_group(token_info, body={})
             mock_dapi.assert_called_once_with(f=agent.create_group,
                                               f_kwargs=mock_remove.return_value,
                                               request_type='local_master',
@@ -838,7 +855,8 @@ async def test_post_group(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_group_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, token_info):
+async def test_get_group_config(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                                mock_exp, mock_request, token_info):
     """Verify 'get_group_config' endpoint is working as expected."""
     result = await get_group_config(token_info,
                                     group_id='001')
@@ -865,7 +883,8 @@ async def test_get_group_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mo
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_put_group_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, token_info):
+async def test_put_group_config(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                                mock_exp, mock_request, token_info):
     """Verify 'put_group_config' endpoint is working as expected."""
     with patch('api.controllers.agent_controller.Body.validate_content_type'):
         with patch('api.controllers.agent_controller.Body.decode_body') as mock_dbody:
@@ -894,11 +913,13 @@ async def test_put_group_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mo
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_group_files(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, token_info):
+async def test_get_group_files(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                               mock_exp, mock_request, token_info):
     """Verify 'get_group_files' endpoint is working as expected."""
     result = await get_group_files(token_info,
                                    group_id='001')
-    hash_ = mock_request.query.get('hash', 'md5')  # Select algorithm to generate the returned checksums.
+    # Select algorithm to generate the returned checksums.
+    hash_ = mock_request.query.get('hash', 'md5')
     f_kwargs = {'group_list': ['001'],
                 'offset': 0,
                 'limit': None,
@@ -930,7 +951,8 @@ async def test_get_group_files(mock_exc, mock_dapi, mock_remove, mock_dfunc, moc
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_group_file_json(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, token_info):
+async def test_get_group_file_json(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                                   mock_exp, mock_request, token_info):
     """Verify 'get_group_file_json' endpoint is working as expected."""
     result = await get_group_file_json(token_info,
                                        group_id='001',
@@ -959,7 +981,8 @@ async def test_get_group_file_json(mock_exc, mock_dapi, mock_remove, mock_dfunc,
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_group_file_xml(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, token_info):
+async def test_get_group_file_xml(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                                  mock_exp, mock_request, token_info):
     """Verify 'get_group_file_xml' endpoint is working as expected."""
     result = await get_group_file_xml(token_info,
                                       group_id='001',
@@ -1040,12 +1063,13 @@ async def test_restart_agents_by_group(mock_aiwr, mock_dapi, mock_remove, mock_d
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_insert_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, token_info):
+async def test_insert_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                            mock_request, token_info):
     """Verify 'insert_agent' endpoint is working as expected."""
     with patch('api.controllers.agent_controller.Body.validate_content_type'):
         with patch('api.controllers.agent_controller.AgentInsertedModel.get_kwargs',
                    return_value=AsyncMock()) as mock_getkwargs:
-            result = await insert_agent(token_info)
+            result = await insert_agent(token_info, body={})
             mock_dapi.assert_called_once_with(f=agent.add_agent,
                                               f_kwargs=mock_remove.return_value,
                                               request_type='local_master',
@@ -1065,7 +1089,8 @@ async def test_insert_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, token_
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_agent_no_group(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, token_info):
+async def test_get_agent_no_group(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                                  mock_exp, mock_request, token_info):
     """Verify 'get_agent_no_group' endpoint is working as expected."""
     result = await get_agent_no_group(token_info)
     f_kwargs = {'offset': 0,
@@ -1094,7 +1119,8 @@ async def test_get_agent_no_group(mock_exc, mock_dapi, mock_remove, mock_dfunc, 
 @patch('api.controllers.agent_controller.remove_nones_to_dict')
 @patch('api.controllers.agent_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.agent_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_agent_outdated(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, token_info):
+async def test_get_agent_outdated(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                                  mock_exp, mock_request, token_info):
     """Verify 'get_agent_outdated' endpoint is working as expected."""
     result = await get_agent_outdated(token_info)
     f_kwargs = {'offset': 0,

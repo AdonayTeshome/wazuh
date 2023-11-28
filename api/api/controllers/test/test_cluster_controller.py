@@ -4,8 +4,9 @@ from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 import pytest
 from starlette.responses import Response
 from connexion.lifecycle import ConnexionResponse
+from connexion.testing import TestContext
 
-from api.controllers.test.utils import CustomAffectedItems
+from api.controllers.test.utils import CustomAffectedItems, token_info
 
 with patch('wazuh.common.wazuh_uid'):
     with patch('wazuh.common.wazuh_gid'):
@@ -25,14 +26,27 @@ with patch('wazuh.common.wazuh_uid'):
         del sys.modules['wazuh.rbac.orm']
 
 
+@pytest.fixture
+def mock_request():
+    """fixture to wrap functions with request"""
+    operation = MagicMock(name="operation")
+    operation.method = "post"
+    with TestContext(operation=operation):
+        with patch('api.controllers.cluster_controller.request') as m_req:
+            m_req.query.get = MagicMock(return_value='')
+            yield m_req
+
+
 @pytest.mark.asyncio
 @patch('api.controllers.cluster_controller.DistributedAPI.distribute_function', return_value=AsyncMock())
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_cluster_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_cluster_node(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                                mock_request, token_info):
     """Verify 'get_cluster_node' endpoint is working as expected."""
-    with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
+    with patch('api.controllers.cluster_controller.get_system_nodes',
+               return_value=AsyncMock()) as mock_snodes:
         result = await get_cluster_node(token_info)
         mock_dapi.assert_called_once_with(f=cluster.get_node_wrapper,
                                           f_kwargs=mock_remove.return_value,
@@ -40,7 +54,7 @@ async def test_get_cluster_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mo
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                          rbac_permissions=token_info['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -55,7 +69,7 @@ async def test_get_cluster_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mo
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_cluster_nodes(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_cluster_nodes(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
     """Verify 'get_cluster_nodes' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         result = await get_cluster_nodes(token_info)
@@ -76,7 +90,7 @@ async def test_get_cluster_nodes(mock_exc, mock_dapi, mock_remove, mock_dfunc, m
                                           wait_for_complete=False,
                                           logger=ANY,
                                           local_client_arg='lc',
-                                          rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                          rbac_permissions=token_info['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -91,7 +105,7 @@ async def test_get_cluster_nodes(mock_exc, mock_dapi, mock_remove, mock_dfunc, m
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_healthcheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_healthcheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
     """Verify 'get_healthcheck' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         result = await get_healthcheck(token_info)
@@ -104,7 +118,7 @@ async def test_get_healthcheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, moc
                                           wait_for_complete=False,
                                           logger=ANY,
                                           local_client_arg='lc',
-                                          rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                          rbac_permissions=token_info['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -119,7 +133,7 @@ async def test_get_healthcheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, moc
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_nodes_ruleset_sync_status(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_nodes_ruleset_sync_status(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
     """Verify 'get_nodes_ruleset_sync_status' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         result = await get_nodes_ruleset_sync_status(token_info)
@@ -138,7 +152,7 @@ async def test_get_nodes_ruleset_sync_status(mock_exc, mock_dapi, mock_remove, m
                                          is_async=True,
                                          wait_for_complete=False,
                                          logger=ANY,
-                                         rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                         rbac_permissions=token_info['rbac_policies'],
                                          nodes=mock_exc.return_value,
                                          broadcasting=True)])
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -153,7 +167,7 @@ async def test_get_nodes_ruleset_sync_status(mock_exc, mock_dapi, mock_remove, m
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_status(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_status(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
     """Verify 'get_status' endpoint is working as expected."""
     result = await get_status(token_info)
     mock_dapi.assert_called_once_with(f=cluster.get_status_json,
@@ -162,7 +176,7 @@ async def test_get_status(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_req
                                       is_async=False,
                                       wait_for_complete=False,
                                       logger=ANY,
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=token_info['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with({})
@@ -174,7 +188,7 @@ async def test_get_status(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_req
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
     """Verify 'get_config' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         result = await get_config(token_info)
@@ -184,7 +198,7 @@ async def test_get_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_req
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                          rbac_permissions=token_info['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -199,7 +213,7 @@ async def test_get_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_req
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_status_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_status_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
     """Verify 'get_status_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         result = await get_status_node(token_info,
@@ -212,7 +226,7 @@ async def test_get_status_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, moc
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                          rbac_permissions=token_info['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -227,7 +241,7 @@ async def test_get_status_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, moc
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_info_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_info_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
     """Verify 'get_info_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         result = await get_info_node(token_info,
@@ -240,7 +254,7 @@ async def test_get_info_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                          rbac_permissions=token_info['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -257,7 +271,7 @@ async def test_get_info_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
 @pytest.mark.parametrize('mock_bool', [True, False])
 async def test_get_configuration_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_bool,
-                                      mock_request=MagicMock()):
+                                      mock_request, token_info):
     """Verify 'get_configuration_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         with patch('api.controllers.cluster_controller.isinstance', return_value=mock_bool) as mock_isinstance:
@@ -274,7 +288,7 @@ async def test_get_configuration_node(mock_exc, mock_dapi, mock_remove, mock_dfu
                                               is_async=False,
                                               wait_for_complete=False,
                                               logger=ANY,
-                                              rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                              rbac_permissions=token_info['rbac_policies'],
                                               nodes=mock_exc.return_value
                                               )
             mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -292,9 +306,9 @@ async def test_get_configuration_node(mock_exc, mock_dapi, mock_remove, mock_dfu
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_daemon_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfunc):
+async def test_get_daemon_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                                     mock_request, token_info):
     """Verify 'get_daemon_stats_node' function is working as expected."""
-    mock_request = MagicMock()
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         result = await get_daemon_stats_node(token_info,
                                              node_id='worker1',
@@ -308,7 +322,7 @@ async def test_get_daemon_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfun
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                          rbac_permissions=token_info['rbac_policies'],
                                           nodes=mock_exc.return_value)
         mock_remove.assert_called_once_with(f_kwargs)
         mock_exc.assert_has_calls([call(mock_snodes.return_value), call(mock_dfunc.return_value)])
@@ -323,7 +337,7 @@ async def test_get_daemon_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfun
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
 @pytest.mark.parametrize('mock_date', [None, 'date_value'])
-async def test_get_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_date, mock_request=MagicMock()):
+async def test_get_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_date, mock_request, token_info):
     """Verify 'get_stats_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         with patch('api.controllers.cluster_controller.deserialize_date', return_value='desdate_value') as mock_desdate:
@@ -344,7 +358,7 @@ async def test_get_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
                                               is_async=False,
                                               wait_for_complete=False,
                                               logger=ANY,
-                                              rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                              rbac_permissions=token_info['rbac_policies'],
                                               nodes=mock_exc.return_value
                                               )
             mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -359,7 +373,7 @@ async def test_get_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_stats_hourly_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_stats_hourly_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
     """Verify 'get_stats_hourly_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         result = await get_stats_hourly_node(token_info,
@@ -372,7 +386,7 @@ async def test_get_stats_hourly_node(mock_exc, mock_dapi, mock_remove, mock_dfun
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                          rbac_permissions=token_info['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -387,7 +401,7 @@ async def test_get_stats_hourly_node(mock_exc, mock_dapi, mock_remove, mock_dfun
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_stats_weekly_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_stats_weekly_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
     """Verify 'get_stats_weekly_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         result = await get_stats_weekly_node(token_info,
@@ -400,7 +414,7 @@ async def test_get_stats_weekly_node(mock_exc, mock_dapi, mock_remove, mock_dfun
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                          rbac_permissions=token_info['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -415,7 +429,7 @@ async def test_get_stats_weekly_node(mock_exc, mock_dapi, mock_remove, mock_dfun
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_stats_analysisd_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_stats_analysisd_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
     """Verify 'get_stats_analysisd_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         result = await get_stats_analysisd_node(token_info,
@@ -429,7 +443,7 @@ async def test_get_stats_analysisd_node(mock_exc, mock_dapi, mock_remove, mock_d
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                          rbac_permissions=token_info['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -444,7 +458,7 @@ async def test_get_stats_analysisd_node(mock_exc, mock_dapi, mock_remove, mock_d
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_stats_remoted_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_stats_remoted_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
     """Verify 'get_stats_remoted_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         result = await get_stats_remoted_node(token_info,
@@ -458,7 +472,7 @@ async def test_get_stats_remoted_node(mock_exc, mock_dapi, mock_remove, mock_dfu
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                          rbac_permissions=token_info['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -473,7 +487,7 @@ async def test_get_stats_remoted_node(mock_exc, mock_dapi, mock_remove, mock_dfu
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_log_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_log_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
     """Verify 'get_log_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         result = await get_log_node(token_info,
@@ -497,7 +511,7 @@ async def test_get_log_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_r
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                          rbac_permissions=token_info['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -512,7 +526,7 @@ async def test_get_log_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_r
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_log_summary_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_log_summary_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
     """Verify 'get_log_summary_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         result = await get_log_summary_node(token_info,
@@ -525,7 +539,7 @@ async def test_get_log_summary_node(mock_exc, mock_dapi, mock_remove, mock_dfunc
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                          rbac_permissions=token_info['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -540,7 +554,7 @@ async def test_get_log_summary_node(mock_exc, mock_dapi, mock_remove, mock_dfunc
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_api_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_api_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
     """Verify 'get_api_config' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         result = await get_api_config(token_info)
@@ -553,7 +567,7 @@ async def test_get_api_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
                                           wait_for_complete=False,
                                           logger=ANY,
                                           broadcasting=True,
-                                          rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                          rbac_permissions=token_info['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -568,7 +582,7 @@ async def test_get_api_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_put_restart(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_put_restart(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
     """Verify 'put_restart' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         result = await put_restart(token_info)
@@ -581,7 +595,7 @@ async def test_put_restart(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_re
                                           wait_for_complete=False,
                                           logger=ANY,
                                           broadcasting=True,
-                                          rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                          rbac_permissions=token_info['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -596,7 +610,7 @@ async def test_put_restart(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_re
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_conf_validation(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_conf_validation(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
     """Verify 'get_conf_validation' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         result = await get_conf_validation(token_info)
@@ -609,7 +623,7 @@ async def test_get_conf_validation(mock_exc, mock_dapi, mock_remove, mock_dfunc,
                                           wait_for_complete=False,
                                           logger=ANY,
                                           broadcasting=True,
-                                          rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                          rbac_permissions=token_info['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -625,7 +639,7 @@ async def test_get_conf_validation(mock_exc, mock_dapi, mock_remove, mock_dfunc,
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
 @patch('api.controllers.cluster_controller.check_component_configuration_pair')
-async def test_get_node_config(mock_check_pair, mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_node_config(mock_check_pair, mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
     """Verify 'get_node_config' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         kwargs_param = {'configuration': 'configuration_value'
@@ -645,7 +659,7 @@ async def test_get_node_config(mock_check_pair, mock_exc, mock_dapi, mock_remove
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                          rbac_permissions=token_info['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -661,7 +675,7 @@ async def test_get_node_config(mock_check_pair, mock_exc, mock_dapi, mock_remove
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_update_configuration(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_update_configuration(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
     """Verify 'update_configuration' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         with patch('api.controllers.cluster_controller.Body.validate_content_type'):
@@ -678,7 +692,7 @@ async def test_update_configuration(mock_exc, mock_dapi, mock_remove, mock_dfunc
                                                   is_async=False,
                                                   wait_for_complete=False,
                                                   logger=ANY,
-                                                  rbac_permissions=mock_request['token_info']['rbac_policies'],
+                                                  rbac_permissions=token_info['rbac_policies'],
                                                   nodes=mock_exc.return_value
                                                   )
                 mock_exc.assert_has_calls([call(mock_snodes.return_value),

@@ -7,6 +7,7 @@ from typing import Union
 
 from starlette.responses import Response
 from connexion.lifecycle import ConnexionResponse
+from connexion import request
 
 from api.controllers.util import json_response
 from api.models.base_model_ import Body
