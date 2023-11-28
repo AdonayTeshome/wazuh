@@ -136,7 +136,6 @@ private:
                               {
                                   const auto dataBlobObj = nlohmann::json::parse(data);
                                   m_consumerLastOffset = dataBlobObj.at("data").at("last_offset").get<int>();
-                                  logDebug2(WM_CONTENTUPDATER, "CtiApiDownloader - Request processed successfully.");
                               }};
 
         // Make a get request to the API to get the consumer offset.
@@ -209,7 +208,7 @@ private:
             {
                 constexpr auto SLEEP_TIME_THRESHOLD {30};
 
-                logError(WM_CONTENTUPDATER, e.what());
+                logWarn(WM_CONTENTUPDATER, e.what());
 
                 // Sleep and, if necessary, increase sleep time exponentially.
                 std::this_thread::sleep_for(std::chrono::seconds(sleepTime));
@@ -252,7 +251,7 @@ public:
      */
     std::shared_ptr<UpdaterContext> handleRequest(std::shared_ptr<UpdaterContext> context) override
     {
-        logDebug2(WM_CONTENTUPDATER, "CtiApiDownloader - Starting process");
+        logDebug1(WM_CONTENTUPDATER, "CtiApiDownloader - Starting process");
 
         m_context = context;
 
