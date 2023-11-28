@@ -304,7 +304,8 @@ async def edit_run_as(token_info: dict, user_id: str, allow_run_as: bool, pretty
     return json_response(data, pretty=pretty)
 
 
-async def create_user(token_info: dict, body: dict, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def create_user(token_info: dict, body: dict, pretty: bool = False,
+                      wait_for_complete: bool = False) -> Response:
     """Create a new user.
 
     Parameters
@@ -339,13 +340,16 @@ async def create_user(token_info: dict, body: dict, pretty: bool = False, wait_f
     return json_response(data, pretty=pretty)
 
 
-async def update_user(token_info: dict, user_id: str, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def update_user(token_info: dict, body: dict, user_id: str,
+                      pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Modify an existent user.
 
     Parameters
     ----------
     token_info : dict
         Security information.
+    body : dict
+        HTTP body parsed from json into dict.
     user_id : str
         User ID of the user to be updated.
     pretty : bool, optional
@@ -359,8 +363,9 @@ async def update_user(token_info: dict, user_id: str, pretty: bool = False, wait
         API response.
     """
     Body.validate_content_type(request, expected_content_type='application/json')
-    f_kwargs = await UpdateUserModel.get_kwargs(token_info: dict, additional_kwargs={'user_id': user_id,
-                                                                            'current_user': request.get("user")})
+    f_kwargs = await UpdateUserModel.get_kwargs(body,
+                                                additional_kwargs={'user_id': user_id,
+                                                                   'current_user': request.get("user")})
 
     dapi = DistributedAPI(f=security.update_user,
                           f_kwargs=remove_nones_to_dict(f_kwargs),
@@ -471,7 +476,8 @@ async def get_roles(token_info: dict, role_ids: list = None, pretty: bool = Fals
     return json_response(data, pretty=pretty)
 
 
-async def add_role(token_info: dict, body: dict, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def add_role(token_info: dict, body: dict, pretty: bool = False,
+                   wait_for_complete: bool = False) -> Response:
     """Add a specified role.
 
     Parameters
@@ -544,13 +550,16 @@ async def remove_roles(token_info: dict, role_ids: list = None, pretty: bool = F
     return json_response(data, pretty=pretty)
 
 
-async def update_role(token_info: dict, role_id: int, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def update_role(token_info: dict, body: dict, role_id: int, pretty: bool = False,
+                      wait_for_complete: bool = False) -> Response:
     """Update the information of a specified role.
 
     Parameters
     ----------
     token_info : dict
         Security information.
+    body : dict
+        HTTP body parsed from json into dict.        
     role_id : int
         Specific role id in the system to be updated.
     pretty : bool, optional
@@ -565,7 +574,7 @@ async def update_role(token_info: dict, role_id: int, pretty: bool = False, wait
     """
     # Get body parameters
     Body.validate_content_type(request, expected_content_type='application/json')
-    f_kwargs = await RoleModel.get_kwargs(token_info: dict, additional_kwargs={'role_id': role_id})
+    f_kwargs = await RoleModel.get_kwargs(body, additional_kwargs={'role_id': role_id})
 
     dapi = DistributedAPI(f=security.update_role,
                           f_kwargs=remove_nones_to_dict(f_kwargs),
@@ -638,7 +647,8 @@ async def get_rules(token_info: dict, rule_ids: list = None, pretty: bool = Fals
     return json_response(data, pretty=pretty)
 
 
-async def add_rule(token_info: dict, body: dict, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def add_rule(token_info: dict, body: dict, pretty: bool = False,
+                   wait_for_complete: bool = False) -> Response:
     """Add a specified rule.
 
     Parameters
@@ -674,13 +684,16 @@ async def add_rule(token_info: dict, body: dict, pretty: bool = False, wait_for_
     return json_response(data, pretty=pretty)
 
 
-async def update_rule(token_info: dict, rule_id: int, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def update_rule(token_info: dict, body: dict, rule_id: int,
+                      pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Update the information of a specified rule.
 
     Parameters
     ----------
     token_info : dict
         Security information.
+    body : dict
+        HTTP body parsed from json into dict.
     rule_id : int
         Specific rule id in the system to be updated.
     pretty : bool, optional
@@ -695,7 +708,7 @@ async def update_rule(token_info: dict, rule_id: int, pretty: bool = False, wait
     """
     # Get body parameters
     Body.validate_content_type(request, expected_content_type='application/json')
-    f_kwargs = await RuleModel.get_kwargs(token_info: dict, additional_kwargs={'rule_id': rule_id})
+    f_kwargs = await RuleModel.get_kwargs(body, additional_kwargs={'rule_id': rule_id})
 
     dapi = DistributedAPI(f=security.update_rule,
                           f_kwargs=remove_nones_to_dict(f_kwargs),
@@ -805,7 +818,8 @@ async def get_policies(token_info: dict, policy_ids: list = None, pretty: bool =
     return json_response(data, pretty=pretty)
 
 
-async def add_policy(token_info: dict, body: dict,  pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def add_policy(token_info: dict, body: dict, pretty: bool = False,
+                     wait_for_complete: bool = False) -> Response:
     """Add a specified policy.
 
     Parameters
@@ -878,13 +892,16 @@ async def remove_policies(token_info: dict, policy_ids: list = None, pretty: boo
     return json_response(data, pretty=pretty)
 
 
-async def update_policy(token_info: dict, policy_id: int, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def update_policy(token_info: dict, body: dict, policy_id: int,
+                        pretty: bool = False, wait_for_complete: bool = False) -> Response:
     """Update the information of a specified policy.
 
     Parameters
     ----------
     token_info : dict
         Security information.
+    body : dict
+        HTTP body parsed from json into dict.
     policy_id : int
         Specific policy id in the system to be updated
     pretty : bool, optional
@@ -899,7 +916,7 @@ async def update_policy(token_info: dict, policy_id: int, pretty: bool = False, 
     """
     # Get body parameters
     Body.validate_content_type(request, expected_content_type='application/json')
-    f_kwargs = await PolicyModel.get_kwargs(token_info: dict, additional_kwargs={'policy_id': policy_id})
+    f_kwargs = await PolicyModel.get_kwargs(body, additional_kwargs={'policy_id': policy_id})
 
     dapi = DistributedAPI(f=security.update_policy,
                           f_kwargs=remove_nones_to_dict(f_kwargs),
@@ -1291,7 +1308,8 @@ async def security_revoke_tokens():
     raise_if_exc(await dapi.distribute_function())
 
 
-async def put_security_config(token_info: dict, body: dict, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def put_security_config(token_info: dict, body: dict, pretty: bool = False,
+                              wait_for_complete: bool = False) -> Response:
     """Update current security configuration with the given one
 
     Parameters
