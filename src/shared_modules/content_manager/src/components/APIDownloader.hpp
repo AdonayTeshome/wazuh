@@ -13,10 +13,13 @@
 
 #include "../sharedDefs.hpp"
 #include "IURLRequest.hpp"
+#include "componentsHelper.hpp"
 #include "updaterContext.hpp"
 #include "utils/chainOfResponsability.hpp"
 #include <iostream>
 #include <memory>
+
+constexpr auto COMPONENT_NAME {"APIDownlader"};
 
 /**
  * @class APIDownloader
@@ -45,7 +48,7 @@ private:
         m_context->data.at("paths").push_back(m_fullFilePath);
 
         // Set the status of the stage
-        m_context->data.at("stageStatus").push_back(R"({"stage": "APIDownloader", "status": "ok"})"_json);
+        Utils::pushComponentStatus(COMPONENT_NAME, Utils::ComponentStatus::STATUS_OK, *m_context);
 
         logDebug2(WM_CONTENTUPDATER, "APIDownloader - Finishing - Download done successfully");
     }
@@ -80,7 +83,7 @@ private:
             [this](const std::string& message, [[maybe_unused]] const long statusCode)
             {
                 // Set the status of the stage
-                m_context->data.at("stageStatus").push_back(R"({"stage": "APIDownloader", "status": "fail"})"_json);
+                Utils::pushComponentStatus(COMPONENT_NAME, Utils::ComponentStatus::STATUS_FAIL, *m_context);
 
                 throw std::runtime_error("APIDownloader - Could not get response from API because: " + message);
             }};
@@ -93,6 +96,7 @@ private:
     std::string m_fullFilePath {};                ///< Full path where the content will be saved.
     IURLRequest& m_urlRequest;                    ///< Interface to perform HTTP requests
     std::shared_ptr<UpdaterContext> m_context {}; ///< updater context
+    const std::string COMPONENT_NAME {"APIDownloader"};
 
 public:
     // LCOV_EXCL_START

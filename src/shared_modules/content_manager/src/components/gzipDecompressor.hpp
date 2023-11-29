@@ -13,6 +13,7 @@
 #define _GZIP_DECOMPRESSOR_HPP
 
 #include "../sharedDefs.hpp"
+#include "componentsHelper.hpp"
 #include "json.hpp"
 #include "updaterContext.hpp"
 #include "utils/chainOfResponsability.hpp"
@@ -33,21 +34,6 @@
 class GzipDecompressor final : public AbstractHandler<std::shared_ptr<UpdaterContext>>
 {
 private:
-    /**
-     * @brief Pushes the state of the current stage into the data field of the context.
-     *
-     * @param contextData Reference to the context data.
-     * @param status Status to be pushed.
-     */
-    void pushStageStatus(nlohmann::json& contextData, std::string status) const
-    {
-        auto statusObject = nlohmann::json::object();
-        statusObject["stage"] = "GzipDecompressor";
-        statusObject["status"] = std::move(status);
-
-        contextData.at("stageStatus").push_back(std::move(statusObject));
-    }
-
     /**
      * @brief Decompress the compressed content and update the context paths.
      *
@@ -88,6 +74,8 @@ public:
      */
     std::shared_ptr<UpdaterContext> handleRequest(std::shared_ptr<UpdaterContext> context) override
     {
+        constexpr auto COMPONENT_NAME {"GzipDecompressor"};
+
         try
         {
             decompress(*context);
@@ -95,13 +83,13 @@ public:
         catch (const std::exception& e)
         {
             // Push error state.
-            pushStageStatus(context->data, "fail");
+            Utils::pushComponentStatus(COMPONENT_NAME, Utils::ComponentStatus::STATUS_FAIL, *context);
 
             throw std::runtime_error("Decompression failed: " + std::string(e.what()));
         }
 
         // Push success state.
-        pushStageStatus(context->data, "ok");
+        Utils::pushComponentStatus(COMPONENT_NAME, Utils::ComponentStatus::STATUS_OK, *context);
 
         logDebug2(WM_CONTENTUPDATER, "GzipDecompressor - Finishing process");
 

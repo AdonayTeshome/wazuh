@@ -13,6 +13,7 @@
 
 #include "../sharedDefs.hpp"
 #include "IURLRequest.hpp"
+#include "componentsHelper.hpp"
 #include "updaterContext.hpp"
 #include "utils/chainOfResponsability.hpp"
 #include <algorithm>
@@ -103,7 +104,7 @@ private:
         }
 
         // Set the status of the stage.
-        m_context->data.at("stageStatus").push_back(R"({"stage": "CtiApiDownloader", "status": "ok"})"_json);
+        Utils::pushComponentStatus(COMPONENT_NAME, Utils::ComponentStatus::STATUS_OK, *m_context);
         logDebug2(WM_CONTENTUPDATER, "CtiApiDownloader - Finishing");
     }
 
@@ -227,6 +228,7 @@ private:
     std::string m_fileName {};                    ///< name of the file where the content will be saved
     int m_consumerLastOffset {};                  ///< consumer offset
     std::shared_ptr<UpdaterContext> m_context {}; ///< updater context
+    const std::string COMPONENT_NAME {"CtiApiDownloader"};
 
 public:
     // LCOV_EXCL_START
@@ -259,7 +261,7 @@ public:
         }
         catch (const std::exception& e)
         {
-            m_context->data.at("stageStatus").push_back(R"({"stage": "CtiApiDownloader", "status": "fail"})"_json);
+            Utils::pushComponentStatus(COMPONENT_NAME, Utils::ComponentStatus::STATUS_FAIL, *m_context);
             throw;
         }
 

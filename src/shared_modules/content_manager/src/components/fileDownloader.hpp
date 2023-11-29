@@ -15,6 +15,7 @@
 #include "../sharedDefs.hpp"
 #include "HTTPRequest.hpp"
 #include "chainOfResponsability.hpp"
+#include "componentsHelper.hpp"
 #include "hashHelper.h"
 #include "json.hpp"
 #include "stringHelper.h"
@@ -36,21 +37,6 @@
 class FileDownloader final : public AbstractHandler<std::shared_ptr<UpdaterContext>>
 {
 private:
-    /**
-     * @brief Pushes the state of the current stage into the data field of the context.
-     *
-     * @param contextData Reference to the context data.
-     * @param status Status to be pushed.
-     */
-    void pushStageStatus(nlohmann::json& contextData, std::string status) const
-    {
-        auto statusObject = nlohmann::json::object();
-        statusObject["stage"] = "FileDownloader";
-        statusObject["status"] = std::move(status);
-
-        contextData.at("stageStatus").push_back(std::move(statusObject));
-    }
-
     /**
      * @brief Function to calculate the hash of a file.
      *
@@ -136,6 +122,8 @@ public:
      */
     std::shared_ptr<UpdaterContext> handleRequest(std::shared_ptr<UpdaterContext> context) override
     {
+        constexpr auto COMPONENT_NAME {"FileDownloader"};
+
         try
         {
             download(*context);
@@ -143,13 +131,13 @@ public:
         catch (const std::exception& e)
         {
             // Push error state.
-            pushStageStatus(context->data, "fail");
+            Utils::pushComponentStatus(COMPONENT_NAME, Utils::ComponentStatus::STATUS_FAIL, *context);
 
             throw std::runtime_error("Download failed: " + std::string(e.what()));
         }
 
         // Push success state.
-        pushStageStatus(context->data, "ok");
+        Utils::pushComponentStatus(COMPONENT_NAME, Utils::ComponentStatus::STATUS_OK, *context);
 
         logDebug2(WM_CONTENTUPDATER, "FileDownloader - Download done successfully");
 
