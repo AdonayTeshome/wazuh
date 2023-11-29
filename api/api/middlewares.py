@@ -18,6 +18,7 @@ from starlette.exceptions import HTTPException
 from connexion import ConnexionMiddleware
 from connexion.exceptions import OAuthProblem, ProblemException, Unauthorized
 from connexion.problem import problem as connexion_problem
+from connexion.lifecycle import ConnexionRequest, ConnexionResponse
 from secure import Secure, ContentSecurityPolicy, XFrameOptions, Server
 from wazuh.core.exception import WazuhPermissionError, WazuhTooManyRequests
 from wazuh.core.utils import get_utc_now
@@ -84,13 +85,13 @@ class SecureHeadersMiddleware(BaseHTTPMiddleware):
 
 ip_stats = dict()
 ip_block = set()
-GENERAL_REQUEST_COUNTER = 0
-GENERAL_CURRENT_TIME = None
-EVENTS_REQUEST_COUNTER = 0
-EVENTS_CURRENT_TIME = None
+general_request_counter = 0
+general_current_time = None
+events_request_counter = 0
+events_current_time = None
 
 
-async def unlock_ip(request: Request, block_time: int):
+async def unlock_ip(request: ConnexionRequest, block_time: int):
     """This function blocks/unblocks the IPs that are requesting an API token.
 
     Parameters
@@ -149,7 +150,7 @@ async def check_rate_limit(
 
     Parameters
     ----------
-    request : connexion.resquest
+    request : Request
         HTTP request.
     request_counter_key : str
         Key of the request counter variable to get from globals() dict.
@@ -160,8 +161,8 @@ async def check_rate_limit(
     """
 
     error_code_mapping = {
-        'GENERAL_REQUEST_COUNTER': {'code': 6001},
-        'EVENTS_REQUEST_COUNTER': {
+        'general_request_counter': {'code': 6001},
+        'events_request_counter': {
             'code': 6005,
             'extra_message': f'For POST /events endpoint the limit is set to {max_requests} requests.'
         }
@@ -191,16 +192,16 @@ class CheckRateLimitsMiddleware(BaseHTTPMiddleware):
         if max_request_per_minute > 0:
             await check_rate_limit(
                 request,
-                'GENERAL_REQUEST_COUNTER',
-                'GENERAL_CURRENT_TIME',
+                'general_request_counter',
+                'general_current_time',
                 max_request_per_minute
             )
 
             if request.url.path == '/events':
                 await check_rate_limit(
                     request,
-                    'EVENTS_REQUEST_COUNTER',
-                    'EVENTS_CURRENT_TIME',
+                    'events_request_counter',
+                    'events_current_time',
                     MAX_REQUESTS_EVENTS_DEFAULT
                 )
 
@@ -286,7 +287,7 @@ class WazuhAccessLoggerMiddleware(BaseHTTPMiddleware):
 
     def custom_logging(self, user, remote, method, path, query,
                        body, elapsed_time, status, hash_auth_context='',
-                       headers: dict = dict()):
+                       headers: dict = None):
         """Provide the log entry structure depending on the logging format.
 
         Parameters
@@ -342,7 +343,7 @@ class WazuhAccessLoggerMiddleware(BaseHTTPMiddleware):
         logger.info(json_info, extra={'log_type': 'json'})
         logger.debug2(f'Receiving headers {headers}')
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(self, request: ConnexionRequest, call_next: RequestResponseEndpoint) -> Response:
         """Log Wazuh access information.
 
         Additionally, it cleans the output given by connexion's exceptions.
@@ -366,7 +367,7 @@ class WazuhAccessLoggerMiddleware(BaseHTTPMiddleware):
         time_diff = time.time() - prev_time
 
         query = dict(request.query_params)
-        body = request.get("body", dict())
+        body = await request.json() if "json" in request.mimetype else {}
         if 'password' in query:
             query['password'] = '****'
         if 'password' in body:

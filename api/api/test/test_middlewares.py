@@ -3,7 +3,7 @@
 # This program is a free software; you can redistribute it and/or modify it under the terms of GPLv2
 from copy import copy
 from datetime import datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, patch, MagicMock
 
 import pytest
 from freezegun import freeze_time
@@ -12,7 +12,21 @@ from wazuh.core.exception import WazuhPermissionError, WazuhTooManyRequests
 from api.middlewares import _cleanup_detail_field, \
     check_rate_limit, prevent_bruteforce_attack, unlock_ip, ip_block, ip_stats
 
+@pytest.fixture
+def request_info(request):
+    """Return the dictionary of the parametrize"""
+    return request.param if 'prevent_bruteforce_attack' in request.node.name else None
 
+@pytest.fixture
+def mock_request(request, request_info):
+    """fixture to wrap functions with request"""
+    req = MagicMock()
+    req.client.host = 'ip'
+    if 'prevent_bruteforce_attack' in request.node.name:
+        for clave, valor in request_info.items():
+            setattr(req, clave, valor)
+
+    return req
 
 class DummyRequest:
     def __init__(self, data: dict):
@@ -48,15 +62,15 @@ def test_cleanup_detail_field():
     assert _cleanup_detail_field(detail) == "Testing. Details field."
 
 
+@pytest.mark.asyncio
 @patch("api.middlewares.ip_stats", new={'ip': {'timestamp': 5}})
 @patch("api.middlewares.ip_block", new={"ip"})
 @freeze_time(datetime(1970, 1, 1, 0, 0, 10))
-@pytest.mark.asyncio
-async def test_middlewares_unlock_ip():
+async def test_middlewares_unlock_ip(mock_request):
     """Test unlock_ip function."""
     # Assert they are not empty
     assert ip_stats and ip_block
-    await unlock_ip(DummyRequest({'remote': "ip"}), 5)
+    await unlock_ip(mock_request, 5)
     # Assert that under these conditions, they have been emptied
     assert not ip_stats and not ip_block
 
@@ -65,28 +79,28 @@ async def test_middlewares_unlock_ip():
 @patch("api.middlewares.ip_block", new={"ip"})
 @freeze_time(datetime(1970, 1, 1))
 @pytest.mark.asyncio
-async def test_middlewares_unlock_ip_ko():
+async def test_middlewares_unlock_ip_ko(mock_request):
     """Test if `unlock_ip` raises an exception if the IP is still blocked."""
     with patch("api.middlewares.raise_if_exc") as raise_mock:
-        await unlock_ip(DummyRequest({'remote': "ip"}), 5)
+        await unlock_ip(mock_request, 5)
         raise_mock.assert_called_once_with(WazuhPermissionError(6000))
 
 
-@pytest.mark.parametrize('request_info', [
-    {'path': '/security/user/authenticate', 'method': 'GET', 'remote': 'ip'},
-    {'path': '/security/user/authenticate', 'method': 'POST', 'remote': 'ip'},
-    {'path': '/security/user/authenticate/run_as', 'method': 'POST', 'remote': 'ip'},
-])
+@pytest.mark.asyncio
 @pytest.mark.parametrize('stats', [
     {},
     {'ip': {'attempts': 4}},
 ])
-@pytest.mark.asyncio
-async def test_middlewares_prevent_bruteforce_attack(request_info, stats):
+@pytest.mark.parametrize('request_info', [
+    {'path': '/security/user/authenticate', 'method': 'GET'},
+    {'path': '/security/user/authenticate', 'method': 'POST'},
+    {'path': '/security/user/authenticate/run_as', 'method': 'POST'},
+], indirect=True)
+async def test_middlewares_prevent_bruteforce_attack(stats, request_info, mock_request):
     """Test `prevent_bruteforce_attack` blocks IPs when reaching max number of attempts."""
     with patch("api.middlewares.ip_stats", new=copy(stats)):
         previous_attempts = ip_stats['ip']['attempts'] if 'ip' in ip_stats else 0
-        await prevent_bruteforce_attack(DummyRequest(request_info),
+        await prevent_bruteforce_attack(mock_request,
                                         attempts=5)
         if stats:
             # There were previous attempts. This one reached the limit
@@ -110,14 +124,14 @@ async def test_middlewares_prevent_bruteforce_attack(request_info, stats):
 ])
 @pytest.mark.asyncio
 async def test_middlewares_check_rate_limit(
-    current_time, max_requests, current_time_key, current_counter_key, expected_error_args
+    current_time, max_requests, current_time_key, current_counter_key, expected_error_args, mock_request
 ):
     """Test if the rate limit mechanism triggers when the `max_requests` are reached."""
 
     with patch(f"api.middlewares.{current_time_key}", new=current_time):
         with patch("api.middlewares.raise_if_exc") as raise_mock:
             await check_rate_limit(
-                DummyRequest({'remote': 'ip'}),
+                mock_request,
                 current_time_key=current_time_key,
                 request_counter_key=current_counter_key,
                 max_requests=max_requests)
