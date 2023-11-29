@@ -2,7 +2,7 @@
 # Created by Wazuh, Inc. <info@wazuh.com>.
 # This program is a free software; you can redistribute it and/or modify it under the terms of GPLv2
 
-from starlette.responses import Response
+from connexion.lifecycle import ConnexionResponse
 
 from api.models.security_token_response_model import TokenResponseModel
 from api.authentication import generate_token
@@ -13,7 +13,7 @@ from wazuh.core.exception import WazuhException
 from wazuh.core.results import WazuhResult
 
 
-def token_response(user: str, data: dict, raw: bool = True) -> Response:
+def token_response(user: str, data: dict, raw: bool = True) -> ConnexionResponse:
     """Generate a token and returns a Response object.
 
     Parameters
@@ -44,15 +44,15 @@ def token_response(user: str, data: dict, raw: bool = True) -> Response:
         raise_if_exc(exc)
 
     if raw:
-        res = Response(content=token, media_type='text/plain', status_code=200)
+        res = ConnexionResponse(body=token, mimetype='text/plain', status_code=200)
     else:
-        res = Response(content=dumps(WazuhResult({'data': TokenResponseModel(token=token)})),
-                       media_type="application/json",
-                       status_code=200)
+        res = ConnexionResponse(body=dumps(WazuhResult({'data': TokenResponseModel(token=token)})),
+                                mimetype="application/json",
+                                status_code=200)
     return res
 
 
-def json_response(data: dict, pretty: bool = False) -> Response:
+def json_response(data: dict, pretty: bool = False) -> ConnexionResponse:
     """Generate a json Response from a dictionary.
 
     Parameters
@@ -67,6 +67,6 @@ def json_response(data: dict, pretty: bool = False) -> Response:
     Response
         JSON response  generated from the data.
     """
-    return Response(content=prettify(data) if pretty else dumps(data),
-                   media_type="application/json",
-                   status_code=200)
+    return ConnexionResponse(body=prettify(data) if pretty else dumps(data),
+                             mimetype="application/json",
+                             status_code=200)
