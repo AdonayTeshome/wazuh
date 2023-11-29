@@ -54,10 +54,8 @@ def mock_request():
 @patch('api.controllers.util.generate_token', return_value='token')
 async def test_login_user(mock_token, mock_exc, mock_dapi, mock_remove, mock_dfunc, raw, mock_request):
     """Verify 'login_user' endpoint is working as expected."""
-    result = await login_user(user='001',
-                              raw=raw)
-    f_kwargs = {'user_id': '001'
-                }
+    result = await login_user(user='001', raw=raw)
+    f_kwargs = {'user_id': '001'}
     mock_dapi.assert_called_once_with(f=preprocessor.get_permissions,
                                       f_kwargs=mock_remove.return_value,
                                       request_type='local_master',
@@ -66,7 +64,9 @@ async def test_login_user(mock_token, mock_exc, mock_dapi, mock_remove, mock_dfu
                                       )
     mock_remove.assert_called_once_with(f_kwargs)
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
-    mock_token.assert_called_once_with(user_id=f_kwargs['user_id'], data=mock_exc.return_value.dikt)
+    mock_token.assert_called_once_with(user_id=f_kwargs['user_id'],
+                                       data=mock_exc.return_value.dikt,
+                                       auth_context=None)
     assert isinstance(result, ConnexionResponse)
     assert result.mimetype == 'text/plain' if raw else result.mimetype == 'application/json'
 
