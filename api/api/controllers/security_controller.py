@@ -117,7 +117,7 @@ async def run_as_login(user: str, raw: bool = False) -> ConnexionResponse:
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return token_response(user, data.dikt, raw)
+    return token_response(user, data.dikt, raw, auth_context=auth_context)
 
 
 async def get_user_me(pretty: bool = False, wait_for_complete: bool = False) -> ConnexionResponse:

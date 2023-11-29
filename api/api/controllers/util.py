@@ -13,7 +13,7 @@ from wazuh.core.exception import WazuhException
 from wazuh.core.results import WazuhResult
 
 
-def token_response(user: str, data: dict, raw: bool = True) -> ConnexionResponse:
+def token_response(user: str, data: dict, raw: bool = True, auth_context: dict = None) -> ConnexionResponse:
     """Generate a token and returns a Response object.
 
     Parameters
@@ -39,7 +39,7 @@ def token_response(user: str, data: dict, raw: bool = True) -> ConnexionResponse
 
     token = None
     try:
-        token = generate_token(user_id=user, data=data)
+        token = generate_token(user_id=user, data=data, auth_context=auth_context)
     except WazuhException as exc:
         raise_if_exc(exc)
 

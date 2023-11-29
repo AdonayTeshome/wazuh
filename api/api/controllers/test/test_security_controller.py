@@ -39,6 +39,7 @@ def mock_request():
     operation.method = "post"
     with TestContext(operation=operation):
         with patch('api.controllers.security_controller.request') as m_req:
+            m_req.json = AsyncMock(side_effect=lambda: {'ctx': ''} )
             m_req.query_params.get = lambda key, default: None
             m_req.context = {'token_info': {'rbac_policies': {}}}
             yield m_req
@@ -102,7 +103,8 @@ async def test_login_user_ko(mock_token, mock_exc, mock_dapi, mock_remove, mock_
 @patch('api.controllers.security_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.security_controller.raise_if_exc', return_value=CustomAffectedItems())
 @patch('api.controllers.util.generate_token', return_value='token')
-async def test_run_as_login(mock_token, mock_exc, mock_dapi, mock_remove, mock_dfunc, raw, mock_request=AsyncMock()):
+async def test_run_as_login(mock_token, mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                            raw, mock_request):
     """Verify 'run_as_login' endpoint is working as expected."""
     result = await run_as_login(user='001', raw=raw)
     auth_context = await mock_request.json()
@@ -128,16 +130,12 @@ async def test_run_as_login(mock_token, mock_exc, mock_dapi, mock_remove, mock_d
 @patch('api.controllers.security_controller.raise_if_exc', return_value=CustomAffectedItems())
 @patch('api.controllers.util.generate_token', return_value='token')
 @pytest.mark.parametrize('mock_bool', [True, False])
-async def test_run_as_login_ko(mock_token, mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_bool,
-                               mock_request=AsyncMock()):
+async def test_run_as_login_ko(mock_token, mock_exc, mock_dapi, mock_remove, mock_dfunc,
+                               mock_bool, mock_request):
     """Verify 'run_as_login' endpoint is handling WazuhException as expected."""
     mock_token.side_effect = WazuhException(999)
-    result = await run_as_login(
-                                user='001',
-                                raw=mock_bool)
-    f_kwargs = {'user_id': '001',
-                'auth_context': await mock_request.json()
-                }
+    result = await run_as_login(user='001', raw=mock_bool)
+    f_kwargs = {'user_id': '001', 'auth_context': await mock_request.json()}
     mock_dapi.assert_called_once_with(f=preprocessor.get_permissions,
                                       f_kwargs=mock_remove.return_value,
                                       request_type='local_master',
