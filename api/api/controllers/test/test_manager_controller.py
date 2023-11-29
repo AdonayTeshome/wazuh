@@ -3,8 +3,9 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
 from connexion.lifecycle import ConnexionResponse
+from connexion.testing import TestContext
 from api.controllers.test.utils import CustomAffectedItems
-from connexion.lifecycle import ConnexionResponse
+
 
 with patch('wazuh.common.wazuh_uid'):
     with patch('wazuh.common.wazuh_gid'):
@@ -22,6 +23,17 @@ with patch('wazuh.common.wazuh_uid'):
 
         wazuh.rbac.decorators.expose_resources = RBAC_bypasser
         del sys.modules['wazuh.rbac.orm']
+
+@pytest.fixture
+def mock_request():
+    """fixture to wrap functions with request"""
+    operation = MagicMock(name="operation")
+    operation.method = "post"
+    with TestContext(operation=operation):
+        with patch('api.controllers.manager_controller.request') as m_req:
+            m_req.query_params.get = lambda key, default: None
+            m_req.context = {'token_info': {'rbac_policies': {}}}
+            yield m_req
 
 
 @pytest.mark.asyncio
@@ -102,9 +114,8 @@ async def test_get_configuration(mock_exc, mock_dapi, mock_remove, mock_dfunc, m
 @patch('api.controllers.manager_controller.remove_nones_to_dict')
 @patch('api.controllers.manager_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.manager_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_daemon_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfunc):
+async def test_get_daemon_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_daemon_stats_node' function is working as expected."""
-    mock_request = MagicMock()
     result = await get_daemon_stats( daemons_list=['daemon_1', 'daemon_2'])
 
     f_kwargs = {'daemons_list': ['daemon_1', 'daemon_2']}
@@ -366,8 +377,7 @@ async def test_get_manager_config_ondemand(mock_check_pair, mock_exc, mock_dapi,
     """Verify 'get_manager_config_ondemand' endpoint is working as expected."""
     kwargs_param = {'configuration': 'configuration_value'
                     }
-    result = await get_manager_config_ondemand(
-                                               component='component1',
+    result = await get_manager_config_ondemand(component='component1',
                                                **kwargs_param)
     f_kwargs = {'component': 'component1',
                 'config': kwargs_param.get('configuration', None)

@@ -3,7 +3,8 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
 from connexion.lifecycle import ConnexionResponse
-from api.controllers.test.utils import CustomItems
+from connexion.testing import TestContext
+from api.controllers.test.utils import CustomAffectedItems
 
 with patch('wazuh.common.wazuh_uid'):
     with patch('wazuh.common.wazuh_gid'):
@@ -15,12 +16,23 @@ with patch('wazuh.common.wazuh_uid'):
         wazuh.rbac.decorators.expose_resources = RBAC_bypasser
         del sys.modules['wazuh.rbac.orm']
 
+@pytest.fixture
+def mock_request():
+    """fixture to wrap functions with request"""
+    operation = MagicMock(name="operation")
+    operation.method = "post"
+    with TestContext(operation=operation):
+        with patch('api.controllers.active_response_controller.request') as m_req:
+            m_req.query_params.get = lambda key, default: None
+            m_req.context = {'token_info': {'rbac_policies': {}}}
+            yield m_req
+
 
 @pytest.mark.asyncio
 @patch('api.controllers.active_response_controller.DistributedAPI.distribute_function', return_value=AsyncMock())
 @patch('api.controllers.active_response_controller.remove_nones_to_dict')
 @patch('api.controllers.active_response_controller.DistributedAPI.__init__', return_value=None)
-@patch('api.controllers.active_response_controller.raise_if_exc', return_value=CustomItems())
+@patch('api.controllers.active_response_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_run_command(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'run_command' endpoint is working as expected."""
     with patch('api.controllers.active_response_controller.Body'):

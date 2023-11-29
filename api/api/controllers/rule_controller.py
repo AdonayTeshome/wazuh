@@ -22,7 +22,7 @@ logger = logging.getLogger('wazuh-api')
 
 
 @cache(expires=api_conf['cache']['time'])
-async def get_rules(request, rule_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_rules(rule_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                     offset: int = 0, select: str = None, limit: int = None, sort: str = None, search: str = None,
                     q: str = None, status: str = None, group: str = None, level: str = None, filename: list = None,
                     relative_dirname: str = None, pci_dss: str = None, gdpr: str = None, gpg13: str = None,
@@ -161,7 +161,7 @@ async def get_rules_groups(pretty: bool = False, wait_for_complete: bool = False
 
 
 @cache(expires=api_conf['cache']['time'])
-async def get_rules_requirement(request, requirement: str = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_rules_requirement(requirement: str = None, pretty: bool = False, wait_for_complete: bool = False,
                                 offset: int = 0, limit: int = None, sort: str = None,
                                 search: str = None) -> ConnexionResponse:
     """Get all specified requirements.
@@ -347,7 +347,7 @@ async def put_file(body: bytes, filename: str = None, overwrite: bool = False,
         API response.
     """
     # Parse body to utf-8
-    Body.validate_content_type(request, expected_content_type='application/octet-stream')
+    Body.validate_content_type(expected_content_type='application/octet-stream')
     parsed_body = Body.decode_body(body, unicode_error=1911, attribute_error=1912)
 
     f_kwargs = {'filename': filename,
@@ -368,7 +368,7 @@ async def put_file(body: bytes, filename: str = None, overwrite: bool = False,
     return json_response(data, pretty=pretty)
 
 
-async def delete_file(request, filename: str = None, 
+async def delete_file(filename: str = None, 
                       relative_dirname: str = None, 
                       pretty: bool = False,
                       wait_for_complete: bool = False) -> ConnexionResponse:

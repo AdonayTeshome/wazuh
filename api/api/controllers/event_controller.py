@@ -17,7 +17,7 @@ from api.util import raise_if_exc, remove_nones_to_dict
 logger = logging.getLogger('wazuh-api')
 
 
-async def forward_event(request: web.Request, pretty: bool = False, wait_for_complete: bool = False) -> ConnexionResponse:
+async def forward_event(pretty: bool = False, wait_for_complete: bool = False) -> ConnexionResponse:
     """Forward events to analysisd.
 
     Parameters

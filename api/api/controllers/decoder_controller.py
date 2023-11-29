@@ -19,7 +19,7 @@ from wazuh.core.results import AffectedItemsWazuhResult
 logger = logging.getLogger('wazuh-api')
 
 
-async def get_decoders(request, decoder_names: list = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_decoders(decoder_names: list = None, pretty: bool = False, wait_for_complete: bool = False,
                        offset: int = 0, limit: int = None, select: list = None, sort: str = None, search: str = None,
                        q: str = None, filename: str = None, relative_dirname: str = None,
                        status: str = None, distinct: bool = False) -> ConnexionResponse:
@@ -306,10 +306,8 @@ async def put_file(body: bytes, filename: str = None, relative_dirname: str = No
     return json_response(data, pretty=pretty)
 
 
-async def delete_file(request, filename: str = None, 
-                      relative_dirname: str = None,
-                      pretty: bool = False,
-                      wait_for_complete: bool = False) -> ConnexionResponse:
+async def delete_file(filename: str = None, relative_dirname: str = None,
+                      pretty: bool = False, wait_for_complete: bool = False) -> ConnexionResponse:
     """Delete a decoder file.
 
     Parameters

@@ -3,8 +3,8 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
 from connexion.lifecycle import ConnexionResponse
+from connexion.testing import TestContext
 from api.controllers.test.utils import CustomAffectedItems
-from connexion.lifecycle import ConnexionResponse
 
 with patch('wazuh.common.wazuh_uid'):
     with patch('wazuh.common.wazuh_gid'):
@@ -18,6 +18,17 @@ with patch('wazuh.common.wazuh_uid'):
         from wazuh.tests.util import RBAC_bypasser
         wazuh.rbac.decorators.expose_resources = RBAC_bypasser
         del sys.modules['wazuh.rbac.orm']
+
+@pytest.fixture
+def mock_request():
+    """fixture to wrap functions with request"""
+    operation = MagicMock(name="operation")
+    operation.method = "post"
+    with TestContext(operation=operation):
+        with patch('api.controllers.cdb_list_controller.request') as m_req:
+            m_req.query_params.get = lambda key, default: None
+            m_req.context = {'token_info': {'rbac_policies': {}}}
+            yield m_req
 
 
 @pytest.mark.asyncio

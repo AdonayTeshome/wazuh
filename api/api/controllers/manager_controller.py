@@ -514,7 +514,7 @@ async def get_conf_validation(pretty: bool = False, wait_for_complete: bool = Fa
     return json_response(data, pretty=pretty)
 
 
-async def get_manager_config_ondemand(request, component: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_manager_config_ondemand(component: str, pretty: bool = False, wait_for_complete: bool = False,
                                       **kwargs: dict) -> ConnexionResponse:
     """Get active configuration in manager or local_node for one component [on demand].
 
