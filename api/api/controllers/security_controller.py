@@ -165,14 +165,14 @@ async def get_user_me(pretty: bool = False, wait_for_complete: bool = False) -> 
     ConnexionResponse
         API response with the user information.
     """
-    f_kwargs = {'token': request['token_info']}
+    f_kwargs = {'token': request.context['token_info']}
     dapi = DistributedAPI(f=security.get_user_me,
                           f_kwargs=remove_nones_to_dict(f_kwargs),
                           request_type='local_master',
                           is_async=False,
                           logger=logger,
                           wait_for_complete=wait_for_complete,
-                          current_user=request['token_info']['sub'],
+                          current_user=request.context['token_info']['sub'],
                           rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
@@ -220,7 +220,7 @@ async def logout_user(pretty: bool = False, wait_for_complete: bool = False) -> 
     dapi = DistributedAPI(f=security.revoke_current_user_tokens,
                           request_type='local_master',
                           is_async=False,
-                          current_user=request['token_info']['sub'],
+                          current_user=request.context['token_info']['sub'],
                           wait_for_complete=wait_for_complete,
                           logger=logger
                           )
@@ -311,7 +311,7 @@ async def edit_run_as(user_id: str, allow_run_as: bool, pretty: bool = False,
                           request_type='local_master',
                           is_async=False,
                           logger=logger,
-                          current_user=request['token_info']['sub'],
+                          current_user=request.context['token_info']['sub'],
                           rbac_permissions=request.context['token_info']['rbac_policies'],
                           wait_for_complete=wait_for_complete
                           )
@@ -414,7 +414,7 @@ async def delete_users(user_ids: list = None, pretty: bool = False,
                           request_type='local_master',
                           is_async=False,
                           logger=logger,
-                          current_user=request['token_info']['sub'],
+                          current_user=request.context['token_info']['sub'],
                           rbac_permissions=request.context['token_info']['rbac_policies'],
                           wait_for_complete=wait_for_complete
                           )
@@ -1066,7 +1066,7 @@ async def set_role_rule(role_id: int, rule_ids: list, pretty: bool = False,
         API response.
     """
     f_kwargs = {'role_id': role_id, 'rule_ids': rule_ids,
-                'run_as': {'user': request['token_info']['sub'], 'run_as': request['token_info']['run_as']}}
+                'run_as': {'user': request.context['token_info']['sub'], 'run_as': request.context['token_info']['run_as']}}
 
     dapi = DistributedAPI(f=security.set_role_rule,
                           f_kwargs=remove_nones_to_dict(f_kwargs),

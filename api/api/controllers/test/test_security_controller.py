@@ -41,7 +41,7 @@ def mock_request():
         with patch('api.controllers.security_controller.request') as m_req:
             m_req.json = AsyncMock(side_effect=lambda: {'ctx': ''} )
             m_req.query_params.get = lambda key, default: None
-            m_req.context = {'token_info': {'rbac_policies': {}}}
+            m_req.context = {'token_info': {'sub': 'wazuh', 'run_as': 'manager', 'rbac_policies': {}}}
             yield m_req
 
 
@@ -154,7 +154,7 @@ async def test_run_as_login_ko(mock_token, mock_exc, mock_dapi, mock_remove, moc
 async def test_get_user_me(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_user_me' endpoint is working as expected."""
     result = await get_user_me()
-    f_kwargs = {'token': mock_request['token_info']
+    f_kwargs = {'token': mock_request.context['token_info']
                 }
     mock_dapi.assert_called_once_with(f=security.get_user_me,
                                       f_kwargs=mock_remove.return_value,
@@ -162,7 +162,7 @@ async def test_get_user_me(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_re
                                       is_async=False,
                                       logger=ANY,
                                       wait_for_complete=False,
-                                      current_user=mock_request['token_info']['sub'],
+                                      current_user=mock_request.context['token_info']['sub'],
                                       rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
@@ -192,7 +192,7 @@ async def test_logout_user(mock_exc, mock_dapi, mock_dfunc, mock_request):
                                       is_async=False,
                                       logger=ANY,
                                       wait_for_complete=False,
-                                      current_user=mock_request['token_info']['sub']
+                                      current_user=mock_request.context['token_info']['sub']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     assert isinstance(result, ConnexionResponse)
@@ -249,7 +249,7 @@ async def test_edit_run_as(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_re
                                       is_async=False,
                                       logger=ANY,
                                       wait_for_complete=False,
-                                      current_user=mock_request['token_info']['sub'],
+                                      current_user=mock_request.context['token_info']['sub'],
                                       rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
@@ -326,7 +326,7 @@ async def test_delete_users(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_u
                                       is_async=False,
                                       logger=ANY,
                                       wait_for_complete=False,
-                                      current_user=mock_request['token_info']['sub'],
+                                      current_user=mock_request.context['token_info']['sub'],
                                       rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
@@ -782,8 +782,8 @@ async def test_set_role_rule(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_
     f_kwargs = {'role_id': '001',
                 'rule_ids': '001',
                 'run_as': {
-                    'user': mock_request['token_info']['sub'],
-                    'run_as': mock_request['token_info']['run_as']
+                    'user': mock_request.context['token_info']['sub'],
+                    'run_as': mock_request.context['token_info']['run_as']
                 }
                 }
     mock_dapi.assert_called_once_with(f=security.set_role_rule,

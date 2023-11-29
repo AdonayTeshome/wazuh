@@ -124,7 +124,8 @@ async def test_middlewares_prevent_bruteforce_attack(stats, request_info, mock_r
 ])
 @pytest.mark.asyncio
 async def test_middlewares_check_rate_limit(
-    current_time, max_requests, current_time_key, current_counter_key, expected_error_args, mock_request
+    current_time, max_requests, current_time_key, current_counter_key,
+    expected_error_args, mock_request
 ):
     """Test if the rate limit mechanism triggers when the `max_requests` are reached."""
 

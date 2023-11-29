@@ -2,14 +2,11 @@
 # Created by Wazuh, Inc. <info@wazuh.com>.
 # This program is a free software; you can redistribute it and/or modify it under the terms of GPLv2
 
-import binascii
 import json
 import logging
 import hashlib
 import time
-import base64
 import contextlib
-from jose.jwt import get_unverified_claims
 
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
@@ -18,7 +15,7 @@ from starlette.exceptions import HTTPException
 from connexion import ConnexionMiddleware
 from connexion.exceptions import OAuthProblem, ProblemException, Unauthorized
 from connexion.problem import problem as connexion_problem
-from connexion.lifecycle import ConnexionRequest, ConnexionResponse
+from connexion.lifecycle import ConnexionRequest
 from secure import Secure, ContentSecurityPolicy, XFrameOptions, Server
 from wazuh.core.exception import WazuhPermissionError, WazuhTooManyRequests
 from wazuh.core.utils import get_utc_now
@@ -91,7 +88,7 @@ events_request_counter = 0
 events_current_time = None
 
 
-async def unlock_ip(request: ConnexionRequest, block_time: int):
+async def unlock_ip(request: Request, block_time: int):
     """This function blocks/unblocks the IPs that are requesting an API token.
 
     Parameters
@@ -343,7 +340,7 @@ class WazuhAccessLoggerMiddleware(BaseHTTPMiddleware):
         logger.info(json_info, extra={'log_type': 'json'})
         logger.debug2(f'Receiving headers {headers}')
 
-    async def dispatch(self, request: ConnexionRequest, call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         """Log Wazuh access information.
 
         Additionally, it cleans the output given by connexion's exceptions.
@@ -364,44 +361,32 @@ class WazuhAccessLoggerMiddleware(BaseHTTPMiddleware):
         """
         prev_time = time.time()
         response = await call_next(request)
+        req = ConnexionRequest.from_starlette_request(request)
         time_diff = time.time() - prev_time
 
-        query = dict(request.query_params)
-        body = await request.json() if "json" in request.mimetype else {}
+        query = dict(req.query_params)
+        body = await req.json() if 'json' in req.mimetype else {}
         if 'password' in query:
             query['password'] = '****'
         if 'password' in body:
             body['password'] = '****'
-        if 'key' in body and '/agents' in request.path:
+        if 'key' in body and '/agents' in req.scope['path']:
             body['key'] = '****'
 
         # With permanent redirect, not found responses or any response with no token information,
         # decode the JWT token to get the username
-        if not request.scope.get('user', None):
-            try:
-                auth_type, encoded_credentials = request.headers["authorization"].split()
-                if auth_type == 'Basic':
-                    user = base64.b64decode(encoded_credentials).decode("utf-8").split(':')[1]
-                elif auth_type == 'Bearer':
-                    user = get_unverified_claims(encoded_credentials)['sub']
-                else:
-                    user = UNKNOWN_USER_STRING    
-            except (KeyError, IndexError, binascii.Error):
-                user = UNKNOWN_USER_STRING
+        user = req.context.get('user', UNKNOWN_USER_STRING)
 
         # Get or create authorization context hash
-        hash_auth_context = ''
-        # Get hash from token information
-        if 'token_info' in request:
-            hash_auth_context = request['token_info'].get('hash_auth_context', '')
+        hash_auth_context = req.context.get('token_info', {}).get('hash_auth_context', '')
         # Create hash if run_as login
-        if not hash_auth_context and request.scope['path'] == RUN_AS_LOGIN_ENDPOINT:
+        if not hash_auth_context and req.scope['path'] == RUN_AS_LOGIN_ENDPOINT:
             hash_auth_context = hashlib.blake2b(json.dumps(body).encode(),
                                                 digest_size=16).hexdigest()
 
-        self.custom_logging(user, request.client.host, request.method,
-                            request.scope['path'], query, body, time_diff, response.status_code,
-                            hash_auth_context=hash_auth_context, headers=request.headers)
+        self.custom_logging(user, req.client.host, req.method,
+                            req.scope['path'], query, body, time_diff, response.status_code,
+                            hash_auth_context=hash_auth_context, headers=req.headers)
         return response
 
 
