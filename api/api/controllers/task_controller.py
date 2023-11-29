@@ -57,7 +57,7 @@ async def get_tasks_status(pretty: bool = False, wait_for_complete: bool = False
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'select': select, 'search': parse_api_param(search, 'search'),

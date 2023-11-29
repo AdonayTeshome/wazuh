@@ -32,7 +32,7 @@ async def get_hardware_info(agent_id: str, pretty: bool = False, wait_for_comple
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'agent_list': [agent_id],
@@ -84,7 +84,7 @@ async def get_hotfix_info(agent_id: str, pretty: bool = False, wait_for_complete
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
 
@@ -157,7 +157,7 @@ async def get_network_address_info(agent_id: str, pretty: bool = False, wait_for
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     filters = {'iface': iface,
@@ -230,7 +230,7 @@ async def get_network_interface_info(agent_id: str, pretty: bool = False, wait_f
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     filters = {'adapter': adapter,
@@ -305,7 +305,7 @@ async def get_network_protocol_info(agent_id: str, pretty: bool = False, wait_fo
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     filters = {'iface': iface,
@@ -354,7 +354,7 @@ async def get_os_info(agent_id: str, pretty: bool = False, wait_for_complete: bo
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'agent_list': [agent_id],
@@ -414,7 +414,7 @@ async def get_packages_info(agent_id: str, pretty: bool = False, wait_for_comple
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     filters = {'vendor': vendor,
@@ -489,7 +489,7 @@ async def get_ports_info(agent_id: str, pretty: bool = False, wait_for_complete:
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     filters = {'pid': pid,
@@ -589,7 +589,7 @@ async def get_processes_info(agent_id: str, pretty: bool = False, wait_for_compl
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     filters = {'state': state,

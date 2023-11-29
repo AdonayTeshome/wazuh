@@ -35,7 +35,7 @@ async def get_status(pretty: bool = False, wait_for_complete: bool = False) -> C
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {}
@@ -65,7 +65,7 @@ async def get_info(pretty: bool = False, wait_for_complete: bool = False) -> Con
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {}
@@ -85,7 +85,7 @@ async def get_info(pretty: bool = False, wait_for_complete: bool = False) -> Con
 
 async def get_configuration(pretty: bool = False, wait_for_complete: bool = False, section: str = None,
                             field: str = None, raw: bool = False,
-                            distinct: bool = False) -> Union[web.Response, ConnexionResponse]:
+                            distinct: bool = False) -> Union[ConnexionResponse, ConnexionResponse]:
     """Get manager's or local_node's configuration (ossec.conf)
 
     Parameters
@@ -105,11 +105,11 @@ async def get_configuration(pretty: bool = False, wait_for_complete: bool = Fals
 
     Returns
     -------
-    web.Response or ConnexionResponse
-        Depending on the `raw` parameter, it will return a web.Response object or a ConnexionResponse object:
+    ConnexionResponse or ConnexionResponse
+        Depending on the `raw` parameter, it will return a ConnexionResponse object or a ConnexionResponse object:
             raw=True            -> ConnexionResponse (application/xml)
             raw=False (default) -> ConnexionResponse (application/json)
-        If any exception was raised, it will return a web.Response with details.
+        If any exception was raised, it will return a ConnexionResponse with details.
     """
     f_kwargs = {'section': section,
                 'field': field,
@@ -176,7 +176,7 @@ async def get_stats(pretty: bool = False, wait_for_complete: bool = False, date:
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     if not date:
@@ -214,7 +214,7 @@ async def get_stats_hourly(pretty: bool = False, wait_for_complete: bool = False
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {}
@@ -247,7 +247,7 @@ async def get_stats_weekly(pretty: bool = False, wait_for_complete: bool = False
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {}
@@ -282,7 +282,7 @@ async def get_stats_analysisd(pretty: bool = False, wait_for_complete: bool = Fa
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
     """
     f_kwargs = {'filename': common.ANALYSISD_STATS}
 
@@ -316,7 +316,7 @@ async def get_stats_remoted(pretty: bool = False, wait_for_complete: bool = Fals
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
     """
     f_kwargs = {'filename': common.REMOTED_STATS}
 
@@ -366,7 +366,7 @@ async def get_log(pretty: bool = False, wait_for_complete: bool = False, offset:
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'offset': offset,
@@ -406,7 +406,7 @@ async def get_log_summary(pretty: bool = False, wait_for_complete: bool = False)
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {}
@@ -436,7 +436,7 @@ async def get_api_config(pretty: bool = False, wait_for_complete: bool = False) 
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {}
@@ -466,7 +466,7 @@ async def put_restart(pretty: bool = False, wait_for_complete: bool = False) -> 
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {}
@@ -496,7 +496,7 @@ async def get_conf_validation(pretty: bool = False, wait_for_complete: bool = Fa
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {}
@@ -529,7 +529,7 @@ async def get_manager_config_ondemand(request, component: str, pretty: bool = Fa
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'component': component,
@@ -566,7 +566,7 @@ async def update_configuration(body: bytes, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     # Parse body to utf-8

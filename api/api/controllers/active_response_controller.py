@@ -32,7 +32,7 @@ async def run_command(agents_list: str = '*', pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
     """
     # Get body parameters
     Body.validate_content_type(request, expected_content_type='application/json')

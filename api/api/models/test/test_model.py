@@ -50,7 +50,7 @@ class RequestMock:
         self._content_type = content_type
 
     @property
-    def content_type(self):
+    def mimetype(self):
         return self._content_type
 
 

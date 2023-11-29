@@ -30,7 +30,7 @@ async def put_syscheck(agents_list: str = '*', pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'agent_list': agents_list}
@@ -91,7 +91,7 @@ async def get_syscheck_agent(agent_id: str, pretty: bool = False, wait_for_compl
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
 
@@ -137,7 +137,7 @@ async def delete_syscheck_agent(agent_id: str = '*', pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'agent_list': [agent_id]}
@@ -170,7 +170,7 @@ async def get_last_scan_agent(agent_id: str, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'agent_list': [agent_id]}

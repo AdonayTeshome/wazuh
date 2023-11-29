@@ -77,7 +77,7 @@ async def get_rules(request, rule_ids: list = None, pretty: bool = False, wait_f
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'rule_ids': rule_ids, 'offset': offset, 'limit': limit, 'select': select,
@@ -136,7 +136,7 @@ async def get_rules_groups(pretty: bool = False, wait_for_complete: bool = False
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'offset': offset,
@@ -186,7 +186,7 @@ async def get_rules_requirement(request, requirement: str = None, pretty: bool =
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'requirement': requirement.replace('-', '_'), 'offset': offset, 'limit': limit,
@@ -245,7 +245,7 @@ async def get_rules_files(pretty: bool = False, wait_for_complete: bool = False,
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'offset': offset,
@@ -277,7 +277,7 @@ async def get_rules_files(pretty: bool = False, wait_for_complete: bool = False,
 @cache(expires=api_conf['cache']['time'])
 async def get_file(pretty: bool = False, wait_for_complete: bool = False, 
                    filename: str = None, relative_dirname: str = None, 
-                   raw: bool = False) -> Union[web.Response, ConnexionResponse]:
+                   raw: bool = False) -> Union[ConnexionResponse, ConnexionResponse]:
     """Get rule file content.
 
     Parameters
@@ -295,11 +295,11 @@ async def get_file(pretty: bool = False, wait_for_complete: bool = False,
 
     Returns
     -------
-    web.Response or ConnexionResponse
-        Depending on the `raw` parameter, it will return a web.Response object or a ConnexionResponse object:
+    ConnexionResponse or ConnexionResponse
+        Depending on the `raw` parameter, it will return a ConnexionResponse object or a ConnexionResponse object:
             raw=True            -> ConnexionResponse (application/xml)
             raw=False (default) -> ConnexionResponse      (application/json)
-        If any exception was raised, it will return a web.Response with details.
+        If any exception was raised, it will return a ConnexionResponse with details.
     """
     f_kwargs = {'filename': filename, 'raw': raw, 'relative_dirname': relative_dirname}
 
@@ -343,7 +343,7 @@ async def put_file(body: bytes, filename: str = None, overwrite: bool = False,
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     # Parse body to utf-8
@@ -387,7 +387,7 @@ async def delete_file(request, filename: str = None,
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'filename': filename, 'relative_dirname': relative_dirname}

@@ -44,7 +44,7 @@ async def deprecated_login_user(user: str, raw: bool = False) -> ConnexionRespon
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         Raw or JSON response with the generated access token.
     """
     f_kwargs = {'user_id': user}
@@ -73,7 +73,7 @@ async def login_user(user: str, raw: bool = False) -> ConnexionResponse:
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         Raw or JSON response with the generated access token.
     """
     f_kwargs = {'user_id': user}
@@ -103,7 +103,7 @@ async def run_as_login(user: str, raw: bool = False) -> ConnexionResponse:
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         Raw or JSON response with the generated access token.
     """
     auth_context = await request.json()
@@ -132,7 +132,7 @@ async def get_user_me(pretty: bool = False, wait_for_complete: bool = False) -> 
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response with the user information.
     """
     f_kwargs = {'token': request['token_info']}
@@ -162,7 +162,7 @@ async def get_user_me_policies(pretty: bool = False, wait_for_complete: bool = F
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response with the user RBAC policies and mode.
     """
     data = WazuhResult({'data': request.context['token_info']['rbac_policies'],
@@ -183,7 +183,7 @@ async def logout_user(pretty: bool = False, wait_for_complete: bool = False) -> 
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
 
@@ -230,7 +230,7 @@ async def get_users(user_ids: list = None, pretty: bool = False, wait_for_comple
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response with the users information.
     """
     f_kwargs = {'user_ids': user_ids, 'offset': offset, 'limit': limit, 'select': select,
@@ -271,7 +271,7 @@ async def edit_run_as(user_id: str, allow_run_as: bool, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'user_id': user_id, 'allow_run_as': allow_run_as}
@@ -302,7 +302,7 @@ async def create_user(pretty: bool = False, wait_for_complete: bool = False) -> 
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     Body.validate_content_type(request, expected_content_type='application/json')
@@ -335,7 +335,7 @@ async def update_user(user_id: str, pretty: bool = False, wait_for_complete: boo
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     Body.validate_content_type(request, expected_content_type='application/json')
@@ -372,7 +372,7 @@ async def delete_users(user_ids: list = None, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     if 'all' in user_ids:
@@ -424,7 +424,7 @@ async def get_roles(role_ids: list = None, pretty: bool = False, wait_for_comple
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response with the roles information.
     """
     f_kwargs = {'role_ids': role_ids, 'offset': offset, 'limit': limit, 'select': select,
@@ -462,7 +462,7 @@ async def add_role(pretty: bool = False, wait_for_complete: bool = False) -> Con
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     # Get body parameters
@@ -497,7 +497,7 @@ async def remove_roles(role_ids: list = None, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response composed of two lists: one contains the deleted roles and the other the non-deleted roles.
     """
     if 'all' in role_ids:
@@ -531,7 +531,7 @@ async def update_role(role_id: int, pretty: bool = False, wait_for_complete: boo
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     # Get body parameters
@@ -582,7 +582,7 @@ async def get_rules(rule_ids: list = None, pretty: bool = False, wait_for_comple
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'rule_ids': rule_ids, 'offset': offset, 'limit': limit, 'select': select,
@@ -620,7 +620,7 @@ async def add_rule(pretty: bool = False, wait_for_complete: bool = False) -> Con
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     # Get body parameters
@@ -654,7 +654,7 @@ async def update_rule(rule_id: int, pretty: bool = False, wait_for_complete: boo
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     # Get body parameters
@@ -689,7 +689,7 @@ async def remove_rules(rule_ids: list = None, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response composed of two lists: one contains the deleted rules and the other the non-deleted rules.
     """
     if 'all' in rule_ids:
@@ -740,7 +740,7 @@ async def get_policies(policy_ids: list = None, pretty: bool = False, wait_for_c
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response with the policies information.
     """
     f_kwargs = {'policy_ids': policy_ids, 'offset': offset, 'limit': limit, 'select': select,
@@ -777,7 +777,7 @@ async def add_policy(pretty: bool = False, wait_for_complete: bool = False) -> C
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     # Get body parameters
@@ -812,7 +812,7 @@ async def remove_policies(policy_ids: list = None, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response composed of two lists: one contains the deleted policies and the other the non-deleted policies.
     """
     if 'all' in policy_ids:
@@ -846,7 +846,7 @@ async def update_policy(policy_id: int, pretty: bool = False, wait_for_complete:
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     # Get body parameters
@@ -885,7 +885,7 @@ async def set_user_role(user_id: str, role_ids: list, position: int = None,
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'user_id': user_id, 'role_ids': role_ids, 'position': position}
@@ -919,7 +919,7 @@ async def remove_user_role(user_id: str, role_ids: list, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     if 'all' in role_ids:
@@ -958,7 +958,7 @@ async def set_role_policy(role_id: int, policy_ids: list, position: int = None, 
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'role_id': role_id, 'policy_ids': policy_ids, 'position': position}
@@ -994,7 +994,7 @@ async def remove_role_policy(role_id: int, policy_ids: list, pretty: bool = Fals
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     if 'all' in policy_ids:
@@ -1032,7 +1032,7 @@ async def set_role_rule(role_id: int, rule_ids: list, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'role_id': role_id, 'rule_ids': rule_ids,
@@ -1069,7 +1069,7 @@ async def remove_role_rule(role_id: int, rule_ids: list, pretty: bool = False,
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     if 'all' in rule_ids:
@@ -1101,7 +1101,7 @@ async def get_rbac_resources(resource: str = None, pretty: bool = False) -> Conn
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response with the RBAC resources.
     """
     f_kwargs = {'resource': resource}
@@ -1130,7 +1130,7 @@ async def get_rbac_actions(pretty: bool = False, endpoint: str = None) -> Connex
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response with the RBAC actions.
     """
     f_kwargs = {'endpoint': endpoint}
@@ -1158,7 +1158,7 @@ async def revoke_all_tokens(pretty: bool = False) -> ConnexionResponse:
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {}
@@ -1197,7 +1197,7 @@ async def get_security_config(pretty: bool = False, wait_for_complete: bool = Fa
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {}
@@ -1245,7 +1245,7 @@ async def put_security_config(pretty: bool = False, wait_for_complete: bool = Fa
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     Body.validate_content_type(request, expected_content_type='application/json')
@@ -1278,7 +1278,7 @@ async def delete_security_config(pretty: bool = False, wait_for_complete: bool =
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {"updated_config":

@@ -31,7 +31,7 @@ async def forward_event(request: web.Request, pretty: bool = False, wait_for_com
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API Response.
     """
     Body.validate_content_type(request, expected_content_type='application/json')

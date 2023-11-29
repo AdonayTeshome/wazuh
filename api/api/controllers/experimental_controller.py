@@ -50,7 +50,7 @@ async def clear_rootcheck_database(pretty: bool = False, wait_for_complete: bool
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     # If we use the 'all' keyword and the request is distributed_master, agents_list must be '*'
@@ -89,7 +89,7 @@ async def clear_syscheck_database(pretty: bool = False, wait_for_complete: bool 
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     # If we use the 'all' keyword and the request is distributed_master, agents_list must be '*'
@@ -156,7 +156,7 @@ async def get_cis_cat_results(pretty: bool = False, wait_for_complete: bool = Fa
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'agent_list': agents_list,
@@ -221,7 +221,7 @@ async def get_hardware_info(pretty: bool = False, wait_for_complete: bool = Fals
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     filters = {
@@ -294,7 +294,7 @@ async def get_network_address_info(pretty: bool = False, wait_for_complete: bool
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'agent_list': agents_list,
@@ -362,7 +362,7 @@ async def get_network_interface_info(pretty: bool = False, wait_for_complete: bo
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     filters = {
@@ -435,7 +435,7 @@ async def get_network_protocol_info(pretty: bool = False, wait_for_complete: boo
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'agent_list': agents_list,
@@ -506,7 +506,7 @@ async def get_os_info(pretty: bool = False, wait_for_complete: bool = False, age
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'agent_list': agents_list,
@@ -576,7 +576,7 @@ async def get_packages_info(pretty: bool = False, wait_for_complete: bool = Fals
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'agent_list': agents_list,
@@ -648,7 +648,7 @@ async def get_ports_info(pretty: bool = False, wait_for_complete: bool = False, 
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     filters = {
@@ -746,7 +746,7 @@ async def get_processes_info(pretty: bool = False, wait_for_complete: bool = Fal
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'agent_list': agents_list,
@@ -820,7 +820,7 @@ async def get_hotfixes_info(pretty: bool = False, wait_for_complete: bool = Fals
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     filters = {'hotfix': hotfix}

@@ -56,7 +56,7 @@ async def get_sca_agent(agent_id: str = None, pretty: bool = False, wait_for_com
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     filters = {'name': name,
@@ -149,7 +149,7 @@ async def get_sca_checks(agent_id: str = None, pretty: bool = False, wait_for_co
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     filters = {'title': title,

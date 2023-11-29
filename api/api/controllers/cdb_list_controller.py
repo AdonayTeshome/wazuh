@@ -52,7 +52,7 @@ async def get_lists(pretty: bool = False, wait_for_complete: bool = False, offse
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'offset': offset,
@@ -83,7 +83,7 @@ async def get_lists(pretty: bool = False, wait_for_complete: bool = False, offse
 
 
 async def get_file(pretty: bool = False, wait_for_complete: bool = False, filename: str = None,
-                   raw: bool = False) -> Union[web.Response, ConnexionResponse]:
+                   raw: bool = False) -> Union[ConnexionResponse, ConnexionResponse]:
     """Get content of one CDB list file, in raw or dict format.
 
     Parameters
@@ -99,11 +99,11 @@ async def get_file(pretty: bool = False, wait_for_complete: bool = False, filena
 
     Returns
     -------
-    web.Response or ConnexionResponse
-        Depending on the `raw` parameter, it will return a web.Response object or a ConnexionResponse object:
+    ConnexionResponse or ConnexionResponse
+        Depending on the `raw` parameter, it will return a ConnexionResponse object or a ConnexionResponse object:
             raw=True            -> ConnexionResponse (text/plain)
             raw=False (default) -> ConnexionResponse      (application/json)
-        If any exception was raised, it will return a web.Response with details.
+        If any exception was raised, it will return a ConnexionResponse with details.
     """
     f_kwargs = {'filename': filename, 'raw': raw}
 
@@ -143,7 +143,7 @@ async def put_file(body: bytes, overwrite: bool = False, pretty: bool = False, w
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     # Parse body to utf-8
@@ -182,7 +182,7 @@ async def delete_file(pretty: bool = False, wait_for_complete: bool = False,
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'filename': filename}
@@ -227,7 +227,7 @@ async def get_lists_files(pretty: bool = False, wait_for_complete: bool = False,
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
     f_kwargs = {'offset': offset,

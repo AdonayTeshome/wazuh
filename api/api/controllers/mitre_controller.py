@@ -28,7 +28,7 @@ async def get_metadata(pretty: bool = False, wait_for_complete: bool = False) ->
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response.
     """
 
@@ -74,7 +74,7 @@ async def get_references(reference_ids: list = None, pretty: bool = False, wait_
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response with the MITRE's references information.
     """
     f_kwargs = {
@@ -135,7 +135,7 @@ async def get_tactics(tactic_ids: list = None, pretty: bool = False, wait_for_co
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response with the MITRE's tactics information.
     """
     f_kwargs = {
@@ -197,7 +197,7 @@ async def get_techniques(technique_ids: list = None, pretty: bool = False, wait_
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response with the MITRE's techniques information.
     """
     f_kwargs = {'filters': {
@@ -257,7 +257,7 @@ async def get_mitigations(mitigation_ids: list = None, pretty: bool = False, wai
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response with the MITRE's mitigations information.
     """
     f_kwargs = {'filters': {
@@ -317,7 +317,7 @@ async def get_groups(group_ids: list = None, pretty: bool = False, wait_for_comp
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response with the MITRE's groups information.
     """
     f_kwargs = {
@@ -378,7 +378,7 @@ async def get_software(software_ids: list = None, pretty: bool = False, wait_for
 
     Returns
     -------
-    web.Response
+    ConnexionResponse
         API response with the MITRE's software information.
     """
     f_kwargs = {
