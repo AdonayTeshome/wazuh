@@ -2,11 +2,9 @@ import sys
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
-from starlette.responses import Response
 from connexion.lifecycle import ConnexionResponse
-from connexion.testing import TestContext
 from api.controllers.test.utils import CustomAffectedItems
-from api.controllers.test.utils import token_info
+from connexion.lifecycle import ConnexionResponse
 
 with patch('wazuh.common.wazuh_uid'):
     with patch('wazuh.common.wazuh_gid'):
@@ -21,26 +19,15 @@ with patch('wazuh.common.wazuh_uid'):
         wazuh.rbac.decorators.expose_resources = RBAC_bypasser
         del sys.modules['wazuh.rbac.orm']
 
-@pytest.fixture
-def mock_request():
-    """fixture to wrap functions with request"""
-    operation = MagicMock(name="operation")
-    operation.method = "post"
-    with TestContext(operation=operation):
-        with patch('api.controllers.agent_controller.request') as m_req:
-            m_req.query.get = MagicMock(return_value='')
-            yield m_req
-
 
 @pytest.mark.asyncio
 @patch('api.controllers.cdb_list_controller.DistributedAPI.distribute_function', return_value=AsyncMock())
 @patch('api.controllers.cdb_list_controller.remove_nones_to_dict')
 @patch('api.controllers.cdb_list_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cdb_list_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_lists(mock_exc, mock_dapi, mock_remove, mock_dfunc,
-                         mock_request, token_info):
+async def test_get_lists(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_lists' endpoint is working as expected."""
-    result = await get_lists(token_info)
+    result = await get_lists()
     f_kwargs = {'offset': 0,
                 'select': None,
                 'limit': None,
@@ -59,11 +46,11 @@ async def test_get_lists(mock_exc, mock_dapi, mock_remove, mock_dfunc,
                                       is_async=False,
                                       wait_for_complete=False,
                                       logger=ANY,
-                                      rbac_permissions=token_info['rbac_policies']
+                                      rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -72,11 +59,10 @@ async def test_get_lists(mock_exc, mock_dapi, mock_remove, mock_dfunc,
 @patch('api.controllers.cdb_list_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cdb_list_controller.raise_if_exc', return_value=CustomAffectedItems())
 @pytest.mark.parametrize('mock_bool', [True, False])
-async def test_get_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_bool,
-                        mock_request, token_info):
+async def test_get_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_bool, mock_request):
     """Verify 'get_file' endpoint is working as expected."""
     with patch('api.controllers.cdb_list_controller.isinstance', return_value=mock_bool) as mock_isinstance:
-        result = await get_file(token_info)
+        result = await get_file()
         f_kwargs = {'filename': None,
                     'raw': False
                     }
@@ -86,12 +72,12 @@ async def test_get_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_bool,
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=token_info['rbac_policies']
+                                          rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                           )
         mock_exc.assert_called_once_with(mock_dfunc.return_value)
         mock_remove.assert_called_once_with(f_kwargs)
         if mock_isinstance.return_value:
-            assert isinstance(result, Response)
+            assert isinstance(result, ConnexionResponse)
         else:
             assert isinstance(result, ConnexionResponse)
 
@@ -101,12 +87,11 @@ async def test_get_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_bool,
 @patch('api.controllers.cdb_list_controller.remove_nones_to_dict')
 @patch('api.controllers.cdb_list_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cdb_list_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_put_file(mock_exc, mock_dapi, mock_remove, mock_dfunc,
-                         mock_request, token_info):
+async def test_put_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'put_file' endpoint is working as expected."""
     with patch('api.controllers.cdb_list_controller.Body.validate_content_type'):
         with patch('api.controllers.cdb_list_controller.Body.decode_body') as mock_dbody:
-            result = await put_file(token_info,
+            result = await put_file(
                                     body={})
             f_kwargs = {'filename': None,
                         'overwrite': False,
@@ -118,11 +103,11 @@ async def test_put_file(mock_exc, mock_dapi, mock_remove, mock_dfunc,
                                               is_async=False,
                                               wait_for_complete=False,
                                               logger=ANY,
-                                              rbac_permissions=token_info['rbac_policies']
+                                              rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                               )
             mock_exc.assert_called_once_with(mock_dfunc.return_value)
             mock_remove.assert_called_once_with(f_kwargs)
-            assert isinstance(result, Response)
+            assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -130,10 +115,9 @@ async def test_put_file(mock_exc, mock_dapi, mock_remove, mock_dfunc,
 @patch('api.controllers.cdb_list_controller.remove_nones_to_dict')
 @patch('api.controllers.cdb_list_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cdb_list_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_delete_file(mock_exc, mock_dapi, mock_remove, mock_dfunc,
-                            mock_request, token_info):
+async def test_delete_file(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'delete_file' endpoint is working as expected."""
-    result = await delete_file(token_info)
+    result = await delete_file()
     f_kwargs = {'filename': None
                 }
     mock_dapi.assert_called_once_with(f=cdb_list.delete_list_file,
@@ -142,11 +126,11 @@ async def test_delete_file(mock_exc, mock_dapi, mock_remove, mock_dfunc,
                                       is_async=False,
                                       wait_for_complete=False,
                                       logger=ANY,
-                                      rbac_permissions=token_info['rbac_policies']
+                                      rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -154,10 +138,9 @@ async def test_delete_file(mock_exc, mock_dapi, mock_remove, mock_dfunc,
 @patch('api.controllers.cdb_list_controller.remove_nones_to_dict')
 @patch('api.controllers.cdb_list_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cdb_list_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_lists_files(mock_exc, mock_dapi, mock_remove, mock_dfunc,
-                               mock_request, token_info):
+async def test_get_lists_files(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_lists_files' endpoint is working as expected."""
-    result = await get_lists_files(token_info)
+    result = await get_lists_files()
     f_kwargs = {'offset': 0,
                 'limit': None,
                 'sort_by': ['relative_dirname', 'filename'],
@@ -174,8 +157,8 @@ async def test_get_lists_files(mock_exc, mock_dapi, mock_remove, mock_dfunc,
                                       is_async=False,
                                       wait_for_complete=False,
                                       logger=ANY,
-                                      rbac_permissions=token_info['rbac_policies']
+                                      rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)

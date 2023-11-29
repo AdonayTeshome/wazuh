@@ -4,8 +4,9 @@
 
 import logging
 
-from starlette.responses import Response
+from connexion.lifecycle import ConnexionResponse
 
+from connexion import request
 from api.controllers.util import json_response
 from api.util import parse_api_param, remove_nones_to_dict, raise_if_exc
 from wazuh import rootcheck
@@ -14,14 +15,12 @@ from wazuh.core.cluster.dapi.dapi import DistributedAPI
 logger = logging.getLogger('wazuh-api')
 
 
-async def put_rootcheck(token_info: dict, agents_list: str = '*', pretty: bool = False,
-                        wait_for_complete: bool = False) -> Response:
+async def put_rootcheck(agents_list: str = '*', pretty: bool = False,
+                        wait_for_complete: bool = False) -> ConnexionResponse:
     """Run rootcheck scan over the agent_ids.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     agents_list : str
         List of agent's IDs.
     pretty: bool
@@ -31,7 +30,7 @@ async def put_rootcheck(token_info: dict, agents_list: str = '*', pretty: bool =
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     f_kwargs = {'agent_list': agents_list}
@@ -43,21 +42,19 @@ async def put_rootcheck(token_info: dict, agents_list: str = '*', pretty: bool =
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=agents_list == '*',
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return json_response(data, pretty=pretty)
 
 
-async def delete_rootcheck(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
-                           agent_id: str = '') -> Response:
+async def delete_rootcheck(pretty: bool = False, wait_for_complete: bool = False,
+                           agent_id: str = '') -> ConnexionResponse:
     """Clear the rootcheck database for a list of agents.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     pretty: bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -67,7 +64,7 @@ async def delete_rootcheck(token_info: dict, pretty: bool = False, wait_for_comp
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     f_kwargs = {'agent_list': [agent_id]}
@@ -78,23 +75,21 @@ async def delete_rootcheck(token_info: dict, pretty: bool = False, wait_for_comp
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return json_response(data, pretty=pretty)
 
 
-async def get_rootcheck_agent(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, agent_id: str = None,
+async def get_rootcheck_agent(pretty: bool = False, wait_for_complete: bool = False, agent_id: str = None,
                               offset: int = 0, limit: int = None, sort: str = None, search: str = None,
                               select: str = None, q: str = '', distinct: bool = False, status: str = 'all',
-                              pci_dss: str = None, cis: str = None) -> Response:
+                              pci_dss: str = None, cis: str = None) -> ConnexionResponse:
     """Return a list of events from the rootcheck database.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -125,7 +120,7 @@ async def get_rootcheck_agent(token_info: dict, pretty: bool = False, wait_for_c
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     f_kwargs = {'agent_list': [agent_id],
@@ -149,21 +144,19 @@ async def get_rootcheck_agent(token_info: dict, pretty: bool = False, wait_for_c
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return json_response(data, pretty=pretty)
 
 
-async def get_last_scan_agent(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
-                              agent_id: str = None) -> Response:
+async def get_last_scan_agent(pretty: bool = False, wait_for_complete: bool = False,
+                              agent_id: str = None) -> ConnexionResponse:
     """Get the last rootcheck scan of an agent.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -173,7 +166,7 @@ async def get_last_scan_agent(token_info: dict, pretty: bool = False, wait_for_c
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     f_kwargs = {'agent_list': [agent_id]}
@@ -184,7 +177,7 @@ async def get_last_scan_agent(token_info: dict, pretty: bool = False, wait_for_c
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 

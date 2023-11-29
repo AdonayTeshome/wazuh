@@ -4,10 +4,11 @@
 
 import logging
 
-from starlette.responses import Response
+from connexion.lifecycle import ConnexionResponse
 
-from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc
+from connexion import request
 from api.controllers.util import json_response
+from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
 from wazuh.core.common import DATABASE_LIMIT
 from wazuh.task import get_task_status
@@ -15,16 +16,15 @@ from wazuh.task import get_task_status
 logger = logging.getLogger('wazuh')
 
 
-async def get_tasks_status(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
+async def get_tasks_status(pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
                            limit: int = DATABASE_LIMIT, tasks_list: list = None, agents_list: list = None,
                            command: str = None, node: str = None, module: str = None, status: str = None, q: str = None,
-                           search: str = None, select: str = None, sort: str = None) -> Response:
+                           search: str = None, select: str = None, sort: str = None) -> ConnexionResponse:
     """Check the status of the specified tasks.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
+    request : request.connexion
     tasks_list : list
         List of tasks ID.
     agents_list : list
@@ -57,7 +57,7 @@ async def get_tasks_status(token_info: dict, pretty: bool = False, wait_for_comp
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     f_kwargs = {'select': select, 'search': parse_api_param(search, 'search'),
@@ -79,7 +79,7 @@ async def get_tasks_status(token_info: dict, pretty: bool = False, wait_for_comp
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 

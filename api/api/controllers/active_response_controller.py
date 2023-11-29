@@ -4,29 +4,25 @@
 
 import logging
 
-from starlette.responses import Response
+from connexion.lifecycle import ConnexionResponse
 from connexion import request
 
-import wazuh.active_response as active_response
 from api.controllers.util import json_response
 from api.models.active_response_model import ActiveResponseModel
 from api.models.base_model_ import Body
 from api.util import remove_nones_to_dict, raise_if_exc
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
+import wazuh.active_response as active_response
 
 logger = logging.getLogger('wazuh-api')
 
 
-async def run_command(token_info: dict, body: dict, agents_list: str = '*', pretty: bool = False,
-                      wait_for_complete: bool = False) -> Response:
+async def run_command(agents_list: str = '*', pretty: bool = False,
+                      wait_for_complete: bool = False) -> ConnexionResponse:
     """Runs an Active Response command on a specified list of agents.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
-    body : dict
-        HTTP request body.
     agents_list : str
         List of agents IDs. All possible values from 000 onwards. Default: '*'
     pretty : bool
@@ -36,11 +32,11 @@ async def run_command(token_info: dict, body: dict, agents_list: str = '*', pret
 
     Returns
     -------
-    Response
+    web.Response
     """
+    # Get body parameters
     Body.validate_content_type(request, expected_content_type='application/json')
-    f_kwargs = await ActiveResponseModel.get_kwargs(body,
-                                                    additional_kwargs={'agent_list': agents_list})
+    f_kwargs = await ActiveResponseModel.get_kwargs(request, additional_kwargs={'agent_list': agents_list})
 
     dapi = DistributedAPI(f=active_response.run_command,
                           f_kwargs=remove_nones_to_dict(f_kwargs),
@@ -49,7 +45,7 @@ async def run_command(token_info: dict, body: dict, agents_list: str = '*', pret
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=agents_list == '*',
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 

@@ -5,11 +5,12 @@
 import logging
 from typing import Union
 
-from starlette.responses import Response
 from connexion.lifecycle import ConnexionResponse
-from connexion import request
+from aiohttp_cache import cache
+from connexion.lifecycle import ConnexionResponse
 
 from api.configuration import api_conf
+from connexion import request
 from api.controllers.util import json_response
 from api.models.base_model_ import Body
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc
@@ -20,20 +21,16 @@ from wazuh.core.results import AffectedItemsWazuhResult
 logger = logging.getLogger('wazuh-api')
 
 
-#@cache(expires=api_conf['cache']['time'])
-async def get_rules(request, token_info, rule_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
+@cache(expires=api_conf['cache']['time'])
+async def get_rules(request, rule_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                     offset: int = 0, select: str = None, limit: int = None, sort: str = None, search: str = None,
                     q: str = None, status: str = None, group: str = None, level: str = None, filename: list = None,
                     relative_dirname: str = None, pci_dss: str = None, gdpr: str = None, gpg13: str = None,
-                    hipaa: str = None, tsc: str = None, mitre: str = None, distinct: bool = False) -> Response:
+                    hipaa: str = None, tsc: str = None, mitre: str = None, distinct: bool = False) -> ConnexionResponse:
     """Get information about all Wazuh rules.
 
     Parameters
     ----------
-    request: Request
-        HTTP request
-    token_info : dict
-        Security information.
     rule_ids : list
         Filters by rule ID.
     pretty : bool
@@ -80,7 +77,7 @@ async def get_rules(request, token_info, rule_ids: list = None, pretty: bool = F
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     f_kwargs = {'rule_ids': rule_ids, 'offset': offset, 'limit': limit, 'select': select,
@@ -98,7 +95,7 @@ async def get_rules(request, token_info, rule_ids: list = None, pretty: bool = F
                 'gdpr': gdpr,
                 'gpg13': gpg13,
                 'hipaa': hipaa,
-                'nist_800_53': request.query.get('nist-800-53', None),
+                'nist_800_53': request.query_params.get('nist-800-53', None),
                 'tsc': tsc,
                 'mitre': mitre,
                 'distinct': distinct}
@@ -109,22 +106,20 @@ async def get_rules(request, token_info, rule_ids: list = None, pretty: bool = F
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return json_response(data, pretty=pretty)
 
 
-#@cache(expires=api_conf['cache']['time'])
-async def get_rules_groups(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
-                           limit: int = None, sort: str = None, search: str = None) -> Response:
+@cache(expires=api_conf['cache']['time'])
+async def get_rules_groups(pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
+                           limit: int = None, sort: str = None, search: str = None) -> ConnexionResponse:
     """Get all rule groups names.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -136,12 +131,12 @@ async def get_rules_groups(token_info: dict, pretty: bool = False, wait_for_comp
     search : str
         Looks for elements with the specified string.
     sort : str
-        Sorts the collection by a field or fields (separated by comma). Use +/-
-        at the beginning to list in ascending or descending order.
+        Sorts the collection by a field or fields (separated by comma). Use +/- at the beginning to list in
+        ascending or descending order.
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     f_kwargs = {'offset': offset,
@@ -158,24 +153,21 @@ async def get_rules_groups(token_info: dict, pretty: bool = False, wait_for_comp
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return json_response(data, pretty=pretty)
 
 
-#@cache(expires=api_conf['cache']['time'])
-async def get_rules_requirement(token_info: dict, requirement: str = None,
-                                pretty: bool = False, wait_for_complete: bool = False,
+@cache(expires=api_conf['cache']['time'])
+async def get_rules_requirement(request, requirement: str = None, pretty: bool = False, wait_for_complete: bool = False,
                                 offset: int = 0, limit: int = None, sort: str = None,
-                                search: str = None) -> Response:
+                                search: str = None) -> ConnexionResponse:
     """Get all specified requirements.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     requirement : str
         Get the specified requirement in all rules in the system.
     pretty : bool
@@ -189,12 +181,12 @@ async def get_rules_requirement(token_info: dict, requirement: str = None,
     search : str
         Looks for elements with the specified string.
     sort : str
-        Sorts the collection by a field or fields (separated by comma). Use +/-
-        at the beginning to list in ascending or descending order.
+        Sorts the collection by a field or fields (separated by comma). Use +/- at the beginning to list in
+        ascending or descending order.
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     f_kwargs = {'requirement': requirement.replace('-', '_'), 'offset': offset, 'limit': limit,
@@ -209,25 +201,22 @@ async def get_rules_requirement(token_info: dict, requirement: str = None,
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return json_response(data, pretty=pretty)
 
 
-#@cache(expires=api_conf['cache']['time'])
-async def get_rules_files(token_info: dict, pretty: bool = False,
-                          wait_for_complete: bool = False, offset: int = 0, limit: int = None,
-                          sort: str = None, search: str = None, status: str = None,
+@cache(expires=api_conf['cache']['time'])
+async def get_rules_files(pretty: bool = False, wait_for_complete: bool = False, offset: int = 0,
+                          limit: int = None, sort: str = None, search: str = None, status: str = None,
                           filename: list = None, relative_dirname: str = None, q: str = None,
-                          select: str = None, distinct: bool = False) -> Response:
+                          select: str = None, distinct: bool = False) -> ConnexionResponse:
     """Get all the rules files.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -239,8 +228,8 @@ async def get_rules_files(token_info: dict, pretty: bool = False,
     search : str
         Looks for elements with the specified string.
     sort : str
-        Sorts the collection by a field or fields (separated by comma).
-        Use +/- at the beginning to list in ascending or descending order.
+        Sorts the collection by a field or fields (separated by comma). Use +/- at the beginning to list in
+        ascending or descending order.
     status : str
         Filters by rules status.
     filename : list
@@ -256,7 +245,7 @@ async def get_rules_files(token_info: dict, pretty: bool = False,
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     f_kwargs = {'offset': offset,
@@ -278,23 +267,21 @@ async def get_rules_files(token_info: dict, pretty: bool = False,
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return json_response(data, pretty=pretty)
 
 
-#@cache(expires=api_conf['cache']['time'])
-async def get_file(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
+@cache(expires=api_conf['cache']['time'])
+async def get_file(pretty: bool = False, wait_for_complete: bool = False, 
                    filename: str = None, relative_dirname: str = None, 
-                   raw: bool = False) -> Union[Response, ConnexionResponse]:
+                   raw: bool = False) -> Union[web.Response, ConnexionResponse]:
     """Get rule file content.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     pretty : bool, optional
         Show results in human-readable format. It only works when `raw` is False (JSON format). Default `True`.
     wait_for_complete : bool, optional
@@ -308,11 +295,11 @@ async def get_file(token_info: dict, pretty: bool = False, wait_for_complete: bo
 
     Returns
     -------
-    Response or ConnexionResponse
-        Depending on the `raw` parameter, it will return a Response object or a ConnexionResponse object:
+    web.Response or ConnexionResponse
+        Depending on the `raw` parameter, it will return a web.Response object or a ConnexionResponse object:
             raw=True            -> ConnexionResponse (application/xml)
-            raw=False (default) -> Response      (application/json)
-        If any exception was raised, it will return a Response with details.
+            raw=False (default) -> ConnexionResponse      (application/json)
+        If any exception was raised, it will return a web.Response with details.
     """
     f_kwargs = {'filename': filename, 'raw': raw, 'relative_dirname': relative_dirname}
 
@@ -322,27 +309,24 @@ async def get_file(token_info: dict, pretty: bool = False, wait_for_complete: bo
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
     if isinstance(data, AffectedItemsWazuhResult):
         response = json_response(data, pretty=pretty)
     else:
-        response = ConnexionResponse(body=data["message"],
-                                     mimetype='application/xml', content_type='application/xml')
+        response = ConnexionResponse(body=data["message"], mimetype='application/xml', content_type='application/xml')
 
     return response
 
 
-async def put_file(token_info: dict, body: bytes, filename: str = None, overwrite: bool = False,
+async def put_file(body: bytes, filename: str = None, overwrite: bool = False,
                    pretty: bool = False, relative_dirname: str = None,
-                   wait_for_complete: bool = False) -> Response:
+                   wait_for_complete: bool = False) -> ConnexionResponse:
     """Upload a rule file.
     
     Parameters
     ----------
-    token_info : dict
-        Security information.
     body : bytes
         Body request with the file content to be uploaded.
     filename : str, optional
@@ -359,7 +343,7 @@ async def put_file(token_info: dict, body: bytes, filename: str = None, overwrit
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     # Parse body to utf-8
@@ -377,23 +361,21 @@ async def put_file(token_info: dict, body: bytes, filename: str = None, overwrit
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return json_response(data, pretty=pretty)
 
 
-async def delete_file(token_info: dict, filename: str = None, 
+async def delete_file(request, filename: str = None, 
                       relative_dirname: str = None, 
                       pretty: bool = False,
-                      wait_for_complete: bool = False) -> Response:
+                      wait_for_complete: bool = False) -> ConnexionResponse:
     """Delete a rule file.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     filename : str, optional
         Name of the file.
     relative_dirname : str
@@ -405,7 +387,7 @@ async def delete_file(token_info: dict, filename: str = None,
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     f_kwargs = {'filename': filename, 'relative_dirname': relative_dirname}
@@ -416,7 +398,7 @@ async def delete_file(token_info: dict, filename: str = None,
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 

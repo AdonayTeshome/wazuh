@@ -2,11 +2,10 @@ import sys
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 import pytest
-from starlette.responses import Response
 from connexion.lifecycle import ConnexionResponse
-from connexion.testing import TestContext
+from connexion.lifecycle import ConnexionResponse
 
-from api.controllers.test.utils import CustomAffectedItems, token_info
+from api.controllers.test.utils import CustomAffectedItems
 
 with patch('wazuh.common.wazuh_uid'):
     with patch('wazuh.common.wazuh_gid'):
@@ -26,42 +25,29 @@ with patch('wazuh.common.wazuh_uid'):
         del sys.modules['wazuh.rbac.orm']
 
 
-@pytest.fixture
-def mock_request():
-    """fixture to wrap functions with request"""
-    operation = MagicMock(name="operation")
-    operation.method = "post"
-    with TestContext(operation=operation):
-        with patch('api.controllers.cluster_controller.request') as m_req:
-            m_req.query.get = MagicMock(return_value='')
-            yield m_req
-
-
 @pytest.mark.asyncio
 @patch('api.controllers.cluster_controller.DistributedAPI.distribute_function', return_value=AsyncMock())
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_cluster_node(mock_exc, mock_dapi, mock_remove, mock_dfunc,
-                                mock_request, token_info):
+async def test_get_cluster_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_cluster_node' endpoint is working as expected."""
-    with patch('api.controllers.cluster_controller.get_system_nodes',
-               return_value=AsyncMock()) as mock_snodes:
-        result = await get_cluster_node(token_info)
+    with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
+        result = await get_cluster_node()
         mock_dapi.assert_called_once_with(f=cluster.get_node_wrapper,
                                           f_kwargs=mock_remove.return_value,
                                           request_type='local_any',
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=token_info['rbac_policies'],
+                                          rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with({})
-        assert isinstance(result, Response)
+        assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -69,17 +55,17 @@ async def test_get_cluster_node(mock_exc, mock_dapi, mock_remove, mock_dfunc,
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_cluster_nodes(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
+async def test_get_cluster_nodes(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_cluster_nodes' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_cluster_nodes(token_info)
+        result = await get_cluster_nodes()
         f_kwargs = {'filter_node': None,
                     'offset': 0,
                     'limit': None,
                     'sort': None,
                     'search': None,
                     'select': None,
-                    'filter_type': mock_request.query.get('type', 'all'),
+                    'filter_type': mock_request.query_params.get('type', 'all'),
                     'q': None,
                     'distinct': False
                     }
@@ -90,14 +76,14 @@ async def test_get_cluster_nodes(mock_exc, mock_dapi, mock_remove, mock_dfunc, m
                                           wait_for_complete=False,
                                           logger=ANY,
                                           local_client_arg='lc',
-                                          rbac_permissions=token_info['rbac_policies'],
+                                          rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, Response)
+        assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -105,10 +91,10 @@ async def test_get_cluster_nodes(mock_exc, mock_dapi, mock_remove, mock_dfunc, m
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_healthcheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
+async def test_get_healthcheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_healthcheck' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_healthcheck(token_info)
+        result = await get_healthcheck()
         f_kwargs = {'filter_node': None
                     }
         mock_dapi.assert_called_once_with(f=cluster.get_health_nodes,
@@ -118,14 +104,14 @@ async def test_get_healthcheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, moc
                                           wait_for_complete=False,
                                           logger=ANY,
                                           local_client_arg='lc',
-                                          rbac_permissions=token_info['rbac_policies'],
+                                          rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, Response)
+        assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -133,10 +119,10 @@ async def test_get_healthcheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, moc
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_nodes_ruleset_sync_status(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
+async def test_get_nodes_ruleset_sync_status(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_nodes_ruleset_sync_status' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_nodes_ruleset_sync_status(token_info)
+        result = await get_nodes_ruleset_sync_status()
         f_kwargs = {'node_list': '*',
                     'master_md5': {'dikt_key': 'dikt_value'}
                     }
@@ -152,14 +138,14 @@ async def test_get_nodes_ruleset_sync_status(mock_exc, mock_dapi, mock_remove, m
                                          is_async=True,
                                          wait_for_complete=False,
                                          logger=ANY,
-                                         rbac_permissions=token_info['rbac_policies'],
+                                         rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                          nodes=mock_exc.return_value,
                                          broadcasting=True)])
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 3
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, Response)
+        assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -167,20 +153,20 @@ async def test_get_nodes_ruleset_sync_status(mock_exc, mock_dapi, mock_remove, m
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_status(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
+async def test_get_status(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_status' endpoint is working as expected."""
-    result = await get_status(token_info)
+    result = await get_status()
     mock_dapi.assert_called_once_with(f=cluster.get_status_json,
                                       f_kwargs=mock_remove.return_value,
                                       request_type='local_master',
                                       is_async=False,
                                       wait_for_complete=False,
                                       logger=ANY,
-                                      rbac_permissions=token_info['rbac_policies']
+                                      rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with({})
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -188,24 +174,24 @@ async def test_get_status(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_req
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
+async def test_get_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_config' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_config(token_info)
+        result = await get_config()
         mock_dapi.assert_called_once_with(f=cluster.read_config_wrapper,
                                           f_kwargs=mock_remove.return_value,
                                           request_type='local_any',
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=token_info['rbac_policies'],
+                                          rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with({})
-        assert isinstance(result, Response)
+        assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -213,10 +199,10 @@ async def test_get_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_req
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_status_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
+async def test_get_status_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_status_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_status_node(token_info,
+        result = await get_status_node(
                                        node_id='001')
         f_kwargs = {'node_id': '001'
                     }
@@ -226,14 +212,14 @@ async def test_get_status_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, moc
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=token_info['rbac_policies'],
+                                          rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, Response)
+        assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -241,10 +227,10 @@ async def test_get_status_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, moc
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_info_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
+async def test_get_info_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_info_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_info_node(token_info,
+        result = await get_info_node(
                                      node_id='001')
         f_kwargs = {'node_id': '001'
                     }
@@ -254,14 +240,14 @@ async def test_get_info_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=token_info['rbac_policies'],
+                                          rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, Response)
+        assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -271,11 +257,11 @@ async def test_get_info_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
 @pytest.mark.parametrize('mock_bool', [True, False])
 async def test_get_configuration_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_bool,
-                                      mock_request, token_info):
+                                      mock_request):
     """Verify 'get_configuration_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         with patch('api.controllers.cluster_controller.isinstance', return_value=mock_bool) as mock_isinstance:
-            result = await get_configuration_node(token_info,
+            result = await get_configuration_node(
                                                   node_id='001')
             f_kwargs = {'node_id': '001',
                         'section': None,
@@ -288,7 +274,7 @@ async def test_get_configuration_node(mock_exc, mock_dapi, mock_remove, mock_dfu
                                               is_async=False,
                                               wait_for_complete=False,
                                               logger=ANY,
-                                              rbac_permissions=token_info['rbac_policies'],
+                                              rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                               nodes=mock_exc.return_value
                                               )
             mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -296,7 +282,7 @@ async def test_get_configuration_node(mock_exc, mock_dapi, mock_remove, mock_dfu
             assert mock_exc.call_count == 2
             mock_remove.assert_called_once_with(f_kwargs)
             if mock_isinstance.return_value:
-                assert isinstance(result, Response)
+                assert isinstance(result, ConnexionResponse)
             else:
                 assert isinstance(result, ConnexionResponse)
 
@@ -306,11 +292,11 @@ async def test_get_configuration_node(mock_exc, mock_dapi, mock_remove, mock_dfu
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_daemon_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfunc,
-                                     mock_request, token_info):
+async def test_get_daemon_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfunc):
     """Verify 'get_daemon_stats_node' function is working as expected."""
+    mock_request = MagicMock()
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_daemon_stats_node(token_info,
+        result = await get_daemon_stats_node(
                                              node_id='worker1',
                                              daemons_list=['daemon_1', 'daemon_2'])
 
@@ -322,13 +308,13 @@ async def test_get_daemon_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfun
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=token_info['rbac_policies'],
+                                          rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                           nodes=mock_exc.return_value)
         mock_remove.assert_called_once_with(f_kwargs)
         mock_exc.assert_has_calls([call(mock_snodes.return_value), call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
 
-        assert isinstance(result, Response)
+        assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -337,11 +323,11 @@ async def test_get_daemon_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfun
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
 @pytest.mark.parametrize('mock_date', [None, 'date_value'])
-async def test_get_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_date, mock_request, token_info):
+async def test_get_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_date, mock_request):
     """Verify 'get_stats_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         with patch('api.controllers.cluster_controller.deserialize_date', return_value='desdate_value') as mock_desdate:
-            result = await get_stats_node(token_info,
+            result = await get_stats_node(
                                           node_id='001',
                                           date=mock_date)
             if not mock_date:
@@ -358,14 +344,14 @@ async def test_get_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
                                               is_async=False,
                                               wait_for_complete=False,
                                               logger=ANY,
-                                              rbac_permissions=token_info['rbac_policies'],
+                                              rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                               nodes=mock_exc.return_value
                                               )
             mock_exc.assert_has_calls([call(mock_snodes.return_value),
                                        call(mock_dfunc.return_value)])
             assert mock_exc.call_count == 2
             mock_remove.assert_called_once_with(f_kwargs)
-            assert isinstance(result, Response)
+            assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -373,10 +359,10 @@ async def test_get_stats_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_stats_hourly_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
+async def test_get_stats_hourly_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_stats_hourly_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_stats_hourly_node(token_info,
+        result = await get_stats_hourly_node(
                                              node_id='001')
         f_kwargs = {'node_id': '001'
                     }
@@ -386,14 +372,14 @@ async def test_get_stats_hourly_node(mock_exc, mock_dapi, mock_remove, mock_dfun
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=token_info['rbac_policies'],
+                                          rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, Response)
+        assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -401,10 +387,10 @@ async def test_get_stats_hourly_node(mock_exc, mock_dapi, mock_remove, mock_dfun
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_stats_weekly_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
+async def test_get_stats_weekly_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_stats_weekly_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_stats_weekly_node(token_info,
+        result = await get_stats_weekly_node(
                                              node_id='001')
         f_kwargs = {'node_id': '001'
                     }
@@ -414,14 +400,14 @@ async def test_get_stats_weekly_node(mock_exc, mock_dapi, mock_remove, mock_dfun
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=token_info['rbac_policies'],
+                                          rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, Response)
+        assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -429,10 +415,10 @@ async def test_get_stats_weekly_node(mock_exc, mock_dapi, mock_remove, mock_dfun
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_stats_analysisd_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
+async def test_get_stats_analysisd_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_stats_analysisd_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_stats_analysisd_node(token_info,
+        result = await get_stats_analysisd_node(
                                                 node_id='001')
         f_kwargs = {'node_id': '001',
                     'filename': common.ANALYSISD_STATS
@@ -443,14 +429,14 @@ async def test_get_stats_analysisd_node(mock_exc, mock_dapi, mock_remove, mock_d
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=token_info['rbac_policies'],
+                                          rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, Response)
+        assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -458,10 +444,10 @@ async def test_get_stats_analysisd_node(mock_exc, mock_dapi, mock_remove, mock_d
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_stats_remoted_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
+async def test_get_stats_remoted_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_stats_remoted_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_stats_remoted_node(token_info,
+        result = await get_stats_remoted_node(
                                               node_id='001')
         f_kwargs = {'node_id': '001',
                     'filename': common.REMOTED_STATS
@@ -472,14 +458,14 @@ async def test_get_stats_remoted_node(mock_exc, mock_dapi, mock_remove, mock_dfu
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=token_info['rbac_policies'],
+                                          rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, Response)
+        assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -487,10 +473,10 @@ async def test_get_stats_remoted_node(mock_exc, mock_dapi, mock_remove, mock_dfu
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_log_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
+async def test_get_log_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_log_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_log_node(token_info,
+        result = await get_log_node(
                                     node_id='001')
         f_kwargs = {'node_id': '001',
                     'offset': 0,
@@ -511,14 +497,14 @@ async def test_get_log_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_r
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=token_info['rbac_policies'],
+                                          rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, Response)
+        assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -526,10 +512,10 @@ async def test_get_log_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_r
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_log_summary_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
+async def test_get_log_summary_node(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_log_summary_node' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_log_summary_node(token_info,
+        result = await get_log_summary_node(
                                             node_id='001')
         f_kwargs = {'node_id': '001'
                     }
@@ -539,14 +525,14 @@ async def test_get_log_summary_node(mock_exc, mock_dapi, mock_remove, mock_dfunc
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=token_info['rbac_policies'],
+                                          rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, Response)
+        assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -554,10 +540,10 @@ async def test_get_log_summary_node(mock_exc, mock_dapi, mock_remove, mock_dfunc
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_api_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
+async def test_get_api_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_api_config' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_api_config(token_info)
+        result = await get_api_config()
         f_kwargs = {'node_list': '*'
                     }
         mock_dapi.assert_called_once_with(f=manager.get_api_config,
@@ -567,14 +553,14 @@ async def test_get_api_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
                                           wait_for_complete=False,
                                           logger=ANY,
                                           broadcasting=True,
-                                          rbac_permissions=token_info['rbac_policies'],
+                                          rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, Response)
+        assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -582,10 +568,10 @@ async def test_get_api_config(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_put_restart(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
+async def test_put_restart(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'put_restart' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await put_restart(token_info)
+        result = await put_restart()
         f_kwargs = {'node_list': '*'
                     }
         mock_dapi.assert_called_once_with(f=manager.restart,
@@ -595,14 +581,14 @@ async def test_put_restart(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_re
                                           wait_for_complete=False,
                                           logger=ANY,
                                           broadcasting=True,
-                                          rbac_permissions=token_info['rbac_policies'],
+                                          rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, Response)
+        assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -610,10 +596,10 @@ async def test_put_restart(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_re
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_conf_validation(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
+async def test_get_conf_validation(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_conf_validation' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
-        result = await get_conf_validation(token_info)
+        result = await get_conf_validation()
         f_kwargs = {'node_list': '*'
                     }
         mock_dapi.assert_called_once_with(f=manager.validation,
@@ -623,14 +609,14 @@ async def test_get_conf_validation(mock_exc, mock_dapi, mock_remove, mock_dfunc,
                                           wait_for_complete=False,
                                           logger=ANY,
                                           broadcasting=True,
-                                          rbac_permissions=token_info['rbac_policies'],
+                                          rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 2
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, Response)
+        assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -639,12 +625,12 @@ async def test_get_conf_validation(mock_exc, mock_dapi, mock_remove, mock_dfunc,
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
 @patch('api.controllers.cluster_controller.check_component_configuration_pair')
-async def test_get_node_config(mock_check_pair, mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
+async def test_get_node_config(mock_check_pair, mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_node_config' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         kwargs_param = {'configuration': 'configuration_value'
                         }
-        result = await get_node_config(token_info,
+        result = await get_node_config(
                                        node_id='001',
                                        component='component_value',
                                        **kwargs_param)
@@ -659,7 +645,7 @@ async def test_get_node_config(mock_check_pair, mock_exc, mock_dapi, mock_remove
                                           is_async=False,
                                           wait_for_complete=False,
                                           logger=ANY,
-                                          rbac_permissions=token_info['rbac_policies'],
+                                          rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                           nodes=mock_exc.return_value
                                           )
         mock_exc.assert_has_calls([call(mock_snodes.return_value),
@@ -667,7 +653,7 @@ async def test_get_node_config(mock_check_pair, mock_exc, mock_dapi, mock_remove
                                    call(mock_dfunc.return_value)])
         assert mock_exc.call_count == 3
         mock_remove.assert_called_once_with(f_kwargs)
-        assert isinstance(result, Response)
+        assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -675,12 +661,12 @@ async def test_get_node_config(mock_check_pair, mock_exc, mock_dapi, mock_remove
 @patch('api.controllers.cluster_controller.remove_nones_to_dict')
 @patch('api.controllers.cluster_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.cluster_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_update_configuration(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request, token_info):
+async def test_update_configuration(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'update_configuration' endpoint is working as expected."""
     with patch('api.controllers.cluster_controller.get_system_nodes', return_value=AsyncMock()) as mock_snodes:
         with patch('api.controllers.cluster_controller.Body.validate_content_type'):
             with patch('api.controllers.cluster_controller.Body.decode_body') as mock_dbody:
-                result = await update_configuration(token_info,
+                result = await update_configuration(
                                                     node_id='001',
                                                     body={})
                 f_kwargs = {'node_id': '001',
@@ -692,11 +678,11 @@ async def test_update_configuration(mock_exc, mock_dapi, mock_remove, mock_dfunc
                                                   is_async=False,
                                                   wait_for_complete=False,
                                                   logger=ANY,
-                                                  rbac_permissions=token_info['rbac_policies'],
+                                                  rbac_permissions=mock_request.context['token_info']['rbac_policies'],
                                                   nodes=mock_exc.return_value
                                                   )
                 mock_exc.assert_has_calls([call(mock_snodes.return_value),
                                            call(mock_dfunc.return_value)])
                 assert mock_exc.call_count == 2
                 mock_remove.assert_called_once_with(f_kwargs)
-                assert isinstance(result, Response)
+                assert isinstance(result, ConnexionResponse)

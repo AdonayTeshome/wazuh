@@ -4,8 +4,9 @@
 
 import logging
 
-from starlette.responses import Response
+from connexion.lifecycle import ConnexionResponse
 
+from connexion import request
 from api.controllers.util import json_response
 from api.util import raise_if_exc, remove_nones_to_dict
 from wazuh.agent import get_full_overview
@@ -14,13 +15,11 @@ from wazuh.core.cluster.dapi.dapi import DistributedAPI
 logger = logging.getLogger('wazuh-api')
 
 
-async def get_overview_agents(token_info: dict, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def get_overview_agents(pretty: bool = False, wait_for_complete: bool = False) -> ConnexionResponse:
     """Get full summary of agents.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     pretty: bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -28,7 +27,7 @@ async def get_overview_agents(token_info: dict, pretty: bool = False, wait_for_c
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     f_kwargs = {}
@@ -39,7 +38,7 @@ async def get_overview_agents(token_info: dict, pretty: bool = False, wait_for_c
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 

@@ -4,9 +4,9 @@
 
 import logging
 
-from starlette.responses import Response
-from connexion import request
+from connexion.lifecycle import ConnexionResponse
 
+from connexion import request
 from api.controllers.util import json_response
 from api.models.base_model_ import Body
 from api.models.logtest_model import LogtestModel
@@ -17,15 +17,11 @@ from wazuh.core.cluster.dapi.dapi import DistributedAPI
 logger = logging.getLogger('wazuh-api')
 
 
-async def run_logtest_tool(token_info: dict, body: dict, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def run_logtest_tool(pretty: bool = False, wait_for_complete: bool = False) -> ConnexionResponse:
     """Get the logtest output after sending a JSON to its socket.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
-    body : dict
-        HTTP body parsed from json into dict.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -33,11 +29,11 @@ async def run_logtest_tool(token_info: dict, body: dict, pretty: bool = False, w
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     Body.validate_content_type(request, expected_content_type='application/json')
-    f_kwargs = await LogtestModel.get_kwargs(body)
+    f_kwargs = await LogtestModel.get_kwargs(request)
 
     dapi = DistributedAPI(f=logtest.run_logtest,
                           f_kwargs=remove_nones_to_dict(f_kwargs),
@@ -45,21 +41,19 @@ async def run_logtest_tool(token_info: dict, body: dict, pretty: bool = False, w
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return json_response(data, pretty=pretty)
 
 
-async def end_logtest_session(token_info: dict, pretty: bool = False,
-                              wait_for_complete: bool = False, token: str = None) -> Response:
+async def end_logtest_session(pretty: bool = False, wait_for_complete: bool = False,
+                              token: str = None) -> ConnexionResponse:
     """Delete the saved session corresponding to the specified token.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -69,7 +63,7 @@ async def end_logtest_session(token_info: dict, pretty: bool = False,
         
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     f_kwargs = {'token': token}
@@ -80,7 +74,7 @@ async def end_logtest_session(token_info: dict, pretty: bool = False,
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 

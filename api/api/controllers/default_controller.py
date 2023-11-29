@@ -6,7 +6,7 @@ import logging
 import socket
 from datetime import datetime
 
-from starlette.responses import Response
+from connexion.lifecycle import ConnexionResponse
 
 from api.controllers.util import json_response
 from api.models.basic_info_model import BasicInfo
@@ -18,7 +18,7 @@ from wazuh.core.utils import get_utc_now
 logger = logging.getLogger('wazuh-api')
 
 
-async def default_info(pretty: bool = False) -> Response:
+async def default_info(pretty: bool = False) -> ConnexionResponse:
     """Return basic information about the Wazuh API.
 
     Parameters
@@ -28,7 +28,7 @@ async def default_info(pretty: bool = False) -> Response:
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     info_data = load_spec()

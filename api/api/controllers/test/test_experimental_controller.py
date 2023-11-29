@@ -2,7 +2,8 @@ import sys
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
-from starlette.responses import Response
+from connexion.lifecycle import ConnexionResponse
+from connexion.testing import TestContext
 from api.controllers.test.utils import CustomAffectedItems
 from wazuh.core.exception import WazuhResourceNotFound
 
@@ -21,6 +22,17 @@ with patch('wazuh.common.wazuh_uid'):
         wazuh.rbac.decorators.expose_resources = RBAC_bypasser
         del sys.modules['wazuh.rbac.orm']
 
+@pytest.fixture
+def mock_request():
+    """fixture to wrap functions with request"""
+    operation = MagicMock(name="operation")
+    operation.method = "post"
+    with TestContext(operation=operation):
+        with patch('api.controllers.experimental_controller.request') as m_req:
+            m_req.query_params.get = lambda key, default: None
+            m_req.context = {'token_info': {'rbac_policies': {}}}
+            yield m_req
+
 
 @pytest.mark.asyncio
 @patch('api.configuration.api_conf')
@@ -30,9 +42,9 @@ with patch('wazuh.common.wazuh_uid'):
 @patch('api.controllers.experimental_controller.raise_if_exc', return_value=CustomAffectedItems())
 @pytest.mark.parametrize('mock_alist', ['001', 'all'])
 async def test_clear_rootcheck_database(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp,
-                                        mock_alist, mock_request=MagicMock()):
+                                        mock_alist, mock_request):
     """Verify 'clear_rootcheck_database' endpoint is working as expected."""
-    result = await clear_rootcheck_database(token_info,
+    result = await clear_rootcheck_database(
                                             agents_list=mock_alist)
     if 'all' in mock_alist:
         mock_alist = '*'
@@ -45,11 +57,11 @@ async def test_clear_rootcheck_database(mock_exc, mock_dapi, mock_remove, mock_d
                                       wait_for_complete=False,
                                       logger=ANY,
                                       broadcasting=mock_alist == '*',
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -60,9 +72,9 @@ async def test_clear_rootcheck_database(mock_exc, mock_dapi, mock_remove, mock_d
 @patch('api.controllers.experimental_controller.raise_if_exc', return_value=CustomAffectedItems())
 @pytest.mark.parametrize('mock_alist', ['001', 'all'])
 async def test_clear_syscheck_database(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp,
-                                       mock_alist, mock_request=MagicMock()):
+                                       mock_alist, mock_request):
     """Verify 'clear_syscheck_database' endpoint is working as expected."""
-    result = await clear_syscheck_database(token_info,
+    result = await clear_syscheck_database(
                                            agents_list=mock_alist)
     if 'all' in mock_alist:
         mock_alist = '*'
@@ -75,11 +87,11 @@ async def test_clear_syscheck_database(mock_exc, mock_dapi, mock_remove, mock_df
                                       wait_for_complete=False,
                                       logger=ANY,
                                       broadcasting=mock_alist == '*',
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -88,9 +100,9 @@ async def test_clear_syscheck_database(mock_exc, mock_dapi, mock_remove, mock_df
 @patch('api.controllers.experimental_controller.remove_nones_to_dict')
 @patch('api.controllers.experimental_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.experimental_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_cis_cat_results(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, mock_request=MagicMock()):
+async def test_get_cis_cat_results(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, mock_request):
     """Verify 'get_cis_cat_results' endpoint is working as expected."""
-    result = await get_cis_cat_results(token_info)
+    result = await get_cis_cat_results()
     f_kwargs = {'agent_list': '*',
                 'offset': 0,
                 'limit': None,
@@ -105,7 +117,7 @@ async def test_get_cis_cat_results(mock_exc, mock_dapi, mock_remove, mock_dfunc,
                     'notchecked': None,
                     'unknown': None,
                     'score': None,
-                    'pass': mock_request.query.get('pass', None)
+                    'pass': mock_request.query_params.get('pass', None)
                     }
                 }
     mock_dapi.assert_called_once_with(f=ciscat.get_ciscat_results,
@@ -115,11 +127,11 @@ async def test_get_cis_cat_results(mock_exc, mock_dapi, mock_remove, mock_dfunc,
                                       wait_for_complete=False,
                                       logger=ANY,
                                       broadcasting=True,
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -128,15 +140,15 @@ async def test_get_cis_cat_results(mock_exc, mock_dapi, mock_remove, mock_dfunc,
 @patch('api.controllers.experimental_controller.remove_nones_to_dict')
 @patch('api.controllers.experimental_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.experimental_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_hardware_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, mock_request=MagicMock()):
+async def test_get_hardware_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, mock_request):
     """Verify 'get_hardware_info' endpoint is working as expected."""
-    result = await get_hardware_info(token_info)
+    result = await get_hardware_info()
     filters = {
         'board_serial': None
     }
     nested = ['ram.free', 'ram.total', 'cpu.cores', 'cpu.mhz', 'cpu.name']
     for field in nested:
-        filters[field] = mock_request.query.get(field, None)
+        filters[field] = mock_request.query_params.get(field, None)
     f_kwargs = {'agent_list': '*',
                 'offset': 0,
                 'limit': None,
@@ -153,11 +165,11 @@ async def test_get_hardware_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, m
                                       wait_for_complete=False,
                                       logger=ANY,
                                       broadcasting=True,
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -167,9 +179,9 @@ async def test_get_hardware_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, m
 @patch('api.controllers.experimental_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.experimental_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_network_address_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp,
-                                        mock_request=MagicMock()):
+                                        mock_request):
     """Verify 'get_network_address_info' endpoint is working as expected."""
-    result = await get_network_address_info(token_info)
+    result = await get_network_address_info()
     f_kwargs = {'agent_list': '*',
                 'offset': 0,
                 'limit': None,
@@ -192,11 +204,11 @@ async def test_get_network_address_info(mock_exc, mock_dapi, mock_remove, mock_d
                                       wait_for_complete=False,
                                       logger=ANY,
                                       broadcasting=True,
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -206,18 +218,18 @@ async def test_get_network_address_info(mock_exc, mock_dapi, mock_remove, mock_d
 @patch('api.controllers.experimental_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.experimental_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_network_interface_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp,
-                                          mock_request=MagicMock()):
+                                          mock_request):
     """Verify 'get_network_interface_info' endpoint is working as expected."""
-    result = await get_network_interface_info(token_info)
+    result = await get_network_interface_info()
     filters = {
         'adapter': None,
-        'type': mock_request.query.get('type', None),
+        'type': mock_request.query_params.get('type', None),
         'state': None,
         'mtu': None
     }
     nested = ['tx.packets', 'rx.packets', 'tx.bytes', 'rx.bytes', 'tx.errors', 'rx.errors', 'tx.dropped', 'rx.dropped']
     for field in nested:
-        filters[field] = mock_request.query.get(field, None)
+        filters[field] = mock_request.query_params.get(field, None)
     f_kwargs = {'agent_list': '*',
                 'offset': 0,
                 'limit': None,
@@ -234,11 +246,11 @@ async def test_get_network_interface_info(mock_exc, mock_dapi, mock_remove, mock
                                       wait_for_complete=False,
                                       logger=ANY,
                                       broadcasting=True,
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -248,9 +260,9 @@ async def test_get_network_interface_info(mock_exc, mock_dapi, mock_remove, mock
 @patch('api.controllers.experimental_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.experimental_controller.raise_if_exc', return_value=CustomAffectedItems())
 async def test_get_network_protocol_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp,
-                                         mock_request=MagicMock()):
+                                         mock_request):
     """Verify 'get_network_protocol_info' endpoint is working as expected."""
-    result = await get_network_protocol_info(token_info)
+    result = await get_network_protocol_info()
     f_kwargs = {'agent_list': '*',
                 'offset': 0,
                 'limit': None,
@@ -259,7 +271,7 @@ async def test_get_network_protocol_info(mock_exc, mock_dapi, mock_remove, mock_
                 'search': None,
                 'filters': {
                     'iface': None,
-                    'type': mock_request.query.get('type', None),
+                    'type': mock_request.query_params.get('type', None),
                     'gateway': None,
                     'dhcp': None
                 },
@@ -272,11 +284,11 @@ async def test_get_network_protocol_info(mock_exc, mock_dapi, mock_remove, mock_
                                       wait_for_complete=False,
                                       logger=ANY,
                                       broadcasting=True,
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -285,9 +297,9 @@ async def test_get_network_protocol_info(mock_exc, mock_dapi, mock_remove, mock_
 @patch('api.controllers.experimental_controller.remove_nones_to_dict')
 @patch('api.controllers.experimental_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.experimental_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_os_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, mock_request=MagicMock()):
+async def test_get_os_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, mock_request):
     """Verify 'get_os_info' endpoint is working as expected."""
-    result = await get_os_info(token_info)
+    result = await get_os_info()
     f_kwargs = {'agent_list': '*',
                 'offset': 0,
                 'limit': None,
@@ -310,11 +322,11 @@ async def test_get_os_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_ex
                                       wait_for_complete=False,
                                       logger=ANY,
                                       broadcasting=True,
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -323,9 +335,9 @@ async def test_get_os_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_ex
 @patch('api.controllers.experimental_controller.remove_nones_to_dict')
 @patch('api.controllers.experimental_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.experimental_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_packages_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, mock_request=MagicMock()):
+async def test_get_packages_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, mock_request):
     """Verify 'get_packages_info' endpoint is working as expected."""
-    result = await get_packages_info(token_info)
+    result = await get_packages_info()
     f_kwargs = {'agent_list': '*',
                 'offset': 0,
                 'limit': None,
@@ -336,7 +348,7 @@ async def test_get_packages_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, m
                     'vendor': None,
                     'name': None,
                     'architecture': None,
-                    'format': mock_request.query.get('format', None),
+                    'format': mock_request.query_params.get('format', None),
                     'version': None
                 },
                 'element_type': 'packages'
@@ -348,11 +360,11 @@ async def test_get_packages_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, m
                                       wait_for_complete=False,
                                       logger=ANY,
                                       broadcasting=True,
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -361,9 +373,9 @@ async def test_get_packages_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, m
 @patch('api.controllers.experimental_controller.remove_nones_to_dict')
 @patch('api.controllers.experimental_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.experimental_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_ports_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, mock_request=MagicMock()):
+async def test_get_ports_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, mock_request):
     """Verify 'get_ports_info' endpoint is working as expected."""
-    result = await get_ports_info(token_info)
+    result = await get_ports_info()
     filters = {
         'pid': None,
         'protocol': None,
@@ -373,7 +385,7 @@ async def test_get_ports_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
     }
     nested = ['local.ip', 'local.port', 'remote.ip']
     for field in nested:
-        filters[field] = mock_request.query.get(field, None)
+        filters[field] = mock_request.query_params.get(field, None)
     f_kwargs = {'agent_list': '*',
                 'offset': 0,
                 'limit': None,
@@ -390,11 +402,11 @@ async def test_get_ports_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
                                       wait_for_complete=False,
                                       logger=ANY,
                                       broadcasting=True,
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -403,9 +415,9 @@ async def test_get_ports_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock
 @patch('api.controllers.experimental_controller.remove_nones_to_dict')
 @patch('api.controllers.experimental_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.experimental_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_processes_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, mock_request=MagicMock()):
+async def test_get_processes_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, mock_request):
     """Verify 'get_processes_info' endpoint is working as expected."""
-    result = await get_processes_info(token_info)
+    result = await get_processes_info()
     f_kwargs = {'agent_list': '*',
                 'offset': 0,
                 'limit': None,
@@ -437,11 +449,11 @@ async def test_get_processes_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, 
                                       wait_for_complete=False,
                                       logger=ANY,
                                       broadcasting=True,
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -450,9 +462,9 @@ async def test_get_processes_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, 
 @patch('api.controllers.experimental_controller.remove_nones_to_dict')
 @patch('api.controllers.experimental_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.experimental_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_hotfixes_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, mock_request=MagicMock()):
+async def test_get_hotfixes_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_exp, mock_request):
     """Verify 'get_hotfixes_info' endpoint is working as expected."""
-    result = await get_hotfixes_info(token_info)
+    result = await get_hotfixes_info()
     filters = {'hotfix': None
                }
     f_kwargs = {'agent_list': '*',
@@ -471,11 +483,11 @@ async def test_get_hotfixes_info(mock_exc, mock_dapi, mock_remove, mock_dfunc, m
                                       wait_for_complete=False,
                                       logger=ANY,
                                       broadcasting=True,
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)
 
 
 @patch('api.controllers.experimental_controller.raise_if_exc')

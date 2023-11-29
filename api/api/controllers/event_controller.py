@@ -4,12 +4,11 @@
 
 import logging
 
-from starlette.responses import Response
-from connexion import request
-
+from connexion.lifecycle import ConnexionResponse
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
 from wazuh.event import send_event_to_analysisd
 
+from connexion import request
 from api.controllers.util import json_response
 from api.models.base_model_ import Body
 from api.models.event_ingest_model import EventIngestModel
@@ -18,15 +17,13 @@ from api.util import raise_if_exc, remove_nones_to_dict
 logger = logging.getLogger('wazuh-api')
 
 
-async def forward_event(token_info: dict, body: dict, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def forward_event(request: web.Request, pretty: bool = False, wait_for_complete: bool = False) -> ConnexionResponse:
     """Forward events to analysisd.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
-    body : dict
-        HTTP body parsed from json into dict.
+    request : web.Request
+        API Request.
     pretty : bool, optional
         Show results in human-readable format, by default False.
     wait_for_complete : bool, optional
@@ -34,11 +31,11 @@ async def forward_event(token_info: dict, body: dict, pretty: bool = False, wait
 
     Returns
     -------
-    Response
+    web.Response
         API Response.
     """
     Body.validate_content_type(request, expected_content_type='application/json')
-    f_kwargs = await EventIngestModel.get_kwargs(body)
+    f_kwargs = await EventIngestModel.get_kwargs(request)
 
     dapi = DistributedAPI(f=send_event_to_analysisd,
                           f_kwargs=remove_nones_to_dict(f_kwargs),
@@ -46,7 +43,7 @@ async def forward_event(token_info: dict, body: dict, pretty: bool = False, wait
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
 
     data = raise_if_exc(await dapi.distribute_function())

@@ -5,14 +5,14 @@
 import logging
 from functools import wraps
 
-from starlette.responses import Response
-from connexion import request
+from connexion.lifecycle import ConnexionResponse
 
 import wazuh.ciscat as ciscat
 import wazuh.rootcheck as rootcheck
 import wazuh.syscheck as syscheck
 import wazuh.syscollector as syscollector
 from api import configuration
+from connexion import request
 from api.controllers.util import json_response
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
@@ -35,14 +35,12 @@ def check_experimental_feature_value(func):
 
 
 @check_experimental_feature_value
-async def clear_rootcheck_database(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
-                                   agents_list: list = None) -> Response:
+async def clear_rootcheck_database(pretty: bool = False, wait_for_complete: bool = False,
+                                   agents_list: list = None) -> ConnexionResponse:
     """Clear the rootcheck database for all the agents or a list of them.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -52,7 +50,7 @@ async def clear_rootcheck_database(token_info: dict, pretty: bool = False, wait_
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     # If we use the 'all' keyword and the request is distributed_master, agents_list must be '*'
@@ -68,7 +66,7 @@ async def clear_rootcheck_database(token_info: dict, pretty: bool = False, wait_
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=agents_list == '*',
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
@@ -76,14 +74,12 @@ async def clear_rootcheck_database(token_info: dict, pretty: bool = False, wait_
 
 
 @check_experimental_feature_value
-async def clear_syscheck_database(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
-                                  agents_list: list = None) -> Response:
+async def clear_syscheck_database(pretty: bool = False, wait_for_complete: bool = False,
+                                  agents_list: list = None) -> ConnexionResponse:
     """Clear the syscheck database for all agents or a list of them.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -93,7 +89,7 @@ async def clear_syscheck_database(token_info: dict, pretty: bool = False, wait_f
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     # If we use the 'all' keyword and the request is distributed_master, agents_list must be '*'
@@ -109,7 +105,7 @@ async def clear_syscheck_database(token_info: dict, pretty: bool = False, wait_f
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=agents_list == '*',
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
@@ -117,17 +113,15 @@ async def clear_syscheck_database(token_info: dict, pretty: bool = False, wait_f
 
 
 @check_experimental_feature_value
-async def get_cis_cat_results(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
+async def get_cis_cat_results(pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
                               offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                               search: str = None, benchmark: str = None, profile: str = None, fail: int = None,
                               error: int = None, notchecked: int = None, unknown: int = None,
-                              score: int = None) -> Response:
+                              score: int = None) -> ConnexionResponse:
     """Get ciscat results info from all agents or a list of them.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     agents_list : str
         List of agent's IDs.
     pretty : bool
@@ -162,7 +156,7 @@ async def get_cis_cat_results(token_info: dict, pretty: bool = False, wait_for_c
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     f_kwargs = {'agent_list': agents_list,
@@ -179,7 +173,7 @@ async def get_cis_cat_results(token_info: dict, pretty: bool = False, wait_for_c
                     'notchecked': notchecked,
                     'unknown': unknown,
                     'score': score,
-                    'pass': request.query.get('pass', None)
+                    'pass': request.query_params.get('pass', None)
                 }
                 }
 
@@ -190,7 +184,7 @@ async def get_cis_cat_results(token_info: dict, pretty: bool = False, wait_for_c
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=agents_list == '*',
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
@@ -198,15 +192,13 @@ async def get_cis_cat_results(token_info: dict, pretty: bool = False, wait_for_c
 
 
 @check_experimental_feature_value
-async def get_hardware_info(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
+async def get_hardware_info(pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
                             offset: int = 0, limit: int = None, select: str = None, sort: str = None,
-                            search: str = None, board_serial: str = None) -> Response:
+                            search: str = None, board_serial: str = None) -> ConnexionResponse:
     """Get hardware info from all agents or a list of them.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     agents_list : str
         List of agent's IDs.
     pretty : bool
@@ -229,7 +221,7 @@ async def get_hardware_info(token_info: dict, pretty: bool = False, wait_for_com
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     filters = {
@@ -238,7 +230,7 @@ async def get_hardware_info(token_info: dict, pretty: bool = False, wait_for_com
     # Add nested fields to kwargs filters
     nested = ['ram.free', 'ram.total', 'cpu.cores', 'cpu.mhz', 'cpu.name']
     for field in nested:
-        filters[field] = request.query.get(field, None)
+        filters[field] = request.query_params.get(field, None)
     f_kwargs = {'agent_list': agents_list,
                 'offset': offset,
                 'limit': limit,
@@ -256,7 +248,7 @@ async def get_hardware_info(token_info: dict, pretty: bool = False, wait_for_com
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=agents_list == '*',
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
@@ -264,16 +256,14 @@ async def get_hardware_info(token_info: dict, pretty: bool = False, wait_for_com
 
 
 @check_experimental_feature_value
-async def get_network_address_info(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
+async def get_network_address_info(pretty: bool = False, wait_for_complete: bool = False,
                                    agents_list: str = '*', offset: int = 0, limit: str = None, select: str = None,
                                    sort: str = None, search: str = None, iface_name: str = None, proto: str = None,
-                                   address: str = None, broadcast: str = None, netmask: str = None) -> Response:
+                                   address: str = None, broadcast: str = None, netmask: str = None) -> ConnexionResponse:
     """Get the IPv4 and IPv6 addresses associated to all network interfaces.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     agents_list : str
         List of agent's IDs.
     pretty : bool
@@ -304,7 +294,7 @@ async def get_network_address_info(token_info: dict, pretty: bool = False, wait_
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     f_kwargs = {'agent_list': agents_list,
@@ -330,7 +320,7 @@ async def get_network_address_info(token_info: dict, pretty: bool = False, wait_
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=agents_list == '*',
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
@@ -338,16 +328,14 @@ async def get_network_address_info(token_info: dict, pretty: bool = False, wait_
 
 
 @check_experimental_feature_value
-async def get_network_interface_info(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
+async def get_network_interface_info(pretty: bool = False, wait_for_complete: bool = False,
                                      agents_list: str = '*', offset: int = 0, limit: int = None, select: str = None,
                                      sort: str = None, search: str = None, adapter: str = None, state: str = None,
-                                     mtu: str = None) -> Response:
+                                     mtu: str = None) -> ConnexionResponse:
     """Get all network interfaces from all agents or a list of them.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     agents_list : str
         List of agent's IDs.
     pretty : bool
@@ -374,19 +362,19 @@ async def get_network_interface_info(token_info: dict, pretty: bool = False, wai
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     filters = {
         'adapter': adapter,
-        'type': request.query.get('type', None),
+        'type': request.query_params.get('type', None),
         'state': state,
         'mtu': mtu
     }
     # Add nested fields to kwargs filters
     nested = ['tx.packets', 'rx.packets', 'tx.bytes', 'rx.bytes', 'tx.errors', 'rx.errors', 'tx.dropped', 'rx.dropped']
     for field in nested:
-        filters[field] = request.query.get(field, None)
+        filters[field] = request.query_params.get(field, None)
 
     f_kwargs = {'agent_list': agents_list,
                 'offset': offset,
@@ -405,7 +393,7 @@ async def get_network_interface_info(token_info: dict, pretty: bool = False, wai
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=agents_list == '*',
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
@@ -413,16 +401,14 @@ async def get_network_interface_info(token_info: dict, pretty: bool = False, wai
 
 
 @check_experimental_feature_value
-async def get_network_protocol_info(token_info: dict, pretty: bool = False, wait_for_complete: bool = False,
+async def get_network_protocol_info(pretty: bool = False, wait_for_complete: bool = False,
                                     agents_list: str = '*', offset: int = 0, limit: int = None, select: str = None,
                                     sort: str = None, search: str = None, iface: str = None, gateway: str = None,
-                                    dhcp: str = None) -> Response:
+                                    dhcp: str = None) -> ConnexionResponse:
     """Get network protocol info from all agents or a list of them.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     agents_list : str
         List of agent's IDs.
     pretty : bool
@@ -449,7 +435,7 @@ async def get_network_protocol_info(token_info: dict, pretty: bool = False, wait
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     f_kwargs = {'agent_list': agents_list,
@@ -460,7 +446,7 @@ async def get_network_protocol_info(token_info: dict, pretty: bool = False, wait
                 'search': parse_api_param(search, 'search'),
                 'filters': {
                     'iface': iface,
-                    'type': request.query.get('type', None),
+                    'type': request.query_params.get('type', None),
                     'gateway': gateway,
                     'dhcp': dhcp
                 },
@@ -474,7 +460,7 @@ async def get_network_protocol_info(token_info: dict, pretty: bool = False, wait
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=agents_list == '*',
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
@@ -482,16 +468,14 @@ async def get_network_protocol_info(token_info: dict, pretty: bool = False, wait
 
 
 @check_experimental_feature_value
-async def get_os_info(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
+async def get_os_info(pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
                       offset: int = 0, limit: int = None, select: str = None, sort: str = None, search: str = None,
                       os_name: str = None, architecture: str = None, os_version: str = None, version: str = None,
-                      release: str = None) -> Response:
+                      release: str = None) -> ConnexionResponse:
     """Get OS info from all agents or a list of them.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     agents_list : str
         List of agent's IDs.
     pretty : bool
@@ -522,7 +506,7 @@ async def get_os_info(token_info: dict, pretty: bool = False, wait_for_complete:
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     f_kwargs = {'agent_list': agents_list,
@@ -548,7 +532,7 @@ async def get_os_info(token_info: dict, pretty: bool = False, wait_for_complete:
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=agents_list == '*',
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
@@ -556,16 +540,14 @@ async def get_os_info(token_info: dict, pretty: bool = False, wait_for_complete:
 
 
 @check_experimental_feature_value
-async def get_packages_info(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
+async def get_packages_info(pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
                             offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                             search: str = None, vendor: str = None, name: str = None, architecture: str = None,
-                            version: str = None) -> Response:
+                            version: str = None) -> ConnexionResponse:
     """Get packages info from all agents or a list of them.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     agents_list : str
         List of agent's IDs.
     pretty : bool
@@ -594,7 +576,7 @@ async def get_packages_info(token_info: dict, pretty: bool = False, wait_for_com
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     f_kwargs = {'agent_list': agents_list,
@@ -607,7 +589,7 @@ async def get_packages_info(token_info: dict, pretty: bool = False, wait_for_com
                     'vendor': vendor,
                     'name': name,
                     'architecture': architecture,
-                    'format': request.query.get('format', None),
+                    'format': request.query_params.get('format', None),
                     'version': version
                 },
                 'element_type': 'packages'
@@ -620,7 +602,7 @@ async def get_packages_info(token_info: dict, pretty: bool = False, wait_for_com
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=agents_list == '*',
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
@@ -628,16 +610,14 @@ async def get_packages_info(token_info: dict, pretty: bool = False, wait_for_com
 
 
 @check_experimental_feature_value
-async def get_ports_info(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
+async def get_ports_info(pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
                          offset: int = 0, limit: int = None, select: str = None, sort: str = None, search: str = None,
                          pid: str = None, protocol: str = None, tx_queue: str = None, state: str = None,
-                         process: str = None) -> Response:
+                         process: str = None) -> ConnexionResponse:
     """Get ports info from all agents or a list of them.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     agents_list : str
         List of agent's IDs.
     pretty : bool
@@ -668,7 +648,7 @@ async def get_ports_info(token_info: dict, pretty: bool = False, wait_for_comple
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     filters = {
@@ -681,7 +661,7 @@ async def get_ports_info(token_info: dict, pretty: bool = False, wait_for_comple
     # Add nested fields to kwargs filters
     nested = ['local.ip', 'local.port', 'remote.ip']
     for field in nested:
-        filters[field] = request.query.get(field, None)
+        filters[field] = request.query_params.get(field, None)
 
     f_kwargs = {'agent_list': agents_list,
                 'offset': offset,
@@ -700,7 +680,7 @@ async def get_ports_info(token_info: dict, pretty: bool = False, wait_for_comple
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=agents_list == '*',
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
@@ -708,18 +688,16 @@ async def get_ports_info(token_info: dict, pretty: bool = False, wait_for_comple
 
 
 @check_experimental_feature_value
-async def get_processes_info(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
+async def get_processes_info(pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
                              offset: int = 0, limit: int = None, select: str = None, sort: str = None,
                              search: str = None, pid: str = None, state: str = None, ppid: str = None,
                              egroup: str = None, euser: str = None, fgroup: str = None, name: str = None,
                              nlwp: str = None, pgrp: str = None, priority: str = None, rgroup: str = None,
-                             ruser: str = None, sgroup: str = None, suser: str = None) -> Response:
+                             ruser: str = None, sgroup: str = None, suser: str = None) -> ConnexionResponse:
     """Get processes info from all agents or a list of them.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     agents_list : str
         List of agent's IDs.
     pretty : bool
@@ -768,7 +746,7 @@ async def get_processes_info(token_info: dict, pretty: bool = False, wait_for_co
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     f_kwargs = {'agent_list': agents_list,
@@ -803,7 +781,7 @@ async def get_processes_info(token_info: dict, pretty: bool = False, wait_for_co
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=agents_list == '*',
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
@@ -811,15 +789,13 @@ async def get_processes_info(token_info: dict, pretty: bool = False, wait_for_co
 
 
 @check_experimental_feature_value
-async def get_hotfixes_info(token_info: dict, pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
+async def get_hotfixes_info(pretty: bool = False, wait_for_complete: bool = False, agents_list: str = '*',
                             offset: int = 0, limit: int = None, sort: str = None, search: str = None,
-                            select: str = None, hotfix: str = None) -> Response:
+                            select: str = None, hotfix: str = None) -> ConnexionResponse:
     """Get hotfixes info from all agents or a list of them.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     agents_list : str
         List of agent's IDs.
     pretty : bool
@@ -844,7 +820,7 @@ async def get_hotfixes_info(token_info: dict, pretty: bool = False, wait_for_com
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
     filters = {'hotfix': hotfix}
@@ -865,7 +841,7 @@ async def get_hotfixes_info(token_info: dict, pretty: bool = False, wait_for_com
                           wait_for_complete=wait_for_complete,
                           logger=logger,
                           broadcasting=agents_list == '*',
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 

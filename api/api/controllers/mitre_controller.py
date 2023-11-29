@@ -4,8 +4,10 @@
 
 import logging
 
-from starlette.responses import Response
+from connexion.lifecycle import ConnexionResponse
+from connexion import request
 
+from connexion import request
 from api.controllers.util import json_response
 from api.util import raise_if_exc, parse_api_param, remove_nones_to_dict
 from wazuh import mitre
@@ -14,13 +16,11 @@ from wazuh.core.cluster.dapi.dapi import DistributedAPI
 logger = logging.getLogger('wazuh-api')
 
 
-async def get_metadata(token_info: dict, pretty: bool = False, wait_for_complete: bool = False) -> Response:
+async def get_metadata(pretty: bool = False, wait_for_complete: bool = False) -> ConnexionResponse:
     """Return the metadata of the MITRE's database.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     pretty : bool, optional
         Show results in human-readable format.
     wait_for_complete : bool, optional
@@ -28,7 +28,7 @@ async def get_metadata(token_info: dict, pretty: bool = False, wait_for_complete
 
     Returns
     -------
-    Response
+    web.Response
         API response.
     """
 
@@ -38,22 +38,20 @@ async def get_metadata(token_info: dict, pretty: bool = False, wait_for_complete
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return json_response(data, pretty=pretty)
 
 
-async def get_references(token_info: dict, reference_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_references(reference_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                          offset: int = None, limit: int = None, sort: str = None, search: str = None,
-                         select: list = None, q: str = None) -> Response:
+                         select: list = None, q: str = None) -> ConnexionResponse:
     """Get information of specified MITRE's references.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     reference_ids : list
         List of reference ids to be obtained.
     pretty : bool
@@ -76,7 +74,7 @@ async def get_references(token_info: dict, reference_ids: list = None, pretty: b
 
     Returns
     -------
-    Response
+    web.Response
         API response with the MITRE's references information.
     """
     f_kwargs = {
@@ -99,22 +97,20 @@ async def get_references(token_info: dict, reference_ids: list = None, pretty: b
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return json_response(data, pretty=pretty)
 
 
-async def get_tactics(token_info: dict, tactic_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_tactics(tactic_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                       offset: int = None, limit: int = None, sort: str = None, search: str = None, select: list = None,
-                      q: str = None, distinct: bool = False) -> Response:
+                      q: str = None, distinct: bool = False) -> ConnexionResponse:
     """Get information of specified MITRE's tactics.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     tactic_ids : list
         List of tactic ids to be obtained.
     pretty : bool
@@ -139,7 +135,7 @@ async def get_tactics(token_info: dict, tactic_ids: list = None, pretty: bool = 
 
     Returns
     -------
-    Response
+    web.Response
         API response with the MITRE's tactics information.
     """
     f_kwargs = {
@@ -163,22 +159,20 @@ async def get_tactics(token_info: dict, tactic_ids: list = None, pretty: bool = 
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return json_response(data, pretty=pretty)
 
 
-async def get_techniques(token_info: dict, technique_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_techniques(technique_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                          offset: int = None, limit: int = None, sort: str = None, search: str = None,
-                         select: list = None, q: str = None, distinct: bool = False) -> Response:
+                         select: list = None, q: str = None, distinct: bool = False) -> ConnexionResponse:
     """Get information of specified MITRE's techniques.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     technique_ids : list, optional
         List of technique ids to be obtained.
     pretty : bool, optional
@@ -203,7 +197,7 @@ async def get_techniques(token_info: dict, technique_ids: list = None, pretty: b
 
     Returns
     -------
-    Response
+    web.Response
         API response with the MITRE's techniques information.
     """
     f_kwargs = {'filters': {
@@ -225,22 +219,20 @@ async def get_techniques(token_info: dict, technique_ids: list = None, pretty: b
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies'])
+                          rbac_permissions=request.context['token_info']['rbac_policies'])
 
     data = raise_if_exc(await dapi.distribute_function())
 
     return json_response(data, pretty=pretty)
 
 
-async def get_mitigations(token_info: dict, mitigation_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_mitigations(mitigation_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                           offset: int = None, limit: int = None, sort: str = None, search: str = None,
-                          select: list = None, q: str = None, distinct: bool = False) -> Response:
+                          select: list = None, q: str = None, distinct: bool = False) -> ConnexionResponse:
     """Get information of specified MITRE's mitigations.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     mitigation_ids : list, optional
         List of mitigation ids to be obtained.
     pretty : bool, optional
@@ -265,7 +257,7 @@ async def get_mitigations(token_info: dict, mitigation_ids: list = None, pretty:
 
     Returns
     -------
-    Response
+    web.Response
         API response with the MITRE's mitigations information.
     """
     f_kwargs = {'filters': {
@@ -287,22 +279,20 @@ async def get_mitigations(token_info: dict, mitigation_ids: list = None, pretty:
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return json_response(data, pretty=pretty)
 
 
-async def get_groups(token_info: dict, group_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_groups(group_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                      offset: int = None, limit: int = None, sort: str = None, search: str = None, select: list = None,
-                     q: str = None, distinct: bool = False) -> Response:
+                     q: str = None, distinct: bool = False) -> ConnexionResponse:
     """Get information of specified MITRE's groups.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     group_ids : list, optional
         List of group IDs to be obtained.
     pretty : bool, optional
@@ -327,7 +317,7 @@ async def get_groups(token_info: dict, group_ids: list = None, pretty: bool = Fa
 
     Returns
     -------
-    Response
+    web.Response
         API response with the MITRE's groups information.
     """
     f_kwargs = {
@@ -350,22 +340,20 @@ async def get_groups(token_info: dict, group_ids: list = None, pretty: bool = Fa
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies']
+                          rbac_permissions=request.context['token_info']['rbac_policies']
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
     return json_response(data, pretty=pretty)
 
 
-async def get_software(token_info: dict, software_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_software(software_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
                        offset: int = None, limit: int = None, sort: str = None, search: str = None, select: list = None,
-                       q: str = None, distinct: bool = False) -> Response:
+                       q: str = None, distinct: bool = False) -> ConnexionResponse:
     """Get information of specified MITRE's software.
 
     Parameters
     ----------
-    token_info : dict
-        Security information.
     software_ids : list, optional
         List of softwware IDs to be obtained.
     pretty : bool, optional
@@ -390,7 +378,7 @@ async def get_software(token_info: dict, software_ids: list = None, pretty: bool
 
     Returns
     -------
-    Response
+    web.Response
         API response with the MITRE's software information.
     """
     f_kwargs = {
@@ -413,7 +401,7 @@ async def get_software(token_info: dict, software_ids: list = None, pretty: bool
                           is_async=False,
                           wait_for_complete=wait_for_complete,
                           logger=logger,
-                          rbac_permissions=token_info['rbac_policies'])
+                          rbac_permissions=request.context['token_info']['rbac_policies'])
 
     data = raise_if_exc(await dapi.distribute_function())
 

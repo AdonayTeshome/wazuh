@@ -4,10 +4,10 @@
 
 from connexion.lifecycle import ConnexionResponse
 
+from api.encoder import dumps, prettify
 from api.models.security_token_response_model import TokenResponseModel
 from api.authentication import generate_token
 from api.util import raise_if_exc
-from api.encoder import dumps, prettify
 
 from wazuh.core.exception import WazuhException
 from wazuh.core.results import WazuhResult

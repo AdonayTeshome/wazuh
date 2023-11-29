@@ -2,7 +2,8 @@ import sys
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
-from starlette.responses import Response
+from connexion.lifecycle import ConnexionResponse
+from connexion.testing import TestContext
 from api.controllers.test.utils import CustomAffectedItems
 
 with patch('wazuh.common.wazuh_uid'):
@@ -18,17 +19,27 @@ with patch('wazuh.common.wazuh_uid'):
         wazuh.rbac.decorators.expose_resources = RBAC_bypasser        
         del sys.modules['wazuh.rbac.orm']
 
+@pytest.fixture
+def mock_request():
+    """fixture to wrap functions with request"""
+    operation = MagicMock(name="operation")
+    operation.method = "post"
+    with TestContext(operation=operation):
+        with patch('api.controllers.syscheck_controller.request') as m_req:
+            m_req.query_params.get = lambda key, default: None
+            m_req.context = {'token_info': {'rbac_policies': {}}}
+            yield m_req
+
 
 @pytest.mark.asyncio
 @patch('api.controllers.syscheck_controller.DistributedAPI.distribute_function', return_value=AsyncMock())
 @patch('api.controllers.syscheck_controller.remove_nones_to_dict')
 @patch('api.controllers.syscheck_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.syscheck_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_put_syscheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_put_syscheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'put_syscheck' endpoint is working as expected."""
-    result = await put_syscheck(token_info)
-    f_kwargs = {'agent_list': '*'
-                }
+    result = await put_syscheck()
+    f_kwargs = {'agent_list': '*'}
     mock_dapi.assert_called_once_with(f=syscheck.run,
                                       f_kwargs=mock_remove.return_value,
                                       request_type='distributed_master',
@@ -36,11 +47,11 @@ async def test_put_syscheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_r
                                       wait_for_complete=False,
                                       logger=ANY,
                                       broadcasting=True,
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -48,13 +59,12 @@ async def test_put_syscheck(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_r
 @patch('api.controllers.syscheck_controller.remove_nones_to_dict')
 @patch('api.controllers.syscheck_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.syscheck_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_syscheck_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_syscheck_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_syscheck_agent' endpoint is working as expected."""
-    result = await get_syscheck_agent(token_info,
-                                      agent_id='001')
-    type_ = mock_request.query.get('type', None)
-    hash_ = mock_request.query.get('hash', None)
-    file_ = mock_request.query.get('file', None)
+    result = await get_syscheck_agent(agent_id='001')
+    type_ = mock_request.query_params.get('type', None)
+    hash_ = mock_request.query_params.get('hash', None)
+    file_ = mock_request.query_params.get('file', None)
     filters = {'type': type_,
                'md5': None,
                'sha1': None,
@@ -62,8 +72,8 @@ async def test_get_syscheck_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, 
                'hash': hash_,
                'file': file_,
                'arch': None,
-               'value.name': mock_request.query.get('value.name', None),
-               'value.type': mock_request.query.get('value.type', None)
+               'value.name': mock_request.query_params.get('value.name', None),
+               'value.type': mock_request.query_params.get('value.type', None)
                }
     f_kwargs = {'agent_list': ['001'],
                 'offset': 0,
@@ -82,11 +92,11 @@ async def test_get_syscheck_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, 
                                       is_async=False,
                                       wait_for_complete=False,
                                       logger=ANY,
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -94,22 +104,21 @@ async def test_get_syscheck_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, 
 @patch('api.controllers.syscheck_controller.remove_nones_to_dict')
 @patch('api.controllers.syscheck_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.syscheck_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_delete_syscheck_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_delete_syscheck_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'delete_syscheck_agent' endpoint is working as expected."""
-    result = await delete_syscheck_agent(token_info)
-    f_kwargs = {'agent_list': ['*']
-                }
+    result = await delete_syscheck_agent()
+    f_kwargs = {'agent_list': ['*']}
     mock_dapi.assert_called_once_with(f=syscheck.clear,
                                       f_kwargs=mock_remove.return_value,
                                       request_type='distributed_master',
                                       is_async=False,
                                       wait_for_complete=False,
                                       logger=ANY,
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)
 
 
 @pytest.mark.asyncio
@@ -117,10 +126,9 @@ async def test_delete_syscheck_agent(mock_exc, mock_dapi, mock_remove, mock_dfun
 @patch('api.controllers.syscheck_controller.remove_nones_to_dict')
 @patch('api.controllers.syscheck_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.syscheck_controller.raise_if_exc', return_value=CustomAffectedItems())
-async def test_get_last_scan_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request=MagicMock()):
+async def test_get_last_scan_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_request):
     """Verify 'get_last_scan_agent' endpoint is working as expected."""
-    result = await get_last_scan_agent(token_info,
-                                       agent_id='001')
+    result = await get_last_scan_agent(agent_id='001')
     f_kwargs = {'agent_list': ['001']
                 }
     mock_dapi.assert_called_once_with(f=syscheck.last_scan,
@@ -129,8 +137,8 @@ async def test_get_last_scan_agent(mock_exc, mock_dapi, mock_remove, mock_dfunc,
                                       is_async=False,
                                       wait_for_complete=False,
                                       logger=ANY,
-                                      rbac_permissions=mock_request['token_info']['rbac_policies']
+                                      rbac_permissions=mock_request.context['token_info']['rbac_policies']
                                       )
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_remove.assert_called_once_with(f_kwargs)
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)

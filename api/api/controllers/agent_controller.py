@@ -33,7 +33,6 @@ async def delete_agents(pretty: bool = False, wait_for_complete: bool = False, a
 
     Parameters
     ----------
-    request : connexion.request
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -112,7 +111,6 @@ async def get_agents(pretty: bool = False, wait_for_complete: bool = False, agen
 
     Parameters
     ----------
-    request : connexion.request
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -203,7 +201,6 @@ async def add_agent(pretty: bool = False, wait_for_complete: bool = False) -> Co
 
     Parameters
     ----------
-    request : connexion.request
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -238,7 +235,6 @@ async def reconnect_agents(pretty: bool = False, wait_for_complete: bool = False
 
     Parameters
     ----------
-    request : connexion.request
     pretty : bool
         Show results in human-readable format. Default `False`
     wait_for_complete : bool
@@ -273,7 +269,6 @@ async def restart_agents(pretty: bool = False, wait_for_complete: bool = False,
 
     Parameters
     ----------
-    request : connexion.request
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -347,7 +342,6 @@ async def get_agent_config(pretty: bool = False, wait_for_complete: bool = False
 
     Parameters
     ----------
-    request : connexion.request
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -390,7 +384,6 @@ async def delete_single_agent_multiple_groups(agent_id: str, groups_list: str = 
 
     Parameters
     ----------
-    request : connexion.request
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -430,7 +423,6 @@ async def get_sync_agent(agent_id: str, pretty: bool = False, wait_for_complete=
 
     Parameters
     ----------
-    request : connexion.request
     agent_id : str
         Agent ID.
     pretty : bool
@@ -467,7 +459,6 @@ async def delete_single_agent_single_group(agent_id: str, group_id: str, pretty:
 
     Parameters
     ----------
-    request : connexion.request
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -504,7 +495,6 @@ async def put_agent_single_group(agent_id: str, group_id: str, force_single_grou
 
     Parameters
     ----------
-    request : connexion.request
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -543,7 +533,6 @@ async def get_agent_key(agent_id: str, pretty: bool = False, wait_for_complete: 
 
     Parameters
     ----------
-    request : connexion.request
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -576,7 +565,6 @@ async def restart_agent(agent_id: str, pretty: bool = False, wait_for_complete: 
 
     Parameters
     ----------
-    request : connexion.request
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -613,7 +601,6 @@ async def put_upgrade_agents(agents_list: str = None, pretty: bool = False, wait
 
     Parameters
     ----------
-    request : connexion.request
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -696,7 +683,6 @@ async def put_upgrade_custom_agents(agents_list: str = None, pretty: bool = Fals
 
     Parameters
     ----------
-    request : connexion.request
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -772,7 +758,6 @@ async def get_agent_upgrade(agents_list: str = None, pretty: bool = False, wait_
 
     Parameters
     ----------
-    request : connexion.request
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -836,7 +821,6 @@ async def get_daemon_stats(agent_id: str, pretty: bool = False, wait_for_complet
 
     Parameters
     ----------
-    request : connexion.request
     agent_id : str
         ID of the agent from which the statistics are obtained.
     pretty : bool
@@ -873,7 +857,6 @@ async def get_component_stats(pretty: bool = False, wait_for_complete: bool = Fa
 
     Parameters
     ----------
-    request : connexion.request
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -910,7 +893,6 @@ async def post_new_agent(agent_name: str, pretty: bool = False,
 
     Parameters
     ----------
-    request : connexion.request
     agent_name : str
         Name used to register the agent.
     pretty : bool
@@ -944,7 +926,6 @@ async def delete_multiple_agent_single_group(group_id: str, agents_list: str = N
 
     Parameters
     ----------
-    request : connexion.request
     group_id : str
         Group ID.
     agents_list : str
@@ -984,7 +965,6 @@ async def put_multiple_agent_single_group(group_id: str, agents_list: str = None
 
     Parameters
     ----------
-    request : connexion.request
     group_id : str
         Group ID.
     agents_list : str
@@ -1024,7 +1004,6 @@ async def delete_groups(groups_list: str = None, pretty: bool = False,
 
     Parameters
     ----------
-    request : connexion.request
     groups_list : str
         Array of group's IDs.
     pretty: bool
@@ -1065,7 +1044,6 @@ async def get_list_group(pretty: bool = False, wait_for_complete: bool = False,
 
     Parameters
     ----------
-    request : connexion.request
     groups_list : str
         Array of group's IDs.
     pretty: bool
@@ -1127,7 +1105,6 @@ async def get_agents_in_group(group_id: str, pretty: bool = False, wait_for_comp
 
     Parameters
     ----------
-    request : connexion.request
     group_id : str
         Group ID.
     pretty: bool
@@ -1221,7 +1198,6 @@ async def get_group_config(group_id: str, pretty: bool = False, wait_for_complet
 
     Parameters
     ----------
-    request : connexion.request
     group_id : str
         Group ID.
     pretty: bool
@@ -1264,7 +1240,6 @@ async def put_group_config(body: bytes, group_id: str, pretty: bool = False,
 
     Parameters
     ----------
-    request : connexion.request
     body : bytes
         Bytes object with the new group configuration.
         The body is obtained from the XML file and decoded in this function.
@@ -1307,7 +1282,6 @@ async def get_group_files(group_id: str, pretty: bool = False, wait_for_complete
 
     Parameters
     ----------
-    request : connexion.request
     group_id : str
         Group ID.
     pretty: bool
@@ -1367,7 +1341,6 @@ async def get_group_file_json(group_id: str, file_name: str, pretty: bool = Fals
 
     Parameters
     ----------
-    request : connexion.request
     group_id : str
         Group ID.
     file_name : str
@@ -1406,7 +1379,6 @@ async def get_group_file_xml(group_id: str, file_name: str, pretty: bool = False
 
     Parameters
     ----------
-    request : connexion.request
     group_id : str
         Group ID.
     file_name : str
@@ -1445,7 +1417,6 @@ async def restart_agents_by_group(group_id: str, pretty: bool = False,
 
     Parameters
     ----------
-    request : connexion.request
     group_id : str
         Group name.
     pretty : bool, optional
@@ -1527,7 +1498,6 @@ async def get_agent_no_group(pretty: bool = False, wait_for_complete: bool = Fal
 
     Parameters
     ----------
-    request : connexion.request
     pretty: bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -1578,7 +1548,6 @@ async def get_agent_outdated(pretty: bool = False, wait_for_complete: bool = Fal
 
     Parameters
     ----------
-    request : connexion.request
     pretty: bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -1629,7 +1598,6 @@ async def get_agent_fields(pretty: bool = False, wait_for_complete: bool = False
 
     Parameters
     ----------
-    request : connexion.request
     pretty : bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -1678,7 +1646,6 @@ async def get_agent_summary_status(pretty: bool = False, wait_for_complete: bool
 
     Parameters
     ----------
-    request : connexion.request
     pretty : bool
         Show results in human-readable format
     wait_for_complete : bool
@@ -1709,7 +1676,6 @@ async def get_agent_summary_os(pretty: bool = False, wait_for_complete: bool = F
 
     Parameters
     ----------
-    request : connexion.request
     pretty : bool
         Show results in human-readable format
     wait_for_complete : bool

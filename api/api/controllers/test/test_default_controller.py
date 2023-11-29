@@ -2,7 +2,7 @@ import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
-from starlette.responses import Response
+from connexion.lifecycle import ConnexionResponse
 
 with patch('wazuh.common.wazuh_uid'):
     with patch('wazuh.common.wazuh_gid'):
@@ -34,4 +34,4 @@ async def test_default_info(mock_wresult, mock_lspec):
     }
     mock_lspec.assert_called_once_with()
     mock_wresult.assert_called_once_with({'data': BasicInfo.from_dict(data)})
-    assert isinstance(result, Response)
+    assert isinstance(result, ConnexionResponse)
