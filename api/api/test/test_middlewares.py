@@ -10,7 +10,7 @@ from freezegun import freeze_time
 from wazuh.core.exception import WazuhPermissionError, WazuhTooManyRequests
 
 from api.middlewares import _cleanup_detail_field, \
-    check_rate_limit, prevent_bruteforce_attack, unlock_ip, IP_BLOCK, IP_STATS
+    check_rate_limit, prevent_bruteforce_attack, unlock_ip, ip_block, ip_stats
 
 
 
@@ -55,10 +55,10 @@ def test_cleanup_detail_field():
 async def test_middlewares_unlock_ip():
     """Test unlock_ip function."""
     # Assert they are not empty
-    assert IP_STATS and IP_BLOCK
+    assert ip_stats and ip_block
     await unlock_ip(DummyRequest({'remote': "ip"}), 5)
     # Assert that under these conditions, they have been emptied
-    assert not IP_STATS and not IP_BLOCK
+    assert not ip_stats and not ip_block
 
 
 @patch("api.middlewares.ip_stats", new={"ip": {'timestamp': 5}})
@@ -84,18 +84,18 @@ async def test_middlewares_unlock_ip_ko():
 @pytest.mark.asyncio
 async def test_middlewares_prevent_bruteforce_attack(request_info, stats):
     """Test `prevent_bruteforce_attack` blocks IPs when reaching max number of attempts."""
-    with patch("api.middlewares.IP_STATS", new=copy(stats)):
-        previous_attempts = IP_STATS['ip']['attempts'] if 'ip' in IP_STATS else 0
+    with patch("api.middlewares.ip_stats", new=copy(stats)):
+        previous_attempts = ip_stats['ip']['attempts'] if 'ip' in ip_stats else 0
         await prevent_bruteforce_attack(DummyRequest(request_info),
                                         attempts=5)
         if stats:
             # There were previous attempts. This one reached the limit
-            assert IP_STATS['ip']['attempts'] == previous_attempts + 1
-            assert 'ip' in IP_BLOCK
+            assert ip_stats['ip']['attempts'] == previous_attempts + 1
+            assert 'ip' in ip_block
         else:
             # There were not previous attempts
-            assert IP_STATS['ip']['attempts'] == 1
-            assert 'ip' not in IP_BLOCK
+            assert ip_stats['ip']['attempts'] == 1
+            assert 'ip' not in ip_block
 
 
 @freeze_time(datetime(1970, 1, 1))

@@ -82,8 +82,8 @@ class SecureHeadersMiddleware(BaseHTTPMiddleware):
         return resp
 
 
-IP_STATS = dict()
-IP_BLOCK = set()
+ip_stats = dict()
+ip_block = set()
 GENERAL_REQUEST_COUNTER = 0
 GENERAL_CURRENT_TIME = None
 EVENTS_REQUEST_COUNTER = 0
@@ -100,15 +100,15 @@ async def unlock_ip(request: Request, block_time: int):
     block_time : int
         Block time used to decide if the IP is going to be unlocked.
     """
-    global IP_BLOCK, IP_STATS
+    global ip_block, ip_stats
     try:
-        if get_utc_now().timestamp() - block_time >= IP_STATS[request.client.host]['timestamp']:
-            del IP_STATS[request.client.host]
-            IP_BLOCK.remove(request.client.host)
+        if get_utc_now().timestamp() - block_time >= ip_stats[request.client.host]['timestamp']:
+            del ip_stats[request.client.host]
+            ip_block.remove(request.client.host)
     except (KeyError, ValueError):
         pass
 
-    if request.client.host in IP_BLOCK:
+    if request.client.host in ip_block:
         msg = f'IP blocked due to exceeded number of logins attempts: {request.client.host}'
         logger.warning(msg)
         raise_if_exc(WazuhPermissionError(6000))
@@ -124,18 +124,18 @@ async def prevent_bruteforce_attack(request: Request, attempts: int = 5):
     attempts : int
         Number of attempts until an IP is blocked.
     """
-    global IP_STATS, IP_BLOCK
+    global ip_stats, ip_block
     if request.path in {'/security/user/authenticate', '/security/user/authenticate/run_as'} and \
             request.method in {'GET', 'POST'}:
-        if request.client.host not in IP_STATS.keys():
-            IP_STATS[request.client.host] = dict()
-            IP_STATS[request.client.host]['attempts'] = 1
-            IP_STATS[request.client.host]['timestamp'] = get_utc_now().timestamp()
+        if request.client.host not in ip_stats.keys():
+            ip_stats[request.client.host] = dict()
+            ip_stats[request.client.host]['attempts'] = 1
+            ip_stats[request.client.host]['timestamp'] = get_utc_now().timestamp()
         else:
-            IP_STATS[request.client.host]['attempts'] += 1
+            ip_stats[request.client.host]['attempts'] += 1
 
-        if IP_STATS[request.client.host]['attempts'] >= attempts:
-            IP_BLOCK.add(request.client.host)
+        if ip_stats[request.client.host]['attempts'] >= attempts:
+            ip_block.add(request.client.host)
 
 
 async def check_rate_limit(
