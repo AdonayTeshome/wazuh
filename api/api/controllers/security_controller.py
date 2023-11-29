@@ -8,8 +8,11 @@ import re
 from connexion.lifecycle import ConnexionResponse
 from connexion import request
 
+from api.encoder import dumps
+from api.models.security_token_response_model import TokenResponseModel
+from api.authentication import generate_token
 from api.configuration import default_security_configuration
-from api.controllers.util import json_response, token_response
+from api.controllers.util import json_response
 from api.models.base_model_ import Body
 from api.models.configuration_model import SecurityConfigurationModel
 from api.models.security_model import (CreateUserModel, PolicyModel, RoleModel,
@@ -20,7 +23,7 @@ from wazuh import security
 from wazuh.core.cluster.control import get_system_nodes
 from wazuh.core.cluster.dapi.dapi import DistributedAPI
 from wazuh.core.common import WAZUH_VERSION
-from wazuh.core.exception import WazuhPermissionError
+from wazuh.core.exception import WazuhPermissionError, WazuhException
 from wazuh.core.results import AffectedItemsWazuhResult, WazuhResult
 from wazuh.core.security import revoke_tokens
 from wazuh.rbac import preprocessor
@@ -57,7 +60,16 @@ async def deprecated_login_user(user: str, raw: bool = False) -> ConnexionRespon
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return token_response(user, data.dikt, raw)
+    token = None
+    try:
+        token = generate_token(user_id=user, data=data.dikt)
+    except WazuhException as e:
+        raise_if_exc(e)
+
+    return ConnexionResponse(body=token, mimetype='text/plain', status_code=200) if raw else \
+           ConnexionResponse(body=dumps(WazuhResult({'data': TokenResponseModel(token=token)})),
+                             mimetype="application/json",
+                             status_code=200)
 
 
 async def login_user(user: str, raw: bool = False) -> ConnexionResponse:
@@ -86,7 +98,16 @@ async def login_user(user: str, raw: bool = False) -> ConnexionResponse:
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return token_response(user, data.dikt, raw)
+    token = None
+    try:
+        token = generate_token(user_id=user, data=data.dikt)
+    except WazuhException as e:
+        raise_if_exc(e)
+
+    return ConnexionResponse(body=token, mimetype='text/plain', status_code=200) if raw else \
+           ConnexionResponse(body=dumps(WazuhResult({'data': TokenResponseModel(token=token)})),
+                             mimetype="application/json",
+                             status_code=200)
 
 
 async def run_as_login(user: str, raw: bool = False) -> ConnexionResponse:
@@ -117,7 +138,16 @@ async def run_as_login(user: str, raw: bool = False) -> ConnexionResponse:
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return token_response(user, data.dikt, raw, auth_context=auth_context)
+    token = None
+    try:
+        token = generate_token(user_id=user, data=data.dikt, auth_context=auth_context)
+    except WazuhException as e:
+        raise_if_exc(e)
+
+    return ConnexionResponse(body=token, mimetype='text/plain', status_code=200) if raw else \
+           ConnexionResponse(body=dumps(WazuhResult({'data': TokenResponseModel(token=token)})),
+                             mimetype="application/json",
+                             status_code=200)
 
 
 async def get_user_me(pretty: bool = False, wait_for_complete: bool = False) -> ConnexionResponse:

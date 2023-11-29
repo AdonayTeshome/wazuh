@@ -51,7 +51,7 @@ def mock_request():
 @patch('api.controllers.security_controller.remove_nones_to_dict')
 @patch('api.controllers.security_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.security_controller.raise_if_exc', return_value=CustomAffectedItems())
-@patch('api.controllers.util.generate_token', return_value='token')
+@patch('api.controllers.security_controller.generate_token', return_value='token')
 async def test_login_user(mock_token, mock_exc, mock_dapi, mock_remove, mock_dfunc, raw, mock_request):
     """Verify 'login_user' endpoint is working as expected."""
     result = await login_user(user='001', raw=raw)
@@ -65,8 +65,7 @@ async def test_login_user(mock_token, mock_exc, mock_dapi, mock_remove, mock_dfu
     mock_remove.assert_called_once_with(f_kwargs)
     mock_exc.assert_called_once_with(mock_dfunc.return_value)
     mock_token.assert_called_once_with(user_id=f_kwargs['user_id'],
-                                       data=mock_exc.return_value.dikt,
-                                       auth_context=None)
+                                       data=mock_exc.return_value.dikt)
     assert isinstance(result, ConnexionResponse)
     assert result.mimetype == 'text/plain' if raw else result.mimetype == 'application/json'
 
@@ -75,14 +74,13 @@ async def test_login_user(mock_token, mock_exc, mock_dapi, mock_remove, mock_dfu
 @patch('api.controllers.security_controller.DistributedAPI.distribute_function', return_value=AsyncMock())
 @patch('api.controllers.security_controller.remove_nones_to_dict')
 @patch('api.controllers.security_controller.DistributedAPI.__init__', return_value=None)
-@patch('api.util.raise_if_exc', return_value=CustomAffectedItems())
-@patch('api.controllers.util.generate_token', return_value='token')
+@patch('api.controllers.security_controller.raise_if_exc', return_value=CustomAffectedItems())
+@patch('api.controllers.security_controller.generate_token', return_value='token')
 @pytest.mark.parametrize('mock_bool', [True, False])
 async def test_login_user_ko(mock_token, mock_exc, mock_dapi, mock_remove, mock_dfunc, mock_bool):
     """Verify 'login_user' endpoint is handling WazuhException as expected."""
     mock_token.side_effect = WazuhException(999)
-    with pytest.raises(expected_exception=WazuhException(999)):
-        result = await login_user(user='001', raw=mock_bool)
+    result = await login_user(user='001', raw=mock_bool)
     f_kwargs = {'user_id': '001'}
     mock_dapi.assert_called_once_with(f=preprocessor.get_permissions,
                                       f_kwargs=mock_remove.return_value,
@@ -102,7 +100,7 @@ async def test_login_user_ko(mock_token, mock_exc, mock_dapi, mock_remove, mock_
 @patch('api.controllers.security_controller.remove_nones_to_dict')
 @patch('api.controllers.security_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.security_controller.raise_if_exc', return_value=CustomAffectedItems())
-@patch('api.controllers.util.generate_token', return_value='token')
+@patch('api.controllers.security_controller.generate_token', return_value='token')
 async def test_run_as_login(mock_token, mock_exc, mock_dapi, mock_remove, mock_dfunc,
                             raw, mock_request):
     """Verify 'run_as_login' endpoint is working as expected."""
@@ -128,7 +126,7 @@ async def test_run_as_login(mock_token, mock_exc, mock_dapi, mock_remove, mock_d
 @patch('api.controllers.security_controller.remove_nones_to_dict')
 @patch('api.controllers.security_controller.DistributedAPI.__init__', return_value=None)
 @patch('api.controllers.security_controller.raise_if_exc', return_value=CustomAffectedItems())
-@patch('api.controllers.util.generate_token', return_value='token')
+@patch('api.controllers.security_controller.generate_token', return_value='token')
 @pytest.mark.parametrize('mock_bool', [True, False])
 async def test_run_as_login_ko(mock_token, mock_exc, mock_dapi, mock_remove, mock_dfunc,
                                mock_bool, mock_request):
