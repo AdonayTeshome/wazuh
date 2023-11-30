@@ -229,54 +229,65 @@ class RemoveFieldsFromErrorMiddleware(BaseHTTPMiddleware):
             Returned response.
         """
 
-        def remove_unwanted_fields(fields_to_remove=None):
-            fields_to_remove = fields_to_remove or ['status', 'type']
-            for field in fields_to_remove:
-                if field in problem.body:
-                    del problem.body[field]
-            if problem.body.get('detail') == '':
-                del problem.body['detail']
-            if 'code' in problem.body:
-                problem.body['error'] = problem.body.pop('code')
-
         problem = None
 
         try:
             return await call_next(request)
         except (OAuthProblem, Unauthorized) as auth_exception:
+            problem = {
+                "status": 401, 
+                "title": "Unauthorized",
+                "type": "about:blank",
+            }
+
             if request.path in {'/security/user/authenticate',
                                 '/security/user/authenticate/run_as'} and \
-                    request.method in {'GET', 'POST'}:
-                await prevent_bruteforce_attack(request=request,
-                                                attempts=configuration.api_conf['access']['max_login_attempts'])
-                problem = connexion_problem(401, "Unauthorized",
-                                            type="about:blank",
-                                            detail="Invalid credentials")
+                request.method in {'GET', 'POST'}:
+                await prevent_bruteforce_attack(
+                    request=request,
+                    attempts=configuration.api_conf['access']['max_login_attempts']
+                )
+                problem["detail"] = "Invalid credentials"
+            elif isinstance(auth_exception, OAuthProblem):
+                problem["detail"] = "No authorization token provided"
             else:
-                if isinstance(auth_exception, OAuthProblem):
-                    problem = connexion_problem(401, "Unauthorized", type="about:blank",
-                                                detail="No authorization token provided")
-                else:
-                    problem = connexion_problem(401, "Unauthorized",
-                                                type="about:blank",
-                                                detail="Invalid token")
+                problem["detail"] = "Invalid token"
         except ProblemException as exc:
-            problem = connexion_problem(
-                status=exc.__dict__['status'],
-                title=exc.__dict__['title'] if exc.__dict__.get('title') else 'Bad Request',
-                type=exc.__dict__.get('type', 'about:blank'),
-                detail=_cleanup_detail_field(exc.__dict__['detail'])
-                if 'detail' in exc.__dict__ else '',
-                ext=exc.__dict__.get('ext'))
+            problem = {
+                "status": exc.__dict__['status'],
+                "title": exc.__dict__['title'] if exc.__dict__.get('title') else 'Bad Request',
+                "type": exc.__dict__.get('type', 'about:blank'),
+                "detail": _cleanup_detail_field(exc.__dict__['detail']) \
+                                if 'detail' in exc.__dict__ \
+                                else ''
+            }
+            problem.update(exc.__dict__.get('ext'))
+
         except HTTPException as exc:
-            problem = connexion_problem(status=exc.status_code,
-                                        title='HTTPException',
-                                        detail=exc.detail if exc.detail else '')
+            problem = {
+                "status": exc.status_code, 
+                "title": 'HTTPException',
+                "type": "about:blank",
+                "detail": exc.detail if exc.detail else ''
+            }
+
         finally:
             if problem:
-                remove_unwanted_fields()
+                # clean fields from the details
+                status = problem.pop('status')
+                if type(problem['detail']) == dict:
+                    for field in ['status', 'type']:
+                        problem['detail'].pop(field)
+                elif problem['detail'] == '':
+                    del problem['detail']
+                if 'code' in problem:
+                    problem['error'] = problem.pop('code')
 
-        return problem
+                response = Response(content=json.dumps(problem),
+                                    status_code=status,
+                                    media_type='"application/problem+json"')
+
+        return response
 
 
 class WazuhAccessLoggerMiddleware(BaseHTTPMiddleware):
@@ -360,12 +371,15 @@ class WazuhAccessLoggerMiddleware(BaseHTTPMiddleware):
             Returned response.
         """
         prev_time = time.time()
+        body = await request.json() \
+                    if 'json' in request.headers.get('content-type', '') and \
+                    int(request.headers.get('content-length', '0')) > 0 \
+                    else {}
         response = await call_next(request)
         req = ConnexionRequest.from_starlette_request(request)
         time_diff = time.time() - prev_time
 
         query = dict(req.query_params)
-        body = await req.json() if 'json' in req.mimetype else {}
         if 'password' in query:
             query['password'] = '****'
         if 'password' in body:
