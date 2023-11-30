@@ -69,7 +69,14 @@ def spawn_authentication_pool():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
-def configure_ssl(uvicorn_params):
+def assign_wazuh_ownership(filepath):
+    """Assign ownership to file."""
+    if os.stat(filepath).st_gid != common.wazuh_gid() or \
+        os.stat(filepath).st_uid != common.wazuh_uid():
+        os.chown(filepath, common.wazuh_uid(), common.wazuh_gid())
+
+
+def configure_ssl(params):
     """Configure https files and permission, and set the uvicorn dictionary configuration keys.
 
     Parameters
@@ -78,67 +85,60 @@ def configure_ssl(uvicorn_params):
         uvicorn parameter configuration dictionary.
 
     """
-    def check_and_assign(filepath):
-        owner_uid = os.stat(filepath).st_uid
-        owner_gid = os.stat(filepath).st_gid
-        if owner_gid != common.wazuh_gid() or owner_uid != common.wazuh_uid():
-            os.chown(filepath, common.wazuh_uid(), common.wazuh_gid())
+    try:
+        # Generate SSL if it does not exist and HTTPS is enabled
+        if not os.path.exists(api_conf['https']['key']) \
+                or not os.path.exists(api_conf['https']['cert']):
+            logger.info('HTTPS is enabled but cannot find the private key and/or certificate. '
+                        'Attempting to generate them')
+            private_key = configuration.generate_private_key(
+                api_conf['https']['key'])
+            logger.info(
+                f"Generated private key file in WAZUH_PATH/{to_relative_path(api_conf['https']['key'])}")
+            configuration.generate_self_signed_certificate(
+                private_key, api_conf['https']['cert'])
+            logger.info(
+                f"Generated certificate file in WAZUH_PATH/{to_relative_path(api_conf['https']['cert'])}")
+        
+        # Check and assign ownership to wazuh user for server.key and server.crt files
+        assign_wazuh_ownership(api_conf['https']['key'])
+        assign_wazuh_ownership(api_conf['https']['cert'])
 
-    if api_conf['https']['enabled']:
-        try:
-            # Generate SSL if it does not exist and HTTPS is enabled
-            if not os.path.exists(api_conf['https']['key']) \
-                    or not os.path.exists(api_conf['https']['cert']):
-                logger.info('HTTPS is enabled but cannot find the private key and/or certificate. '
-                            'Attempting to generate them')
-                private_key = configuration.generate_private_key(
-                    api_conf['https']['key'])
-                logger.info(
-                    f"Generated private key file in WAZUH_PATH/{to_relative_path(api_conf['https']['key'])}")
-                configuration.generate_self_signed_certificate(
-                    private_key, api_conf['https']['cert'])
-                logger.info(
-                    f"Generated certificate file in WAZUH_PATH/{to_relative_path(api_conf['https']['cert'])}")
-            
-            # Check and assign ownership to wazuh user for server.key and server.crt files
-            check_and_assign(api_conf['https']['key'])
-            check_and_assign(api_conf['https']['cert'])
+        params['ssl_version'] = ssl.PROTOCOL_TLS_SERVER
 
-            uvicorn_params['ssl_version'] = ssl.PROTOCOL_TLS_SERVER
+        if api_conf['https']['use_ca']:
+            params['ssl_cert_reqs'] = ssl.CERT_REQUIRED
+            params['ssl_ca_certs'] = api_conf['https']['ca']
 
-            if api_conf['https']['use_ca']:
-                uvicorn_params['ssl_cert_reqs'] = ssl.CERT_REQUIRED
-                uvicorn_params['ssl_ca_certs'] = api_conf['https']['ca']
+        params['ssl_certfile'] = api_conf['https']['cert']
+        params['ssl_keyfile'] = api_conf['https']['key']
 
-            uvicorn_params['ssl_certfile'] = api_conf['https']['cert']
-            uvicorn_params['ssl_keyfile'] = api_conf['https']['key']
+        # Load SSL ciphers if any has been specified
+        if api_conf['https']['ssl_ciphers']:
+            params['ssl_ciphers'] = api_conf['https']['ssl_ciphers'].upper()
 
-            # Load SSL ciphers if any has been specified
-            if api_conf['https']['ssl_ciphers']:
-                uvicorn_params['ssl_ciphers'] = api_conf['https']['ssl_ciphers'].upper()
-
-        except ssl.SSLError as exc:
-            error = APIError(
-                2003, details='Private key does not match with the certificate')
+    except ssl.SSLError as exc:
+        error = APIError(
+            2003, details='Private key does not match with the certificate')
+        logger.error(error)
+        raise error from exc
+    except IOError as exc:
+        if exc.errno == 22:
+            error = APIError(2003, details='PEM phrase is not correct')
             logger.error(error)
             raise error from exc
-        except IOError as exc:
-            if exc.errno == 22:
-                error = APIError(2003, details='PEM phrase is not correct')
-                logger.error(error)
-                raise error from exc
-            elif exc.errno == 13:
-                error = APIError(2003,
-                                 details='Ensure the certificates have the correct permissions')
-                logger.error(error)
-                raise error from exc
-            else:
-                msg = f'Wazuh API SSL ERROR. Please, ensure ' \
-                      f'if path to certificates is correct in the configuration ' \
-                      f'file WAZUH_PATH/{to_relative_path(CONFIG_FILE_PATH)}'
-                print(msg)
-                logger.error(msg)
-                raise exc from exc
+        elif exc.errno == 13:
+            error = APIError(2003,
+                                details='Ensure the certificates have the correct permissions')
+            logger.error(error)
+            raise error from exc
+        else:
+            msg = f'Wazuh API SSL ERROR. Please, ensure ' \
+                    f'if path to certificates is correct in the configuration ' \
+                    f'file WAZUH_PATH/{to_relative_path(CONFIG_FILE_PATH)}'
+            print(msg)
+            logger.error(msg)
+            raise exc from exc
 
 
 def start(params):
@@ -398,10 +398,22 @@ if __name__ == '__main__':
     uvicorn_params['loop'] = 'uvloop'
 
     # Set up logger
+    if not (api_conf['logs']['format'] in ['plain', 'json']):
+        print(f"Configuration error in the API log format: {api_conf['logs']['format']}.")
+        sys.exit(1)
+    elif api_conf['logs']['format'] == 'json':
+        log_path = f'{API_LOG_PATH}.json'
+    else:
+        log_path = f'{API_LOG_PATH}.log'
+
     add_log_level_debug2()
-    uvicorn_params['log_config'] = create_log_config_dict(log_path=f'{API_LOG_PATH}.log',
-                                                          log_level=api_conf['logs']['level'].upper(),
-                                                          foreground_mode=args.foreground)
+
+    json_log = 'json' in api_conf['logs']['format']
+    uvicorn_params['log_config'] = create_log_config_dict(
+                                        log_path=log_path,
+                                        log_level=api_conf['logs']['level'].upper(),
+                                        foreground_mode=args.foreground)
+    assign_wazuh_ownership(f'{API_LOG_PATH}.log')
 
     logger = logging.getLogger('wazuh-api')
 
@@ -418,7 +430,8 @@ if __name__ == '__main__':
             f"{API_LOG_PATH}.<log_format>")
 
     # Configure ssl files
-    configure_ssl(uvicorn_params)
+    if api_conf['https']['enabled']:
+        configure_ssl(uvicorn_params)
 
     # Check for unused PID files
     utils.clean_pid_files(API_MAIN_PROCESS)
