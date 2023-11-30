@@ -123,8 +123,9 @@ class WazuhIntegration:
             aws_config = aws_tools.get_aws_config_params()
 
             # Set profile
-            if profile is not None and profile != 'default':
-                profile = f"profile {profile}"
+            if profile is not None:
+                if profile not in aws_config.sections():
+                    profile = f"profile {profile}"
             else:
                 profile = 'default'
 
