@@ -42,7 +42,7 @@ public:
         m_dbSocket->connect(
             [&](const char* body, uint32_t bodySize, const char* header, uint32_t headerSize)
             {
-                std::unique_lock<std::mutex> lock {m_mutex};
+                std::lock_guard<std::mutex> lock {m_mutex};
                 m_response = std::string(body, bodySize);
                 m_conditionVariable.notify_one();
             });
@@ -52,7 +52,7 @@ public:
     {
         std::unique_lock<std::mutex> lock {m_mutex};
         m_dbSocket->send(query.c_str(), query.size());
-        auto res = m_conditionVariable.wait_for(lock, std::chrono::milliseconds(DB_WRAPPER_QUERY_WAIT_TIME));
+        const auto res = m_conditionVariable.wait_for(lock, std::chrono::milliseconds(DB_WRAPPER_QUERY_WAIT_TIME));
 
         if (res == std::cv_status::timeout)
         {
@@ -64,28 +64,28 @@ public:
             throw std::runtime_error("Empty DB response");
         }
 
-        if (0 == m_response.compare(0, 3, DB_WRAPPER_ERROR))
+        if (0 == m_response.compare(0, sizeof(DB_WRAPPER_ERROR), DB_WRAPPER_ERROR))
         {
             throw std::runtime_error("DB query error: " + m_response.substr(4));
         }
 
-        if (0 == m_response.compare(0, 3, DB_WRAPPER_IGNORE))
+        if (0 == m_response.compare(0, sizeof(DB_WRAPPER_IGNORE), DB_WRAPPER_IGNORE))
         {
             throw std::runtime_error("DB query ignored: " + m_response.substr(4));
         }
 
-        if (0 == m_response.compare(0, 3, DB_WRAPPER_UNKNOWN))
+        if (0 == m_response.compare(0, sizeof(DB_WRAPPER_UNKNOWN), DB_WRAPPER_UNKNOWN))
         {
             throw std::runtime_error("DB query unknown response: " + m_response.substr(4));
         }
 
-        if (0 == m_response.compare(0, 3, DB_WRAPPER_DUE))
+        if (0 == m_response.compare(0, sizeof(DB_WRAPPER_DUE), DB_WRAPPER_DUE))
         {
             // TODO: Implement due response
             throw std::runtime_error("DB query with pending data");
         }
 
-        if (0 == m_response.compare(0, 2, DB_WRAPPER_OK))
+        if (0 == m_response.compare(0, sizeof(DB_WRAPPER_OK), DB_WRAPPER_OK))
         {
             response = nlohmann::json::parse(m_response.substr(3));
         }
