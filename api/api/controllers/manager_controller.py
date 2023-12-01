@@ -129,7 +129,8 @@ async def get_configuration(pretty: bool = False, wait_for_complete: bool = Fals
     if isinstance(data, AffectedItemsWazuhResult):
         response = json_response(data, pretty=pretty)
     else:
-        response = ConnexionResponse(body=data["message"], mimetype='application/xml', content_type='application/xml')
+        response = ConnexionResponse(body=data["message"],
+                                     content_type='application/xml; charset=utf-8')
     return response
 
 

@@ -119,7 +119,8 @@ async def get_file(pretty: bool = False, wait_for_complete: bool = False, filena
     if isinstance(data, AffectedItemsWazuhResult):
         response = json_response(data, pretty=pretty)
     else:
-        response = ConnexionResponse(body=data["message"], mimetype='text/plain', content_type='text/plain')
+        response = ConnexionResponse(body=data["message"],
+                                     content_type='text/plain')
 
     return response
 
