@@ -13,7 +13,6 @@ import wazuh.cluster as cluster
 import wazuh.core.common as common
 import wazuh.manager as manager
 import wazuh.stats as stats
-from connexion import request
 from api.controllers.util import json_response
 from api.models.base_model_ import Body
 from api.util import remove_nones_to_dict, parse_api_param, raise_if_exc, deserialize_date, deprecate_endpoint
