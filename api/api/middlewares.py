@@ -261,7 +261,8 @@ class RemoveFieldsFromErrorMiddleware(BaseHTTPMiddleware):
                                 if 'detail' in exc.__dict__ \
                                 else ''
             }
-            problem.update(exc.__dict__.get('ext'))
+            if exc.__dict__.get('ext'):
+                problem.update(exc.__dict__.get('ext', {}))
 
         except HTTPException as exc:
             problem = {
