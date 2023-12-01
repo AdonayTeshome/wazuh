@@ -191,7 +191,7 @@ private:
             }};
 
         const auto fullUrl {m_url + queryParameters};
-        logDebug2(WM_CONTENTUPDATER, "Attempting to download content from: '%s'", fullUrl.c_str());
+        logDebug2(WM_CONTENTUPDATER, "Downloading content from: '%s'", fullUrl.c_str());
 
         constexpr auto INITIAL_SLEEP_TIME {1};
         auto sleepTime {INITIAL_SLEEP_TIME};
