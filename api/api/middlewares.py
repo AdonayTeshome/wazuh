@@ -276,7 +276,7 @@ class RemoveFieldsFromErrorMiddleware(BaseHTTPMiddleware):
             if problem:
                 # clean fields from the details
                 status = problem.pop('status')
-                if type(problem['detail']) == dict:
+                if isinstance(problem['detail'], dict):
                     for field in ['status', 'type']:
                         problem['detail'].pop(field)
                 elif problem['detail'] == '':
