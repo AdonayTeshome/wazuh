@@ -66,9 +66,10 @@ async def deprecated_login_user(user: str, raw: bool = False) -> ConnexionRespon
     except WazuhException as e:
         raise_if_exc(e)
 
-    return ConnexionResponse(body=token, mimetype='text/plain', status_code=200) if raw else \
+    return ConnexionResponse(body=token, mimetype='text/plain', content_type='text/plain', status_code=200) if raw else \
            ConnexionResponse(body=dumps(WazuhResult({'data': TokenResponseModel(token=token)})),
                              mimetype="application/json",
+                             content_type="application/json",
                              status_code=200)
 
 
@@ -104,9 +105,10 @@ async def login_user(user: str, raw: bool = False) -> ConnexionResponse:
     except WazuhException as e:
         raise_if_exc(e)
 
-    return ConnexionResponse(body=token, mimetype='text/plain', status_code=200) if raw else \
+    return ConnexionResponse(body=token, mimetype='text/plain', content_type='text/plain', status_code=200) if raw else \
            ConnexionResponse(body=dumps(WazuhResult({'data': TokenResponseModel(token=token)})),
                              mimetype="application/json",
+                             content_type="application/json",
                              status_code=200)
 
 
@@ -144,9 +146,13 @@ async def run_as_login(user: str, raw: bool = False) -> ConnexionResponse:
     except WazuhException as e:
         raise_if_exc(e)
 
-    return ConnexionResponse(body=token, mimetype='text/plain', status_code=200) if raw else \
+    return ConnexionResponse(body=token,
+                             mimetype='text/plain',
+                             content_type='text/plain',
+                             status_code=200) if raw else \
            ConnexionResponse(body=dumps(WazuhResult({'data': TokenResponseModel(token=token)})),
                              mimetype="application/json",
+                             content_type="application/json",
                              status_code=200)
 
 

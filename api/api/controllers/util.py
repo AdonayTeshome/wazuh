@@ -23,4 +23,5 @@ def json_response(data: dict, pretty: bool = False) -> ConnexionResponse:
     """
     return ConnexionResponse(body=prettify(data) if pretty else dumps(data),
                              mimetype="application/json",
+                             content_type="application/json",
                              status_code=200)

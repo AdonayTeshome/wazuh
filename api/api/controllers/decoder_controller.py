@@ -252,7 +252,7 @@ async def get_file(pretty: bool = False, wait_for_complete: bool = False,
     if isinstance(data, AffectedItemsWazuhResult):
         response = json_response(data, pretty=pretty)
     else:
-        response = ConnexionResponse(body=data["message"], 
+        response = ConnexionResponse(body=data["message"],
                                      mimetype='application/xml', content_type='application/xml')
 
     return response

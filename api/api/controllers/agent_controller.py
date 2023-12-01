@@ -1408,7 +1408,7 @@ async def get_group_file_xml(group_id: str, file_name: str, pretty: bool = False
                           )
     data = raise_if_exc(await dapi.distribute_function())
 
-    return ConnexionResponse(body=data["data"], mimetype='application/xml')
+    return ConnexionResponse(body=data["data"], content_type='application/xml; charset=utf-8')
 
 
 async def restart_agents_by_group(group_id: str, pretty: bool = False,
