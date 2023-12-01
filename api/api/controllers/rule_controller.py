@@ -348,7 +348,7 @@ async def put_file(body: bytes, filename: str = None, overwrite: bool = False,
         API response.
     """
     # Parse body to utf-8
-    Body.validate_content_type(expected_content_type='application/octet-stream')
+    Body.validate_content_type(request, expected_content_type='application/octet-stream')
     parsed_body = Body.decode_body(body, unicode_error=1911, attribute_error=1912)
 
     f_kwargs = {'filename': filename,
