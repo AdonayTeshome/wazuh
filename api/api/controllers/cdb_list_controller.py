@@ -120,7 +120,7 @@ async def get_file(pretty: bool = False, wait_for_complete: bool = False, filena
         response = json_response(data, pretty=pretty)
     else:
         response = ConnexionResponse(body=data["message"],
-                                     content_type='text/plain')
+                                     content_type='text/plain; charset=utf-8')
 
     return response
 
